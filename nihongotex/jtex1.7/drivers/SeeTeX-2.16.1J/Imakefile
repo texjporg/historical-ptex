@@ -1,0 +1,121 @@
+/*
+ * Copyright 1989 Dirk Grunwald
+ * 
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without fee,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of Dirk Grunwald or M.I.T.
+ * not be used in advertising or publicity pertaining to distribution of
+ * the software without specific, written prior permission.  Dirk
+ * Grunwald and M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ * 
+ * DIRK GRUNWALD AND M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL M.I.T.  BE LIABLE FOR ANY SPECIAL, INDIRECT
+ * OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
+ * OR PERFORMANCE OF THIS SOFTWARE.
+ * 
+ * Author:
+ * 	Dr. Dirk Grunwald
+ * 	Dept. of Computer Science
+ * 	Campus Box 430
+ * 	Univ. of Colorado, Boulder
+ * 	Boulder, CO 80309
+ * 
+ * 	grunwald@colorado.edu
+ * 	
+ */ 
+
+#define IHaveSubdirs
+
+COMMON_SUBDIRS	= libtex Xtex Mftobdf Dviselect Dviconcat Texx Iptex Fonts
+
+#include "./Imake.Config"
+
+#ifdef sun
+  SUBDIRS = $(COMMON_SUBDIRS) Texsun
+#endif
+
+#ifdef unixpc
+   SUBDIRS = libtex Tex3b1 Dviselect
+#endif
+
+#if !defined(sun) && !defined(unixpc)
+   SUBDIRS = $(COMMON_SUBDIRS)
+#endif
+
+TARSUBDIRS = libtex Doc Xtex Mftobdf Dviselect Dviconcat \
+		Texx Iptex Fonts Texsun Tex3b1
+
+/*
+ *  This makes GNU make misbehave and is no longer needed.
+ * MFLAGS	=IprBin=$(IprBin) FontDesc=$(FontDesc)
+ */
+
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)' 'CCOPTIONS=$(CCOPTIONS)'
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))
+
+
+FILES	= Imakefile Imake.Config fontdesc-example README 
+VERSION	=2.16.1
+FTP	=/usr/ftp
+tar:
+	for file in $(TARSUBDIRS);\
+	do\
+		(cd $$file ; make Makefile ) ;\
+	done
+	cd ..;\
+	rm -f SeeTeX.tar ; \
+	tar cf SeeTeX.tar SeeTeX/Imakefile ; \
+	for file in $(FILES);\
+	do\
+	  tar rf SeeTeX.tar SeeTeX/$$file; \
+	done; \
+	cd SeeTeX; \
+	for file in $(TARSUBDIRS);\
+	do\
+	  (cd $$file ; $(MAKE) TARFILE=SeeTeX.tar PRODUCT=SeeTeX tar);\
+	done ; \
+	cd .. ; \
+	mv SeeTeX.tar /usr/tmp ; \
+	rm -rf /usr/tmp/SeeTeX ; \
+	(cd /usr/tmp;\
+	 tar xvf SeeTeX.tar;\
+	 rm -f SeeTeX.tar $(FTP)/pub/SeeTeX/SeeTeX*.tar*;\
+	 tar crf $(FTP)/pub/SeeTeX/SeeTeX-$(VERSION).tar SeeTeX;\
+	 rm -rf SeeTeX ;\
+	 compress $(FTP)/pub/SeeTeX/SeeTeX-$(VERSION).tar)
+	(cd Xtex; \
+		make xtex-$(VERSION).tar.Z;\
+		mv xtex-$(VERSION).tar.Z $(FTP)/pub/SeeTeX)
+	
+
+libtex/lib.a:
+	cd libtex; make
+
+xtex:	libtex/lib.a
+	cd Xtex; make
+
+mftobdf XeT/mftobdf:
+	cd Mftobdf ; make mftobdf
+
+dviselect Dviselect/dviselect:
+	cd Dviselect ; make dviselect
+
+texsun Texsun/texsun:
+	cd Texsun ; make texsun
+
+texx Texx/texx:
+	cd Texx ; make texx
+
+iptex Iptex/iptex:
+	cd Iptex ; make iptex
+
+

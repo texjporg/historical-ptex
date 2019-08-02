@@ -1,0 +1,72 @@
+/*
+ * $Header$
+ *
+ * Copyright (c) 1990, Ricoh Company Ltd.
+ *	All rights reserved.
+ */
+       /* INCLUDES = -I$(TOP) */
+       INCLUDES =
+        /* DEPLIBS = XawClientDepLibs */
+        DEPLIBS = 
+/* LOCAL_LIBRARIES = XawClientLibs */
+LOCAL_LIBRARIES =
+  /* SYS_LIBRARIES = -lm */
+  SYS_LIBRARIES =
+    CDEBUGFLAGS = -g -DDEBUG
+    /* CDEBUGFLAGS = -O */
+
+     COMMONSRCS = main.c amble.c cmd.c misc.c findfile.c \
+		  font.c pkfont.c pxlfont.c jfont.c
+     COMMONOBJS = main.o amble.o cmd.o misc.o findfile.o \
+		  font.o pkfont.o pxlfont.o jfont.o
+
+/* Definitions for local configuration */
+R240FONTS = "\"/usr/lib/tex/pkfonts.240R\""
+RICOHFONTS = "\"/usr/lib/tex/pkfonts:/usr/lib/tex/fonts.300C\""
+CANNONFONTS = "\"/usr/lib/tex/fonts.300C:/usr/lib/tex/pkfonts:\""
+/* FAXFONTS = "\"/usr/lib/tex/pkfonts.200:/usr/lib/tex/pkfonts\"" */
+/* FAXFONTS = "\"/usr/lib/tex/pkfonts.200\"" */
+FAXFONTS = "\"/usr/lib/tex/pkfonts.240R\""
+
+           SRCS = $(COMMONSRCS) lp3320.c \
+		lp3320_r98.c
+           OBJS = $(COMMONOBJS) lp3320.o \
+		lp3320_r98.o
+       PROGRAMS = dvi2lp3320 \
+		dvi2lp3320_r98
+        MANUALS =
+
+AllTarget($(PROGRAMS))
+
+NormalProgramTarget(dvi2lp3320,$(COMMONOBJS) lp3320.o,/**/,/**/,/**/)
+SpecialObjectRule(lp3320.o,lp3320.c,-DFONTAREA=$(R240FONTS) -DUSEEXACTROMFONT)
+
+NormalProgramTarget(dvi2lp4081,$(COMMONOBJS) lp4081.o,/**/,/**/,/**/)
+SpecialObjectRule(lp4081.o,lp4081.c,-DFONTAREA=$(RICOHFONTS))
+
+NormalProgramTarget(dvi2ps,$(COMMONOBJS) lpps.o,/**/,/**/,/**/)
+
+NormalProgramTarget(dvi2us,$(COMMONOBJS) lpus.o,/**/,/**/,/**/)
+
+NormalProgramTarget(dvi2drw,$(COMMONOBJS) drw_lp4081.o,/**/,/**/,/**/)
+SpecialObjectRule(drw_lp4081.o,drw_lp4081.c,-DFONTAREA=$(RICOHFONTS))
+
+NormalProgramTarget(dvi2lp6000,$(COMMONOBJS) lp6000.o,/**/,/**/,/**/)
+SpecialObjectRule(lp6000.o,lp6000.c,-DFONTAREA=$(RICOHFONTS))
+
+NormalProgramTarget(dvi2imagen,$(COMMONOBJS) lpimagen.o,/**/,/**/,/**/)
+SpecialObjectRule(lpimagen.o,lpimagen.c,-DFONTAREA=$(CANNONFONTS))
+
+NormalProgramTarget(dvi2raster,$(COMMONOBJS) lppixrect.o,/**/,/**/,-lpixrect)
+SpecialObjectRule(lppixrect.o,lppixrect.c,-DFONTAREA=$(FAXFONTS))
+
+NormalProgramTarget(dvi2lp3320_r98,$(COMMONOBJS) lp3320_r98.o,/**/,/**/,/**/)
+SpecialObjectRule(lp3320_r98.o,lp3320_r98.c,-DFONTAREA=$(R240FONTS) -DUSEEXACTROMFONT -DR98)
+
+InstallMultiple($(PROGRAMS), $(USRLIBDIR))
+/* InstallMultipleMan($(MANUALS), $(MANDIR)) */
+DependTarget()
+LintTarget()
+
+clean::
+	$(RM) $(PROGRAMS)

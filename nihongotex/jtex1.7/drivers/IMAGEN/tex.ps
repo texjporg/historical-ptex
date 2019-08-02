@@ -1,0 +1,326 @@
+%
+% This is poor version
+%
+
+/TeXhax@Dictionary 200 dict def
+TeXhax@Dictionary begin
+/Set@Matrix 6 array def
+
+%%
+%% for paper.
+%%
+
+/@A4     where {pop} {/@A4     {} def} ifelse
+/@A3     where {pop} {/@A3     {} def} ifelse
+/@B4     where {pop} {/@B4     {} def} ifelse
+/@B5     where {pop} {/@B5     {} def} ifelse
+/@Note   where {pop} {/@Note   {} def} ifelse
+/@Legal  where {pop} {/@Legal  {} def} ifelse
+/@Letter where {pop} {/@Letter {} def} ifelse
+
+/Setup@Portrait {
+  /Paper@Height exch def
+  /Paper@Width  exch def
+  72 Paper@Height 72 mul 72 sub translate
+  72 @Resolution div dup neg scale
+  Set@Matrix currentmatrix pop
+  /@Landscape false def
+} def
+
+/Setup@Landscape {
+  /Paper@Height exch def
+  /Paper@Width  exch def
+  72 72 translate
+  90 rotate
+  72 Resolution div dup neg scale
+  Mtrx currentmatrix pop
+  /@Landscape true def
+} def
+
+/Paper@A4              {@A4      8.3 11.7 Setup@Portrait} def
+/Paper@A3              {@A3     11.7 16.6 Setup@Portrait} def
+/Paper@B4              {@B4     10.1 14.4 Setup@Portrait} def
+/Paper@B5              {@B5      7.2 10.1 Setup@Portrait} def
+/Paper@Note            {@Note    8.3 11.7 Setup@Portrait} def
+/Paper@Legal           {@Legal   8.5 14   Setup@Portrait} def
+/Paper@Letter          {@Letter  8.5 11   Setup@Portrait} def
+/Paper@A3Landscape     {@A3     11.7 16.6 Setup@Landscape} def
+/Paper@A4Landscape     {@A4      8.3 11.7 Setup@Landscape} def
+/Paper@B4Landscape     {@B4     10.1 14.4 Setup@Landscape} def
+/Paper@B5Landscape     {@B5      7.2 10.1 Setup@Landscape} def
+/Paper@NoteLandscape   {@Note    8.5 11   Setup@Landscape} def
+/Paper@LegalLandscape  {@Legal   8.5 14   Setup@Landscape} def
+/Paper@LetterLandscape {@Letter  8.5 11   Setup@Landscape} def
+
+/@manualfeed { statusdict /manualfeed true put } def
+
+/@Envelope {
+  statusdict /manualfeed true put
+  Paper@Letter initmatrix
+  306 108 translate
+  74  72  translate
+  90 rotate
+  72 Resolution div dup neg scale
+  Mtrx currentmatrix pop
+  /Landscape false def
+} def
+
+/COPIES {
+  /#copies exch def
+} def
+
+%%
+%% for font.
+%%
+
+/@NewFont {
+  /New@Faimly  exch def
+  /Font@Size   exch def
+  /@Correction exch def
+  New@Faimly 7 dict def
+  New@Faimly load   begin
+    /FontType    3                                      def
+    /FontMatrix  [@Correction 0 0 @Correction neg 0 0]  def
+    /FontBBox    [0 0 1 1]                              def
+    /BitMaps     Font@Size array                        def
+    /BuildChar   {CharBuilder}                          def
+    /Encoding    256 array                              def
+    0 1 255 {Encoding exch /.notdef put} for
+  end
+  New@Faimly New@Faimly load definefont pop
+} def
+
+/Char@Image    {Char@Data 0 get} def
+/Char@Width    {Char@Data 1 get} def
+/Char@Height   {Char@Data 2 get} def
+/Char@XOffset  {Char@Data 3 get} def
+/Char@YOffset  {Char@Data 4 get} def
+/Char@TFMwidth {Char@Data 5 get} def
+
+/CharBuilder {
+  /Char@Code exch def
+  /Font@Dict exch def
+  /Char@Data Font@Dict
+  /BitMaps get Char@Code get def
+  Char@Data null eq not {
+    Char@TFMwidth 0
+    Char@XOffset  neg
+    Char@YOffset  neg
+    Char@Width  Char@XOffset sub
+    Char@Height Char@YOffset sub
+    setcachedevice
+    Char@Width Char@Height true [1 0  0 1 Char@XOffset Char@YOffset]
+    {Char@Image} imagemask
+  } if
+} def
+
+/@SetFont {
+  setfont () pop
+} def
+
+/@DownBitmap {
+  /Char@Code exch def
+  dup 0 get length 2 lt {
+    pop [<00> 1 1 0 0 8.00]
+  } if
+  /Char@Data  exch def
+  currentfont /BitMaps  get Char@Code Char@Data put
+  currentfont /Encoding get Char@Code 
+  dup (   ) cvs cvn
+  put
+} def
+
+%%
+%% for Printing.
+%%
+
+/@BeginingOfPrinting {
+  Paper@A4
+} def
+
+/@BeginingOfPage {
+  /Save@Image save def
+  Set@Matrix setmatrix
+  0 0 moveto
+} def
+
+/@EndOfPrinting {
+  end
+} def
+
+/@EndOfPage {
+  showpage 
+  Save@Image
+  restore
+} def
+
+/@Rule { % /ru
+  /Y@Dim exch neg def
+  /X@Dim exch def
+  /X@Pos currentpoint /Y@Pos exch def def
+  newpath
+  X@Pos      Y@Pos  moveto
+  X@Dim      0     rlineto
+  0          Y@Dim rlineto
+  X@Dim neg  0     rlineto
+  closepath  fill
+  X@Pos      Y@Pos moveto
+} def
+
+%%
+%% for `\special'.
+%%
+
+/@SpecialDefaults { 
+  /hsi Paper@Width  72 mul def
+  /vsi Paper@Height 72 mul def
+  /hof 0 def
+  /vof 0 def
+  /hsc 1 def
+  /vsc 1 def
+  /rotat 0 def
+  /CLIP false def
+  /BBOX false def
+  /EPSF false def
+} def
+
+/@hsize    {/hsi   exch def /CLIP true def} def
+/@vsize    {/vsi   exch def /CLIP true def} def
+/@hoffset  {/hof   exch def} def
+/@voffset  {/vof   exch def} def
+/@hscale   {/hsc   exch def} def
+/@vscale   {/vsc   exch def} def
+/@rotation {/rotat exch def} def
+
+/@bbox {
+  /ury exch def
+  /urx exch def
+  /lly exch def
+  /llx exch def
+  /BBOX true def
+} def
+
+/@epsf {
+  /hsi 0 def
+  /vsi 0 def
+  /EPSF true def
+} def
+
+/@setclipper {
+  CLIP {
+    newpath
+    0   0   moveto
+    hsi 0   rlineto
+    0   vsi rlineto
+    hsi neg 0 rlineto 
+    closepath clip} if
+} def
+
+/@BeginSpecial {
+  /SpecialSave save def
+  currentpoint transform initgraphics itransform translate
+  @Landscape {90 rotate} if
+  @SpecialDefaults
+  @MacSetUp
+} def
+
+/@SetSpecial {
+  hof vof translate
+  EPSF BBOX and
+  {hsi 0 eq {
+     vsi 0 eq {hsc vsc} {vsi ury lly sub div dup} ifelse
+     }
+     {vsi 0 eq {
+        hsi urx llx sub div dup
+     }
+     {hsi urx llx sub div vsi ury lly sub div} ifelse} ifelse scale
+     llx neg ury neg translate
+     newpath
+     llx lly moveto
+     urx llx sub 0 rlineto
+     0 ury lly sub rlineto
+     llx urx sub 0 rlineto
+     closepath clip
+     0  setgray
+     0  setlinecap
+     1  setlinewidth
+     0  setlinejoin
+     10 setmiterlimit
+     [] 0 setdash
+     newpath
+     /showpage {} def
+   }
+   {@setclipper hsc vsc scale rotat rotate} ifelse
+} def
+
+/@EndSpecial { 
+  SpecialSave restore
+} def
+
+/@MacSetUp {
+  userdict /md known {
+    userdict /md get type /dicttype eq {
+      /MacDrwgs true def
+      md begin
+        /txpose {
+          pxs pys neg scale
+        } bind def
+        /cp {
+          pop pop pm restore
+        } bind def
+      end
+    } if
+  } if    
+} def
+
+/@push {
+  /SpecialSave save def
+  currentpoint translate
+  newpath
+} def
+
+/@pop {
+  SpecialSave restore
+} def
+
+/@pn {
+  setlinewidth
+} def
+
+/@pt {
+  moveto currentpoint currentlinewidth 2 div 0 360 arc fill
+} def
+
+/@ln {
+  moveto lineto stroke
+} def
+
+/@ar {
+  /endangle exch def
+  /startangle exch def
+  /yrad exch def
+  /xrad exch def
+  /yc exch def
+  /xc exch def
+  /savematrix matrix currentmatrix def
+  xc yc moveto
+  currentpoint translate
+  newpath
+  xrad yrad scale
+  0 0 1 startangle endangle arc
+  savematrix setmatrix
+} def
+
+/@wh {1    setgray} def
+/@sh {0.75 setgray} def
+/@bk {0    setgray} def
+
+%%
+%%
+%%
+
+end
+
+%%
+%%  end of TeXhax@Dictionary definition
+%%

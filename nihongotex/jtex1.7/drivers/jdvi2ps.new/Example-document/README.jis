@@ -1,0 +1,22 @@
+% pstex/README.jis
+%
+
+pstexはPostScriptファイルを組み込むための(.psz)ファイルを作成するプログラム
+です。pstexはjdvi2kpsと共に使用されます。
+
+pstexの詳しいドキュメントについては，pstexのドキュメントを参照してください。
+pstexのドキュメント出力方法は，以下のとうりです。
+
+	% jlatex pstex
+	% pstex pstex
+	% jlatex pstex
+	% jdvi2kps pstex | lpr -Pxxx
+
+	注意　既にjlatex,pstex,jdvi2kpsがインストールされている環境が必要で
+	      す。
+
+
+				宮部 義幸, 垣内 隆志
+				松下電器産業株式会社 情報通信関西研究所
+				JUNET: miyabe@sy6.isl.mei.co.jp
+				       kakiuchi@sy6.isl.mei.co.jp

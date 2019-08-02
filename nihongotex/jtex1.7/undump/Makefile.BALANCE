@@ -1,0 +1,11 @@
+BINDIR=/usr/local/bin
+CFLAGS = -O
+
+undump: & undump.o scanargs.o
+	cc -o undump undump.o scanargs.o
+
+clean:
+	rm -f *.o
+
+install: undump
+	cp undump $(BINDIR)

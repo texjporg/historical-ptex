@@ -1,0 +1,10 @@
+SJIS および EUC に対応した makeindex です。
+それぞれのコードに対応した makeindex を生成するには、
+src/makefile の CFLAGS の設定を変更してください。
+
+SJIS の場合	CFLAGS	      = -O -DKANJI -DSJIS
+EUC の場合	CFLAGS	      = -O -DKANJI -DEUC
+
+それ以外の部分は、何も手を加えていません。
+
+					ryoi-k@ascii.co.jp

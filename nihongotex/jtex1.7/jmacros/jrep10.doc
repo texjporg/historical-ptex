@@ -1,0 +1,421 @@
+% REPORT DOCUMENT STYLE -- Released 23 September 1985
+%    for LaTeX version 2.09
+% Copyright (C) 1985 by Leslie Lamport
+
+%  ****************************************
+%  *              フォント                *
+%  ****************************************
+%
+
+\lineskip 1pt            % 文字のサイズがどれでも \lineskip は 1pt です。
+\normallineskip 1pt
+\def\baselinestretch{1}
+
+% サイズを変更するコマンド(\SIZE)が指定されると
+%        \@setsize\SIZE{BASELINESKIP}\FONTSIZE\@FONTSIZE
+%  というコマンドを実行して、次の各パラメータを変更します。
+%   BASELINESKIP = そのサイズでの標準のベースラインスキップ。(実際の値は
+%                  \baselinestretch * BASELINESKIP になります。)
+%
+%  \FONTSIZE     = フォントのサイズを示すコマンド名.  現在使用可能な
+%                  (preloaded)フォントのサイズは \vpt (5pt), \vipt (6pt),
+%                  \viipt (etc.), \viiipt, \ixpt, \xpt, \xipt, \xiipt,
+%                  \xivpt, \xviipt, \xxpt, \xxvpt です.
+%  \@FONTSIZE    = フォントサイズのコマンドと同じですが、名前の前に
+%                  '@' が付いています。例えば \FONTSIZE = \xivpt であれば
+%                  \@FONTSIZE = \@xivpt になります.
+%
+% ドキュメント・スタイルでは, \normalsize にあたるコマンドとして
+% \@normalsize コマンドを定義しています.  \normalsize コマンドは
+% 他のサイズ変更コマンドとは違って, normalsize にするだけの
+% コマンドになっています. 
+
+\def\@normalsize{\@setsize\normalsize{15pt}\xpt\@xpt
+\abovedisplayskip 10pt plus2pt minus5pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus3pt%
+\belowdisplayshortskip 6pt plus3pt minus3pt%
+\let\@listi\@listI} 
+
+\def\small{\@setsize\small{11pt}\ixpt\@ixpt
+\abovedisplayskip 8.5pt plus 3pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus2pt%
+\belowdisplayshortskip 4pt plus2pt minus 2pt
+\def\@listi{\leftmargin\leftmargini \topsep 4pt plus 2pt minus 2pt\parsep 2pt
+plus 1pt minus 1pt\itemsep \parsep}}
+
+\def\footnotesize{\@setsize\footnotesize{9.5pt}\viiipt\@viiipt
+\abovedisplayskip 6pt plus 2pt minus 4pt%
+\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus 1pt%
+\belowdisplayshortskip 3pt plus 1pt minus 2pt
+\def\@listi{\leftmargin\leftmargini \topsep 3pt plus 1pt minus 1pt%
+\parsep 2pt plus 1pt minus 1pt \itemsep \parsep}}
+
+\def\scriptsize{\@setsize\scriptsize{8pt}\viipt\@viipt}
+\def\tiny{\@setsize\tiny{6pt}\vpt\@vpt}
+\def\large{\@setsize\large{17pt}\xiipt\@xiipt}
+\def\Large{\@setsize\Large{21pt}\xivpt\@xivpt}
+\def\LARGE{\@setsize\LARGE{25pt}\xviipt\@xviipt}
+\def\huge{\@setsize\huge{28pt}\xxpt\@xxpt}
+\def\Huge{\@setsize\Huge{33pt}\xxvpt\@xxvpt}
+
+\normalsize  % normalsize のフォントにします.
+
+
+%  ****************************************
+%  *         ページ・レイアウト           *
+%  ****************************************
+%
+% どのマージンの大きさもページの上および左から1インチ内側の点が基準になります。
+
+% サイド・マージン:
+\if@twoside                 % 両面印字での値:
+   \oddsidemargin 44pt      %   奇数ページの左マージン
+   \evensidemargin 82pt     %   偶数ページの左マージン
+   \marginparwidth 107pt    %   傍注の幅.
+\else                       % 片面印字での値:
+   \oddsidemargin 63pt      %   \oddsidemargin = \evensidemargin にしましょう
+   \evensidemargin 63pt
+   \marginparwidth 90pt 
+\fi
+\marginparsep 11pt          % 外側のマージンと傍注の間のスペース
+
+
+% VERTICAL SPACING:        
+                         % ページの上:
+\topmargin 27pt          %    running head を出力するボックスと
+                         %       ぺージの一番上との距離.
+                         %    box containing running head.
+\headheight 12pt         %    running head を出力するボックスの高さ.
+\headsep 25pt            %    running head とテキストの間のスペース.
+% \topskip = 10pt        %    ページの最初の行での '\baselineskip'.
+                         % ページの下:
+\footheight 12pt         %    running foot を出力するボックスの高さ.
+\footskip 30pt           %    foot を出力するボックスのベースラインと
+                         %       テキストの最後の行のベースラインとの距離.
+
+
+% テキストの大きさ:
+
+\textheight 578pt        % テキストの高さ (running head および foot 以外の
+                         % 脚注や図も含めたもの)
+\textwidth 327pt         % テキスト行の幅.
+                         % 二段組モード用:
+\columnsep 10pt          %    コラムの間のスペース.
+\columnseprule 0pt       %    コラムの間の線の太さ.
+
+% \raggedbottom コマンドで 'ragged bottom' ページになります: 
+% ページは正確に \textheight に伸ばされずに, 自然な高さになります.
+
+% 脚注(FOOTNOTESコマンド):
+
+\footnotesep 6.65pt   % 各脚注の最初での strut の高さ
+                      % ここではノーマルな \footnotesize の strut に
+                      % 設定しているので, 脚注間に余計にはスペースは空きません.
+
+\skip\footins 9pt plus 4pt minus 2pt  % テキストの最後の行と
+                                      % 最初の脚注との間のスペース.
+
+% フロート: (フロートとは figure環境 や table 環境のようなものです.)
+%
+%  テキスト・ページでのフロート:
+%
+%    一段組あるいは二段組の一段モード:
+\floatsep 12pt plus 2pt minus 2pt        % テキスト・ページで, 次あるいは前の
+                                         % float との間のスペース.
+\textfloatsep 20pt plus 2pt minus 4pt    % ページの上あるいは下にある float と
+                                         % テキストの間のスペース.
+\intextsep 12pt plus 2pt minus 2pt       % テキストのなかにある float と
+                                         % テキストとの間のスペース.
+\@maxsep 20pt                            % \floatsep, \textfloatsep および 
+                                         % \intextsep (minus the stretch 
+                                         % and shrink)の最大値.
+%    二段組での二段抜きフロート:
+\dblfloatsep 12pt plus 2pt minus 2pt     % 二段組モードでの二段組用 float の
+                                         % パラメータで \floatsep と同じ.
+\dbltextfloatsep 20pt plus 2pt minus 4pt % 同じく \textfloatsep と同じ.
+\@dblmaxsep 20pt                         % \dblfloatsep と \dbltexfloatsep
+                                         % の最大値.
+
+%  フロート・ページあるいはフロート・コラム:
+%    一段組あるいは二段組の一段モード:
+\@fptop 0pt plus 1fil    % float ページあるいは段の上の stretch. (Must be    
+                         % 0pt plus ...)                                    
+\@fpsep 8pt plus 2fil    % float ページあるいは段の float 間のスペース.
+\@fpbot 0pt plus 1fil    % float ページあるいは段の下の stretch. (Must be 
+                         % 0pt plus ... )                                   
+
+%    二段組での二段抜きフロート:
+\@dblfptop 0pt plus 1fil % float ページの上の stretch. (Must be 0pt plus ...)
+\@dblfpsep 8pt plus 2fil % float ページの float 間のスペース.
+\@dblfpbot 0pt plus 1fil % float ページの下の stretch. (Must be 0pt plus ... )                                   
+% 傍注(\marginparコマンド):
+%
+\marginparpush 5pt       % 2 つの傍注の間に挿入されるスペースの最小値.
+
+
+%  ****************************************
+%  *             パラグラフ               *
+%  ****************************************
+%
+\parskip 0pt plus 1pt              % パラグラフの間のスペース
+\parindent 15pt                    % パラグラフ・インデント
+\topsep 8pt plus 2pt minus 4pt     % list 環境 やパラグラフ環境で
+                                   % \parskip を加えた上に加えるスペース.
+\partopsep 2pt plus 1pt minus 1pt  % 環境の前に空行が指定されとときに
+                                   % \parskip と \topsep を加えた上に
+                                   % 加えるスペース.
+\itemsep 4pt plus 2pt minus 1pt    % リスト項目の間に \parskip を加えた上に
+                                   % 加えるスペース.
+
+% 各状況でのページ・ブレークのペナルティを定義します.
+
+\@lowpenalty   51      % \nopagebreak[1] あるいは \nolinebreak[1] でのペナルティ
+\@medpenalty  151      % \nopagebreak[2] あるいは \nolinebreak[2] でのペナルティ
+\@highpenalty 301      % \nopagebreak[3] あるいは \nolinebreak[3] でのペナルティ
+
+\@beginparpenalty -\@lowpenalty    % list環境やパラグラフ環境の前
+\@endparpenalty   -\@lowpenalty    % list環境やパラグラフ環境の後
+\@itempenalty     -\@lowpenalty    % リスト項目の間
+
+% \clubpenalty         % 'Club line'  at bottom of page.
+% \widowpenalty        % 'Widow line' at top of page.
+% \displaywidowpenalty % Math display widow line.
+% \predisplaypenalty   % Breaking before a math display.
+% \postdisplaypenalty  % Breaking after a math display.
+% \interlinepenalty    % Breaking at a line within a paragraph.
+% \brokenpenalty       % Breaking after a hyphenated line.
+
+
+%    ****************************************
+%    *            章とセクション            *
+%    ****************************************
+%
+%
+
+\def\part{\cleardoublepage   % 新しいページをスタート.
+   \thispagestyle{plain}     % part のページ・スタイルは 'plain'
+  \if@twocolumn              % IF 二段組のスタイル:
+     \onecolumn              %  THEN \onecolumn
+     \@tempswatrue           %       @tempswa := true
+    \else \@tempswafalse     %  ELSE @tempswa := false
+  \fi                        % FI
+  \hbox{}\vfil               % fil を加えてタイトルを真中にする.
+  \bgroup  \centering        % BEGIN centering
+  \secdef\@part\@spart}     
+
+
+\def\@part[#1]#2{\ifnum \c@secnumdepth >-2\relax  % IF secnumdepth > -2
+        \refstepcounter{part}                     %   THEN part カウンタを増やす
+        \addcontentsline{toc}{part}{\thepart      %        目次へエントリ
+        \hspace{1em}#1}\else                      %   ELSE 番号なし出力
+        \addcontentsline{toc}{part}{#1}\fi        % FI
+   \markboth{}{}
+    \ifnum \c@secnumdepth >-2\relax	% IF secnumdepth > -2
+      \huge\bf Part \thepart		%   THEN 'Part' と番号をプリント
+    \par				%         スタイルは \huge bold.
+    \vskip 20pt \fi			%        タイトルの前にスペース.
+    \Huge \bf				% FI
+    #1\@endpart}			% title を \Huge bold でプリント.
+    
+    
+% \@endpart はパートのページを終了するコマンドです.
+%
+\def\@endpart{\par\egroup		% END centering 
+   \vfil\newpage			% ページの最後に fil を加える.
+   \if@twoside				% IF 両面印字
+       \hbox{}				%   THEN ブランク・ページの作成.
+       \thispagestyle{empty}  
+       \newpage        
+   \fi					% FI
+   \if@tempswa				% IF @tempswa = true       
+     \twocolumn				%   THEN \twocolumn 
+   \fi}					% FI
+
+\def\@spart#1{\Huge \bf #1\@endpart}	% title を \huge boldface でプリント
+
+
+
+% \@makechapterhead {TEXT} : \chapter コマンド用 heading の作成.
+%
+
+\def\@makechapterhead#1{             % \chapter コマンド用 heading.
+  \vspace*{50pt}                     % テキスト・ページの上のスペース
+  { \parindent 0pt \raggedright 
+    \ifnum \c@secnumdepth >\m@ne     % IF secnumdepth > -1 THEN
+      \huge\bf \@chapapp{} \thechapter % 'Chapter' と番号をプリント.
+    \par 
+    \vskip 20pt \fi                    % 番号とタイトルの間のスペース
+    \Huge \bf                        % タイトル.
+    #1\par 
+    \nobreak                         % 改ページの禁止
+    \vskip 40pt                      % タイトルとテキストの間のスペース.
+  } }
+
+% \@makeschapterhead {TEXT} : \chapter* コマンド用 heading の作成.
+%
+
+\def\@makeschapterhead#1{            % \chapter* コマンド用 heading
+  \vspace*{50pt}                     % ページの上のスペース
+  { \parindent 0pt \raggedright 
+    \Huge \bf                        % タイトル.
+    #1\par 
+    \nobreak                         % 改ページの禁止
+    \vskip 40pt                      % タイトルとテキストの間のスペース.
+  } }
+
+% \secdef{UNSTARCMDS}{STARCMDS} :
+%    \chapter あるいは \section コマンドを \@startsection を使わずに
+%   定義したときには, 次のような \secdef を使用できます:
+%       \def\chapter { ... \secdef \CMDA \CMDB }
+%       \def\CMDA    [#1]#2{ ... }  % \chapter[...]{...} を定義するコマンド
+%       \def\CMDB    #1{ ... }      % \chapter*{...} を定義するコマンド
+
+\def\chapter{\clearpage      % 新しいページをスタート.
+   \thispagestyle{plain}     % chapter のページのページスタイルを 'plain' にする
+   \global\@topnum\z@        % このページの最初に figure が出力されるのを防ぐ.
+   \@afterindenttrue         % 最初のパラグラフのインデントを禁止.
+   \secdef\@chapter\@schapter}   % インデントするためには
+                                 % \@afterindenttrue を変更します.
+
+\def\@chapter[#1]#2{\ifnum \c@secnumdepth >\m@ne
+        \refstepcounter{chapter}
+        \typeout{\@chapapp\space\thechapter.}
+        \addcontentsline{toc}{chapter}{\protect
+        \numberline{\thechapter}#1}\else
+      \addcontentsline{toc}{chapter}{#1}\fi
+   \chaptermark{#1}
+   \addtocontents{lof}{\protect\addvspace{10pt}} % 図目次や表目次のために
+   \addtocontents{lot}{\protect\addvspace{10pt}} % chapter 間にスペースを加える.
+   \if@twocolumn                                 % 二段組かどうか.
+           \@topnewpage[\@makechapterhead{#2}]  
+     \else \@makechapterhead{#2}
+           \@afterheading                  % chapter や section heading の後で
+     \fi}                                  % 呼ばれるルーチン.
+
+\def\@schapter#1{\if@twocolumn \@topnewpage[\@makeschapterhead{#1}]
+        \else \@makeschapterhead{#1} 
+              \@afterheading\fi}
+
+% \@startsection {NAME}{LEVEL}{INDENT}{BEFORESKIP}{AFTERSKIP}{STYLE} 
+%            optional * [ALTHEADING]{HEADING}
+%    セクションを開始するコマンド.
+%    NAME       : 例えば, 'subsection'
+%    LEVEL      : セクション・レベルの数 --- 例えば chapter=1, section = 2.
+%                 セクション番号は (LEVEL <= secnumdepth の値) のときにだけ
+%                 プリントされます.
+%    INDENT     : 左マージンからの heading のインデント.
+%    BEFORESKIP : ここに指定した絶対値の分だけ heading の前にスキップします.
+%                 負のときには, heading に続くテキストのパラグラフ・
+%                 インデントが削除されます.
+%    AFTERSKIP  : 正であれば, heading の後にスキップし,
+%                       そうでなければ マイナスのスキップを挿入して
+%                       見出しにくっつくことになります.
+%    STYLE      : スタイルを設定するコマンド.
+%  '*' がなければ, カウンタをインクリメントします.
+%  '*' があれば, [ALTHEADING] 引数は指定できません.
+%  セクション・コマンドは普通 \@startsection + 最初の 6 つの引数で指定します.
+
+\def\section{\@startsection {section}{1}{\z@}{3.5ex plus 1ex minus 
+    .2ex}{2.3ex plus .2ex}{\Large\bf}}
+\def\subsection{\@startsection{subsection}{2}{\z@}{3.25ex plus 1ex minus 
+   .2ex}{1.5ex plus .2ex}{\large\bf}}
+\def\subsubsection{\@startsection{subsubsection}{3}{\z@}{3.25ex plus
+1ex minus .2ex}{1.5ex plus .2ex}{\normalsize\bf}}
+\def\paragraph{\@startsection
+     {paragraph}{4}{\z@}{3.25ex plus 1ex minus .2ex}{-1em}{\normalsize\bf}}
+\def\subparagraph{\@startsection
+     {subparagraph}{4}{\parindent}{3.25ex plus 1ex minus 
+     .2ex}{-1em}{\normalsize\bf}}
+
+% デフォルトの \...mark コマンドに初期化.  (ページ・スタイルの定義参照)
+%
+
+\def\chaptermark#1{}
+% \def\sectionmark#1{}           % 定義済
+% \def\subsectionmark#1{}
+% \def\subsubsectionmark#1{}
+% \def\paragraphmark#1{}
+% \def\subparagraphmark#1{}
+
+% secnumdepth というカウンタの値には セクション番号付きで出力する
+% 一番高いセクション・コマンドのレベルを指定します.
+%
+
+\setcounter{secnumdepth}{2}
+
+% 付録(\appendix)
+%
+% \appendix コマンドは次のような処理をします:
+%    -- chapter カウンタを 0 にリセット
+%    -- \@chapapp を Appendix に設定(for messages)
+%    -- appendix 番号を出力するための chapter カウンタを再定義
+%    -- section カウンタを 0 にリセット
+%    -- 付録のタイトルと heading が chapter のタイトルとheadingとは
+%       別にしたければ, \chapter コマンドを再定義.
+
+\def\appendix{\par
+  \setcounter{chapter}{0}
+  \setcounter{section}{0}
+  \def\@chapapp{Appendix}
+  \def\thechapter{\Alph{chapter}}}
+
+
+%    ****************************************
+%    *               リスト                 *
+%    ****************************************
+%
+
+% 次のコマンドは list 環境のパラメータのデフォルトの値を
+% 設定するためのコマンドです.
+% 各パラメータの意味については LaTeX マニュアルを参照してください.
+% デフォルトで list 環境のパラメータは次のように設定されています.
+% まず \rightmargin, \listparindent, \itemindent は 0pt です.
+% そして K 番目のレベルのリストでは \@listK というコマンドが呼ばれます.
+% ただし 'K' は 'i' 'ii' ... 'vi' です. ( 例えば, \@listiii は
+% 3番目のレベルのリストで呼ばれます.) 約束として \@listK では 
+% \leftmargin を \leftmarginK に設定します.
+%
+% 効率化のために 第 1 レベルのリストの値は最初に定義されているので,
+% \@listi は単に \leftmargin を設定するだけです.
+
+\leftmargini 25pt
+\leftmarginii 22pt     % > \labelsep + width of '(m)'
+\leftmarginiii 18.7pt  % > \labelsep + width of 'vii.'
+\leftmarginiv 17pt     % > \labelsep + width of 'M.'
+\leftmarginv 10pt
+\leftmarginvi 10pt
+
+\leftmargin\leftmargini
+\labelwidth\leftmargini\advance\labelwidth-\labelsep
+\labelsep 5pt
+
+\def\@listI{\leftmargin\leftmargini \parsep 4pt plus 2pt minus 1pt\topsep 8pt
+plus 2pt minus 4pt\itemsep 4pt plus 2pt minus 1pt}
+\let\@listi\@listI
+\@listi 
+
+\def\@listii{\leftmargin\leftmarginii
+   \labelwidth\leftmarginii\advance\labelwidth-\labelsep
+   \topsep 4pt plus 2pt minus 1pt
+   \parsep 2pt plus 1pt minus 1pt
+   \itemsep \parsep}
+
+\def\@listiii{\leftmargin\leftmarginiii
+    \labelwidth\leftmarginiii\advance\labelwidth-\labelsep
+    \topsep 2pt plus 1pt minus 1pt 
+    \parsep \z@ \partopsep 1pt plus 0pt minus 1pt
+    \itemsep \topsep}
+
+\def\@listiv{\leftmargin\leftmarginiv
+     \labelwidth\leftmarginiv\advance\labelwidth-\labelsep}
+
+\def\@listv{\leftmargin\leftmarginv
+     \labelwidth\leftmarginv\advance\labelwidth-\labelsep}
+
+\def\@listvi{\leftmargin\leftmarginvi
+     \labelwidth\leftmarginvi\advance\labelwidth-\labelsep}
+
+

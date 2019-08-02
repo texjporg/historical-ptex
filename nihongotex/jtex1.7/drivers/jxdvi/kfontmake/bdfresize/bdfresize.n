@@ -1,0 +1,45 @@
+.TH BDFRESIZE 1 "20 August 1988" "BDF"
+.SH NAME
+bdfresize \- Resize BDF Format Font
+.SH SYNOPSIS
+bdfresize
+[-w \fIfactor\fP] [-h \fIfactor\fP] [-f \fIfactor\fP] [\fIbdf-file\fP]
+.SH DESCRIPTION
+.I Bdfresize
+is a command to magnify or reduce font which is described with
+the standard BDF format.
+If
+.I bdf-file
+is not specified, it reads from stdin.
+.I Bdfresize
+outputs the result to stdout in BDF format.
+A few COMMENT lines are inserted to the result font.
+FONT, ATTRIBUTES, STARTCHAR and ENCODING lines are copied from source font.
+If a syntax error occurs in source font,
+.I bdfresize
+stop its process.
+.SH OPTIONS
+.TP 8
+.BI \-w " factor"
+Specifies resize factor for the font width.
+.TP 8
+.BI \-h " factor"
+Specifies resize factor for the font height.
+.TP 8
+.BI \-f " factor"
+Same as specifying both \fB-w\fP and \fB-h\fP with same \fIfactor\fP.
+.PP
+\fIfactor\fP is described either of following forms.
+.br
+	<digits>
+.br
+	<digits>/<digits>
+.SH "SEE ALSO"
+Character Bitmap Distribution Format 2.1 (Adobe Systems, Inc.)
+.SH AUTHOR
+Copyright (C) 1988 by Hiroto Kagotani.
+.br
+	kagotani@cs.titech.junet
+
+Everyone is permitted to do anything on this program
+including copying, transplanting, debugging, and modifying. 

@@ -1,0 +1,15 @@
+README
+Makefile
+COPYRIGHT
+MANIFEST.new
+MANIFEST.fonts
+src/Makefile
+src/jdvi2kps.h
+src/jdvi2kps.c
+src/dvi_private.c
+src/fopenp.c
+src/postscript.c
+src/init_font.c
+src/jtex.ps
+src/jdvi2kps.1
+src/jdvi2kps.man

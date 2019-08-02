@@ -1,0 +1,5 @@
+This directory contains Shift-JIS KANJI code files and source
+codes for the Shift-JIS KANJI version Japanese TeX.
+
+If you need an EUC KANJI version of Japanese TeX,
+you must execute the EUCsetup.

@@ -1,0 +1,31 @@
+To make tex3b1 you need to first check the Makefile and edit it as
+necessary.  Then type make.  It should all work.
+
+If you can arrange it, link with -lmalloc.  This will require using
+something like "shcc" if you also want the shared library.  I find
+tex3b1 is somewhat quicker than with the "standard" version of malloc.
+
+Further comments from the Author.
+----------------------------------------------------------------------
+
+From: andy@csvax.caltech.edu (Andy Fyfe)
+To: grunwald@foobar.Colorado.EDU
+Subject: Re:  fix to dvistuff.c from SeeTeX 2.15.1
+Date: Mon, 7 May 90 16:50:38 PDT
+
+I've bundled up a shar archive that I hope can be easily integrated into
+the current SeeTeX distrubution.  It's 2 directories, tex3b1 which contains
+the tex3b1 sources, and libtex which contains Makefile.3b1 and libtex.patches.
+I made the makefile in tex3b1 automatically call make in the libtex directory.
+I was hoping to just override the make variables and use the existing
+Makefile, but it would insist on calling imake to make a new makefile when
+compiling font.c.  So I gave in and made my own.  The patches change the
+#include's for 2 of the libtex source files (under the direction of
+#ifdef unixpc).  Seek.c needs to include <fcntl.h> instead of <sys/fcntl.h>
+and font.c needs to include <unistd.h> (in order to get the definition for
+R_OK).
+
+If this is not what you need let me know so I can fix it up.
+
+Andy Fyfe				andy@csvax.caltech.edu
+

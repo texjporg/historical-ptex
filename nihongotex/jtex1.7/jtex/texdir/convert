@@ -1,0 +1,14 @@
+#!/bin/csh
+# This script does all the work necessary to convert tex.p to a C program.
+#
+cp jtex.pool ../ctex/jtex.pool
+cat jtex.defines jtex.p \
+	| ../web2cdir/web2c -t \
+	| ../web2cdir/fixwrites -t \
+	| ../web2cdir/regfix \
+	| (cd ../ctex; ../web2cdir/splitup)
+cat coerce.h fixcoerce.h jtex.h > ../ctex/coerce.h
+rm -f coerce.h stack.stack
+cd ../ctex
+cp texd.h orig_texd.h
+../texdir/ini_to_trip orig_texd.h trip_texd.h

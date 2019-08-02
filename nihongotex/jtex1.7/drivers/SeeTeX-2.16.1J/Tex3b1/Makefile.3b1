@@ -1,0 +1,86 @@
+#
+# Makefile for dvi previewer.
+#
+LIBTEX = ../libtex
+BINDIR = /usr/local/bin
+MANDIR = /usr/man
+INCLUDES = -I$(LIBTEX)
+#
+# The following defaults will be used unless overriden here
+#   -DPAGE_HEIGHT=11				/* inches */
+#   -DPAGE_WIDTH=8.5				/* inches */
+#   -DFONT_DPI=300
+#   -DBLACKNESS=3
+#   -DSHRINK_1=3
+#   -DSHRINK_2=4
+#   -DSHRINK_3=2
+#
+# add -DNOSHARED_LIB if you want a non-shared-lib form form of tex3b1
+#
+DEFINES = # -DFONT_DPI=360 -DBLACKNESS=9 -DSHRINK_1=4 -DSHRINK_2=6 -DSHRINK_3=2
+#
+#  Use these for gcc
+#
+CC = gcc
+COPT = -O -fstrength-reduce
+CFLAGS = $(COPT) $(INCLUDES) $(DEFINES)
+LD = gcc
+LDFLAGS = -shlib # -s
+LIBS = $(LIBTEX)/libtex.a -lmalloc
+OBJS = tex3b1.o assist.o misc.o vfprintf.o doprnt.o
+#
+# ...and these for cc
+#
+#CC = cc
+#COPT = -O
+#CFLAGS = $(COPT) $(INCLUDES) $(DEFINES)
+#LD = ld
+#LDFLAGS = /lib/crt0s.o /lib/shlib.ifile 
+#LIBS = $(LIBTEX)/libtex.a 
+#OBJS = tex3b1.o assist.o misc.o vfprintf.o doprnt.o
+#
+#
+# and now for libtex!
+#
+FONTDESC = /usr/local/lib/tex/fontdesc
+#
+MANSRC = tex3b1.1
+
+default: tex3b1
+
+tex3b1: $(OBJS) $(LIBTEX)/libtex.a
+	$(LD) $(LDFLAGS) $(OBJS) $(LIBS) -o tex3b1
+
+tex3b1.o: tex3b1.c $(LIBTEX)/dvistuff.h Makefile
+
+vfprintf.o doprnt.o:
+	ar x /lib/libc.a $@
+
+$(LIBTEX)/libtex.a:
+	cd $(LIBTEX); \
+	$(MAKE) -f Makefile.3b1 "CC=$(CC)" "COPT=$(COPT)" "FontDesc=$(FONTDESC)"
+
+$(SRCS) $(MANSRC):
+	co -q $@
+
+inst-tex3b1: tex3b1 tex3b1.1
+	cp tex3b1 $(BINDIR)/tex3b1
+	strip $(BINDIR)/tex3b1
+	chown bin $(BINDIR)/tex3b1
+	chgrp bin $(BINDIR)/tex3b1
+	chmod 755 $(BINDIR)/tex3b1
+	cp tex3b1.1 $(MANDIR)/man1/tex3b1.1
+	chown bin $(MANDIR)/man1/tex3b1.1
+	chgrp bin $(MANDIR)/man1/tex3b1.1
+	chmod 664 $(MANDIR)/man1/tex3b1.1
+
+depend:
+	makedepend $(CFLAGS) $(SRCS)
+
+install: inst-tex3b1
+
+clean:
+	-rm -f *.o tex3b1 a.out core
+
+lint:
+	lint -u $(INCLUDES) tex3b1.c 

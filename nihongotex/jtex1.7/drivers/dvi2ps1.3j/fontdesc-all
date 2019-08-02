@@ -1,0 +1,39 @@
+#
+# Sample dvi2ps font description file.
+#
+#	TYPE	SPEC	SUB	PATH
+# Computer Modern font
+font	pk	*	3	/usr/lib/tex/fonts/pk/%f.%mpk
+#font	gf	*	3	/usr/lib/tex/fonts/gf/%f.%mgf
+#font	pxl	*	3	/usr/lib/tex/fonts/pxl/%f.%mpxl
+# Dainippon font
+font	pk	*	3	/usr/lib/tex/jfonts/pk/%f.%mpk
+#font	gf	*	3	/usr/lib/tex/jfonts/gf/%f.%mgf
+#font	pxl	*	3	/usr/lib/tex/jfonts/pxl/%f.%mpxl
+#
+# built-in font
+#font	jstfm	*	0	/usr/lib/tex/lwjfonts/tfm/%f.tfm
+#font	jfm	*	0	/usr/lib/tex/lwjfonts/jfm/%f.tfm
+#font	tfm	*	0	/usr/lib/tex/lwfonts/tfm/%f.tfm
+#font	bitex	*	0	/usr/lib/tex/lwfonts/lwtex/%f.lwtex
+#
+# jfm file may be found as	/usr/lib/tex/jfonts/jfm/%f.tfm (not used)
+#	%f = dm10  ->  %F = dm, %D = 10
+#	%j = jsy, jroma, jhira, jkata, ..., jka, jkb, ...
+#jfont	pk	*	3	/usr/lib/tex/jfonts/pk/%F%j%D.%mpk
+#
+#  DNP font  pk,gf,pxl
+packdict	dm
+packdict	dg
+#  JIS font  pk,gf,pxl
+packdict	jis
+#
+# built-in kanji
+#		FAM	PITCH	BUILT-IN KANJI FONT NAME
+#  jstfm NTT JTeX with DNP font tfm / jfm ASCII JTeX with DNP font tfm
+bikanji		dm	fixed	Ryumin-Light-H
+bikanji		dg	fixed	GothicBBB-Medium-H
+#  jfm ASCII JTeX with (modified) LBP8 font tfm i.e. min* goth*
+#include		%%DVI2PSLIB%%/LBP-LW-fix.ps
+#bikanji		min	var	Ryumin-Light-Ext-H-LBP
+#bikanji		goth	var	GothicBBB-Medium-Ext-H-LBP

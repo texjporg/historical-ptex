@@ -1,0 +1,97 @@
+JTeX 対応パッチについて：
+
+このパッチは texx2.9 を NTT 及び ASCII 版の JTeX に対応させるための
+ものです。トップディレクトリの Makefile 中の JTEX 変数を適当に変更
+して、make して下さい。
+
+NTT 版： -DNTTJTEX を指定して下さい。ただし、パッチ作者は NTT 版の
+    テストができる環境にありませんので、うまくいく保証はありません。
+    漢字フォントを持たない場合は、k14 を NTTJTeX に合うように分割し
+    て、利用して下さい。
+
+ASCII 版： -DASCIIJTEX を指定して下さい。漢字フォントを持たず、k14
+    を代わりに使う場合は、-DFAKEKANJI も指定して下さい。min10 など
+    の漢字フォントがある場合、mftobdf が正しく動くかどうかは分かり
+    ません。（おそらく動かないでしょう。直して下さい）
+
+
+texx2 を動かすための環境：
+
+以下で述べるのは、パッチ作者の環境（ASCII 版、漢字フォントなし）に
+おけるものです。
+
+texx2/b-i-f.new はオリジナルの build-initial-fonts を修正したもので
+す。中のディレクトリ名、もとのフォントの解像度などを適宜変更し、75dpi
+のものを作る時は  b-i-f.new 75  とすると、75dpi 用のフォントが作ら
+れます。
+
+app-default/Texx2 は、用意したフォントにしたがって変更しておく必要が
+あります。元が 300dpi のフォントを用いて、75dpi と 150dpi を作った
+場合は、
+	*.mag:250
+	*.smallMag:250
+	*.largeMag:500
+	*.dpi:300
+として下さい。また、USletter ではなく、A4 にしたいなら、
+	*.paperWidth: 8.26
+	*.paperHeight: 11.67
+も加えるといいでしょう。もちろん、これらは .Xdefaults にも書けます。
+
+K14 などの X11 用のフォントを漢字フォントとして用いる時は、bdfresize
+で必要な大きさのフォントを作り、fonts.alias によって texx2 からアク
+セスできるようにして下さい。
+パッチ作者の場合、LasorShot に 40 ドット明朝体カートリッジをつけてい
+ますが、次のような fonts.alias を用いています。75dpi と 150dpi の物
+を用意しています。
+----- fonts.alias ------
+...
+min5.75		   k14.5
+min6.75		   k14.6
+min7.75		   k14.7
+min8.75		   k14.7
+min9.75		   k14.10
+min10.75	   k14.10
+min10.82	   k14.10
+min10.90	   k14.12
+min10.108	   k14.15
+min10.130	   k14.15
+min10.156	   k14.20
+min10.187	   k14.25
+min5.150	   k14.10
+min6.150	   k14.12
+min7.150	   k14.15
+min8.150	   k14.15
+min9.150	   k14.20
+min10.150	   k14.20
+min10.164	   k14.20
+min10.180	   k14.25
+min10.216	   xdvi30
+min10.259	   xdvi30
+min10.311	   xdvi40
+min10.373	   xdvi50
+goth5.75	   k14.5
+goth6.75	   k14.6
+goth7.75	   k14.7
+goth8.75	   k14.7
+goth9.75	   k14.10
+goth10.75	   k14.10
+goth10.82	   k14.10
+goth10.90	   k14.12
+goth10.108	   k14.15
+goth10.130	   k14.15
+goth10.156	   k14.20
+goth10.187	   k14.25
+goth5.150	   k14.10
+goth6.150	   k14.12
+goth7.150	   k14.15
+goth8.150	   k14.15
+goth9.150	   k14.20
+goth10.150	   k14.20
+goth10.164	   k14.20
+goth10.180	   k14.25
+goth10.216	   xdvi30
+goth10.259	   xdvi30
+goth10.311	   xdvi40
+goth10.373	   xdvi50
+
+                                1989/July/9  kagotani@cs.titech.ac.jp

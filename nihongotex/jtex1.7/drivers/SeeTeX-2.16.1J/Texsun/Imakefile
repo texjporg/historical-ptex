@@ -1,0 +1,31 @@
+#include "../Imake.Config"
+
+OBJS	=texsun.o
+SRCS	=texsun.c
+
+FILES	=Imakefile Makefile.raw $(SRCS) texsun.icon texsun.man texsunprint.sh
+
+      LIBTEXROOT= ../
+      LIBTEXSRC	= ../libtex
+         LIBTEX	= $(LIBTEXSRC)/libtex.a
+      DEPLIBTEX	= $(LIBTEX)
+        SYSLIBS = -lsuntool -lsunwindow -lpixrect -lm
+        DEPLIBS = $(DEPLIBTEX) 
+LOCAL_LIBRARIES = $(LIBTEX)
+
+        DEFINES = -I$(LIBTEXROOT)
+
+all: texsun
+
+NormalProgramTarget(texsun,$(OBJS),$(DEPLIBS),$(LOCAL_LIBRARIES),$(SYSLIBS))
+InstallProgram(texsun, $(BINDIR))
+InstallManPage(texsun,$(MANDIR))
+DependTarget()
+TagsTarget()
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/Texsun/$$file; \
+	done

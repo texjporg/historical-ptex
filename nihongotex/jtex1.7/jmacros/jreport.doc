@@ -1,0 +1,664 @@
+% REPORT DOCUMENT STYLE -- Released 17 December 1985
+%    for LaTeX version 2.09
+% Copyright (C) 1985 by Leslie Lamport
+
+\typeout{Document Style `jreport'. <22 Mar 88>}
+
+%  デフォルトの文字の大きさを指定するオプション・スタイルは、
+%  次のような大きさ毎のタイプ指定コマンドを定義しているファイ
+%  ルを読み込むようになっています。
+%       10pt : JREP10, 11pt : JREP11, 12pt : JREP12
+%  これらはファイル名の最後の数字を \@ptsize に定義することに
+%  よって実現しています。
+%
+
+\def\@ptsize{0}				% デフォルトは REP10.STY
+\@namedef{ds@11pt}{\def\@ptsize{1}}	% 11pt オプションでは 
+					% REP11.STY を読み込みます.
+\@namedef{ds@12pt}{\def\@ptsize{2}}	% 12pt オプションでは
+					% REP12.STY を読み込みます.
+
+%  片面印字か両面印字か。
+%
+% \@twosidefalse			% デフォルトは片面印字です。
+\def\ds@twoside{\@twosidetrue		% twoside オプションを定義します。
+           \@mparswitchtrue}		%	Marginparがページの外側にな
+					%	るようにします。
+%  draft オプション
+%
+% \overfullrule = 0pt             % デフォルトでは overfull hbox は付けません。
+\def\ds@draft{\overfullrule 5pt}  % overfull hbox を出力するようにします。
+
+%  \@options コマンドは、指定されたオプション・スタイルの処理を行う
+%  コマンドです。
+%  例えば入力ファイルの \documentstyle コマンドに FOO オプションが
+%  指定されていて、\ds@FOO というコマンドが定義されていれば、
+%  \ds@FOO を実行します。
+%  また BAR コマンドが指定されていて、\ds@BAR というコマンドが
+%  定義されていなければ、現在の (main).STY ファイルを実行した後に
+%  BAR.sty ファイルを読み込み、実行します。
+
+\@options
+
+\input jrep1\@ptsize.sty\relax
+
+
+%    ****************************************
+%    *               リスト                 *
+%    ****************************************
+%
+
+% 番号付け(enumerate環境)
+%  enumere 環境では
+%        enumi    enumii    enumiii    enumiv
+%  の4つのカウンタを使用します。ただし enumN は N番目のレベルの
+%  番号付けを制御するためのカウンタです。
+%  またラベルはそれぞれ
+%        \labelenumi    \labelenumii    \labelenumiii    \labelenumiv
+%  というコマンドで作成されます。
+%  \p@enumN\theenumN コマンドは \ref コマンドの出力を定義したものです。
+
+\def\labelenumi{\arabic{enumi}.}    
+\def\theenumi{\arabic{enumi}}     
+ 
+\def\labelenumii{(\alph{enumii})}
+\def\theenumii{\alph{enumii}}
+\def\p@enumii{\theenumi}
+
+\def\labelenumiii{\roman{enumiii}.}
+\def\theenumiii{\roman{enumiii}}
+\def\p@enumiii{\theenumi(\theenumii)}
+
+\def\labelenumiv{\Alph{enumiv}.}
+\def\theenumiv{\Alph{enumiv}}     
+\def\p@enumiv{\p@enumiii\theenumiii}
+
+%  箇条書(itemize 環境)
+%  itemize 環境では
+%      \labelitemi    \labelitemii    \labelitemiii    \labelitemiv
+%  という4つのコマンドを使って、レベルに応じた様々なラベルを
+%  出力するようになっています。
+
+\def\labelitemi{$\bullet$}
+\def\labelitemii{\bf --}
+\def\labelitemiii{$\ast$}
+\def\labelitemiv{$\cdot$}
+
+
+% 詩(verse 環境)
+%   verse 環境は list 環境のパラメータを賢く使って実現しています。
+%   ユーザは行末を \\ で指定します。
+%   これは \\ を \@centercr に \let して実現しています。
+%
+\def\verse{\let\\=\@centercr  
+  \list{}{\itemsep\z@ \itemindent -1.5em\listparindent \itemindent 
+          \rightmargin\leftmargin\advance\leftmargin 1.5em}\item[]}
+\let\endverse\endlist
+
+% 引用文(quotation 環境)
+%   Fills lines
+%   Indents paragraph
+%   
+\def\quotation{\list{}{\listparindent 1.5em
+    \itemindent\listparindent
+    \rightmargin\leftmargin\parsep 0pt plus 1pt}\item[]}
+\let\endquotation=\endlist
+
+% 引用(quote 環境) -- パラグラフのインデントがない以外は quotation と同じです。
+%
+\def\quote{\list{}{\rightmargin\leftmargin}\item[]}
+\let\endquote=\endlist
+
+% 説明(description 環境)
+%
+%  description環境ではラベルのフォーマットを変更するために、
+%  ラベルを作成するコマンドを \descriptionlabel コマンドに
+%  定義しなおしています。
+
+\def\descriptionlabel#1{\hspace\labelsep \bf #1}
+\def\description{\list{}{\labelwidth\z@ \itemindent-\leftmargin
+       \let\makelabel\descriptionlabel}}
+
+\let\enddescription\endlist
+
+\newdimen\descriptionmargin
+\descriptionmargin=3em
+
+
+%    ****************************************
+%    *           その他の環境               *
+%    ****************************************
+%
+%
+% 定理(theorem-like 環境) 
+%  \@begintheorem ... \@endtheorem は (ユーザが定義した) theorem-like環境の
+%  最初と最後に実行するコマンドです。
+%  ただし \@opargbegintheorem はオプション引数が指定されたときにだけ実行します。
+%  Cf. LATEX.TEX.
+%
+% \def\@begintheorem#1#2{\it \trivlist \item[\hskip \labelsep{\bf #1\ #2}]}
+% \def\@opargbegintheorem#1#2#3{\it \trivlist
+%       \item[\hskip \labelsep{\bf #1\ #2\ (#3)}]}
+% \def\@endtheorem{\endtrivlist}
+
+
+% タイトル・ページ(titlepage 環境)
+%  titlepage 環境はページ番号なしで、1ページをスタートし、終了する環境です。
+%  またこのときページ番号を 0 にリセットします。
+%  二段組のスタイルでは、このページだけ一段で組みます。
+
+\def\titlepage{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+     \else \newpage \fi \thispagestyle{empty}\c@page\z@}
+
+\def\endtitlepage{\if@restonecol\twocolumn \else \newpage \fi}
+
+% 行列と表(array 環境 と tabular 環境)
+%
+
+\arraycolsep 5pt     % array 環境のコラム間のスペースの半分。
+\tabcolsep 6pt       % tabular 環境のコラム間のスペースの半分。
+\arrayrulewidth .4pt % array 環境 および tabular 環境での線の太さ。
+\doublerulesep 2pt   % array 環境 および tabular 環境の２重線の間のスペース。
+
+% タブ(tabbing 環境)
+%
+\tabbingsep \labelsep   % \' コマンドで使用するスペース。(LaTeX manual 参照)
+
+% ミニページ(minipage 環境)
+%  \@minipagerestore は minipage 環境の始めに実行されるコマンドで,
+%  minipage 環境のなかだけ別のパラメータ値を使用したいときなどに
+%  それを定義しておきます.
+%  このスタイルでは何もしません.
+%
+% \skip\@mpfootins : これは普通の脚注での \skip\footins と同じことを
+%                     minipage 環境のなかで行うものです。
+
+\skip\@mpfootins = \skip\footins
+
+% 枠線付きボックス(\framebox, \fbox コマンド)
+%
+\fboxsep = 3pt    % \fbox や \framebox でテキストと枠線との間のスペース.
+\fboxrule = .4pt  % \fbox や \framebox で作成される枠線の太さ.
+
+
+%    ****************************************
+%    *           章とセクション             *
+%    ****************************************
+%
+% カウンタの定義:
+%
+% \newcounter{NEWCTR}[OLDCTR] : カウンタ NEWCTR を定義します.
+%                               ただしこのカウンタは OLDCTR が増えると,
+%                               0 にリセットされます. 
+%                               OLDCTR は定義済でなければなりません.
+
+\newcounter{part}
+\newcounter {chapter}
+\newcounter {section}[chapter]
+\newcounter {subsection}[section]
+\newcounter {subsubsection}[subsection]
+\newcounter {paragraph}[subsubsection]
+\newcounter {subparagraph}[paragraph]
+
+% カウンタ CTR を定義すると, \theCTR というマクロが定義され,
+% このマクロを使って カウンタ CTR の値をプリントすることができます.
+% \theCTR は次のどれかに定義されています.
+%
+%  \arabic{COUNTER} : COUNTER の値をアラビア数字でプリントします.
+%  \roman{COUNTER}  : COUNTER の値を小文字のローマ数字でプリントします.
+%  \Roman{COUNTER}  : COUNTER の値を大文字のローマ数字でプリントします.
+%  \alph{COUNTER}   : COUNTER の値を小文字の英字でプリントします.
+%                         1 = a, 2 = b, etc.
+%  \Alph{COUNTER}   : COUNTER の値を大文字の英字でプリントします.
+%                           1 = A, 2 = B, etc.
+%
+
+\def\thepart          {\Roman{part}}
+\def\thechapter       {\arabic{chapter}}
+\def\thesection       {\thechapter.\arabic{section}}
+\def\thesubsection    {\thesection.\arabic{subsection}}
+\def\thesubsubsection {\thesubsection .\arabic{subsubsection}}
+\def\theparagraph     {\thesubsubsection.\arabic{paragraph}}
+\def\thesubparagraph  {\theparagraph.\arabic{subparagraph}}
+                     
+% \@chapapp を 'Chapter' に初期化します.  \appendix コマンドでは
+% これを 'Appendix' に再定義します.
+%
+\def\@chapapp{Chapter}
+
+
+
+%    ****************************************
+%    *               目次など               *
+%    ****************************************
+%
+% \subsection コマンドは
+%       \contentsline{subsection}{TITLE}{PAGE}
+% というコマンドを .toc ファイルに書き込みます. ただし TITLE はエントリ名,
+% PAGE はページ番号です.
+% もし subsection に番号がふられていれば, TITLE は
+%       \numberline{NUM}{HEADING}
+% というフォームになります. ただし NUM は \thesubsection で作成される
+% 数字です. 他のセクション・コマンドも同様です.
+%
+% 'figure' 環境の \caption コマンドは
+%    \contentsline{figure}{\numberline{NUM}{CAPTION}}{PAGE}
+% というコマンドを .lof ファイルに書き込みます. ただし NUM は \thefigure
+% で作成される番号で, CAPTION は図の題名です.
+% 'table' 環境でも同様です.
+%
+% \contentsline{NAME} というコマンドは \l@NAME に展開されます.  
+% つまり目次の場合だと, \l@chapter, \l@section, \l@subsection, ...
+% などのコマンドが必要になりますし, 図目次であれば, \l@figure という
+% コマンドが必要です. 
+% これらのコマンドはほとんどの場合, 次の \@dottedtocline コマンドを
+% 使って定義します. 
+%
+% \@dottedtocline{LEVEL}{INDENT}{NUMWIDTH}{TITLE}{PAGE}
+%    LEVEL    : (LEVEL <= 'tocdepth' カウンタの値)であればエントリを
+%               作成します. 例えば \chapter のレベルは 0, \section の
+%               レベルは 1 です.
+%    INDENT   : 外側からどれだけインデントして目次のラインを始めるか.
+%             
+%    NUMWIDTH : TITLE に \numberline コマンドが含まれている場合, 
+%               セクション番号をタイプセットするボックスの幅.
+%   
+% このコマンドは次の3つのパラメータを使用します. 
+% これらのパラメータは \def コマンドで設定します.
+% (フォントによって変化するように em などの単位を使用するとよいでしょう.)
+%   \@pnumwidth : ページ番号を出力するためのボックスの幅.
+%   \@tocrmarg  : エントリが複数行になるときの右のマージン.
+%                 これは \@tocrmarg >= \@pnumwidth でなければなりません.
+%   \@dotsep    : ドットの間の距離で mu 単位です.
+%                 2 とか 1.7 とかの数字で示します.
+
+\def\@pnumwidth{1.55em}
+\def\@tocrmarg {2.55em}
+\def\@dotsep{4.5}
+\setcounter{tocdepth}{2}
+
+
+% 目次
+%  reportスタイルでは, \tableofcontents, \listoffigures 等はすべて
+%  一段のスタイルで出力します. @restonecol
+
+
+\def\tableofcontents{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+  \fi\chapter*{目 次\@mkboth{目 次}{目 次}}
+  \@starttoc{toc}\if@restonecol\twocolumn\fi}
+
+\def\l@part#1#2{\addpenalty{-\@highpenalty}
+   \addvspace{2.25em plus 1pt}  % part の前に空けるスペース
+   \begingroup
+   \@tempdima 3em         % パート番号を出力するためのボックスの幅,  
+     \parindent \z@ \rightskip \@pnumwidth        %% \numberline で使用します.
+     \parfillskip -\@pnumwidth   
+     {\large \bf          % パートは \large のボールドで出力.
+     \leavevmode          % horizontal モードにする TeX のコマンド.
+     #1\hfil \hbox to\@pnumwidth{\hss #2}}\par
+     \nobreak             % パート番号とエントリの間で
+   \endgroup}                    %% 改ページが起こらないようにする.
+
+
+\def\l@chapter#1#2{\pagebreak[3] 
+   \vskip 1.0em plus 1pt  % chapter の前に空けるスペース
+   \@tempdima 1.5em       % 省番号を出力するためのボックスの幅.
+   \begingroup
+     \parindent \z@ \rightskip \@pnumwidth 
+     \parfillskip -\@pnumwidth   
+     \bf                  % 章はボールドで出力.
+     \leavevmode          % horizontal モードにする TeX のコマンド.
+     #1\hfil \hbox to\@pnumwidth{\hss #2}\par
+   \endgroup}
+      
+\def\l@section{\@dottedtocline{1}{1.5em}{2.3em}}
+\def\l@subsection{\@dottedtocline{2}{3.8em}{3.2em}}
+\def\l@subsubsection{\@dottedtocline{3}{7.0em}{4.1em}}
+\def\l@paragraph{\@dottedtocline{4}{10em}{5em}}
+\def\l@subparagraph{\@dottedtocline{5}{12em}{6em}}
+
+% 図目次
+%
+\def\listoffigures{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+  \fi\chapter*{図 目 次\@mkboth
+  {図 目 次}{図 目 次}}\@starttoc{lof}\if@restonecol\twocolumn
+  \fi}
+
+\def\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
+
+% 表目次
+%
+\def\listoftables{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+  \fi\chapter*{表 目 次\@mkboth
+  {表 目 次}{表 目 次}}\@starttoc{lot}\if@restonecol
+  \twocolumn\fi}
+
+\let\l@table\l@figure
+
+
+
+%    ****************************************
+%    *               参考文献               *
+%    ****************************************
+%
+% thebibliography 環境は次のコマンドを実行します:
+%
+%  \def\newblock{\hskip .11em plus .33em minus -.07em} --
+%      `closed' 形式の定義.  
+%      where the blocks (major units of information) of an entry run together.
+%
+%  \sloppy  -- 参考文献の途中での改行を起こりにくくします.
+% 
+%  \sfcode`\.=1000\relax --
+%       `.' (period) で文末スペースを出力しないようにします.
+
+\def\thebibliography#1{\chapter*{Bibliography\@mkboth
+  {関 連 書 籍}{関 連 書 籍}}\list
+  {[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+    \advance\leftmargin\labelsep
+    \usecounter{enumi}}
+    \def\newblock{\hskip .11em plus .33em minus .07em}
+    \sloppy
+    \sfcode`\.=1000\relax}
+
+\let\endthebibliography=\endlist
+
+% \def\@biblabel#1{[#1]\hfill}  % \bibitem[...] コマンドでラベルを
+                                % 作成するマクロ.
+% \def\@cite#1{[#1]}            % \cite コマンドの出力を作成するマクロ.
+
+
+
+%    ****************************************
+%    *                索引                  *
+%    ****************************************
+%
+% 索引(theindex 環境)
+% 1つのエントリをそれぞれパラグラフとして処理して, 二段組形式で出力します.
+% ユーザは \item \subitem \subsubitem コマンドでエントリを作成し, 
+% 各アルファベットの最初のエントリの前には, \indexspace コマンドで
+% 空白をあけるようにします.
+
+\newif\if@restonecol
+
+\def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+\columnseprule \z@
+\columnsep 35pt\twocolumn[\@makeschapterhead{索 引}]
+  \@mkboth{索 引}{索 引}\thispagestyle{plain}\parindent\z@
+  \parskip\z@ plus .3pt\relax\let\item\@idxitem}
+
+\def\@idxitem{\par\hangindent 40pt}
+
+\def\subitem{\par\hangindent 40pt \hspace*{20pt}}
+
+\def\subsubitem{\par\hangindent 40pt \hspace*{30pt}}
+
+\def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
+
+\def\indexspace{\par \vskip 10pt plus 5pt minus 3pt\relax}
+
+
+%    ****************************************
+%    *                脚注                  *
+%    ****************************************
+%
+% \footnoterule はテキストと脚注の間に線を引くためのマクロです.
+% このマクロによって出力される線は vertical space としては
+% 0 でなければなりませんから, 負のスキップを使用して, 
+% 線を出力したために取られたスペースを補う必要があります.
+% (PLAIN.TEX 参照.)
+
+\def\footnoterule{\kern-3\p@   
+  \hrule width .4\columnwidth 
+  \kern 2.6\p@}                 % \hrule の高さはデフォルトで .4 ポイントです.
+
+% \newcounter{footnote}
+\@addtoreset{footnote}{chapter}  % 脚注番号は章ごとに付けます.
+
+%   \@makefntext{NOTE} :
+%        実際の脚注を作成するためのマクロで, マークとして \@thefnmark,
+%        テキストとして NOTE を出力します. これは実際には
+%        幅が \columnwidth ( つまり \hsize = \columnwidth ) の
+%        \parbox のなかで呼ばれます.
+%
+%        次のマクロ定義は 脚注の全行を 10pt インデントして,
+%        パラグラフの最初の行だけ 1em インデントする定義です.
+%        これらのインデントの大きさを変更したければ, '10pt'(両方とも)
+%        あるいは '1em' というところを値を変えてやるだけです.
+%        マークは脚注に対して右詰めになります.
+%          \long\def\@makefntext#1{\@setpar{\@@par\@tempdima \hsize 
+%             \advance\@tempdima-10pt\parshape \@ne 10pt \@tempdima}\par
+%             \parindent 1em\noindent \hbox to \z@{\hss$^{\@thefnmark}$}#1}
+%
+%        ここではこれより簡単なマクロを定義しており,
+%        脚注のテキストも普通のパラグラフのようにセットして,
+%        パラグラフの最初や脚注の最初だけインデントするように
+%        なっています. ですから後のパラグラフに必要な \parindent
+%        を設定しておいて, マークを出力する前にはインデントが
+%        起こらないようにしています.
+
+\long\def\@makefntext#1{\parindent 1em\noindent 
+            \hbox to 1.8em{\hss$^{\@thefnmark}$}#1}
+
+% \@makefnmark : テキスト中の脚注マークを作成するマクロ. 
+% デフォルトを使用しています.
+%
+
+
+
+%    ****************************************
+%    *      figure環境 と table環境         *
+%    ****************************************
+% 
+% フロート位置のパラメータ. これらの説明は LaTeX manual を参照してください.
+%
+\setcounter{topnumber}{2}
+\def\topfraction{.7}
+\setcounter{bottomnumber}{1}
+\def\bottomfraction{.3}
+\setcounter{totalnumber}{3}
+\def\textfraction{.2}
+\def\floatpagefraction{.5}
+\setcounter{dbltopnumber}{2}
+\def\dbltopfraction{.7}
+\def\dblfloatpagefraction{.5}
+
+% \@makecaption{NUMBER}{TEXT} : 図や表の題を作成するマクロ.
+%      NUMBER : 図あるいは表の番号--e.g., 'Figure 3.2' 
+%      TEXT   : 題のテキスト.
+%  マクロは正しい大きさの \parbox のなかで \normalsize で使用されます.
+
+\long\def\@makecaption#1#2{
+   \vskip 10pt 
+   \setbox\@tempboxa\hbox{#1: #2}
+   \ifdim \wd\@tempboxa >\hsize   % IF 複数行になる:
+       \unhbox\@tempboxa\par      %   THEN パラグラフとしてセット.
+     \else                        %   ELSE  センタリング.
+       \hbox to\hsize{\hfil\box\@tempboxa\hfil}  
+   \fi}
+
+% タイプが TYPE のフロートを定義するために(e.g., TYPE = figure), 
+% ドキュメント・スタイルでは次を定義する必要があります.
+%
+%  \fps@TYPE   : タイプが TYPE のフロートのデフォルトの出力位置指定.
+%
+%  \ftype@TYPE : タイプが TYPE のフロートのタイプ番号. 各 TYPE はユニークな
+%                タイプ番号を持っており, その番号は 2 の倍数になっています.
+%                例えば figure はタイプ番号 1 ですし, table は 2, そして 
+%                program はタイプ番号が 4 のようになっています.
+%
+%  \ext@TYPE   : タイプが TYPE のフロートの目次を作成するためのファイルの
+%                拡張子. 例えば, \ext@figure = 'lof' になります.
+%
+%  \fnum@TYPE  : 題名の番号を作成するマクロ.
+%                例えば, \fnum@TYPE == Figure \thefigure.
+%
+%  実際にはフロートを作成する環境のコマンド --- 例えば \figure と
+%  \endfigure コマンド --- は次に説明する \@float および \end@float
+%  マクロを使って定義しています.
+%
+%  \@float{TYPE}[PLACEMENT] : タイプが TYPE の一段用出力のフロート環境を
+%  始めます. PLACEMENT は出力位置指定です. デフォルトの PLACEMENT の値は
+%  \fps@TYPE で定義されます. 環境を終了するのは \end@float コマンドです.
+%  例えば, \figure == \@float{figure}, \endfigure == \end@float.
+
+
+% 図(figure 環境)
+
+\newcounter{figure}[chapter]
+\def\thefigure{\thechapter.\@arabic\c@figure}
+
+\def\fps@figure{tbp}
+\def\ftype@figure{1}
+\def\ext@figure{lof}
+\def\fnum@figure{Figure \thefigure}
+\def\figure{\@float{figure}}
+\let\endfigure\end@float
+\@namedef{figure*}{\@dblfloat{figure}}
+\@namedef{endfigure*}{\end@dblfloat}
+
+% 表(table 環境)
+%
+\newcounter{table}[chapter]
+\def\thetable{\thechapter.\@arabic\c@table}
+
+\def\fps@table{tbp}
+\def\ftype@table{2}
+\def\ext@table{lot}
+\def\fnum@table{Table \thetable}
+\def\table{\@float{table}}
+\let\endtable\end@float
+\@namedef{table*}{\@dblfloat{table}}
+\@namedef{endtable*}{\end@dblfloat}
+
+
+%    ****************************************
+%    *           タイトルと要約             *
+%    ****************************************
+%
+%
+% タイトルと要約の形式は article スタイルで titlepage オプションを指定
+% したときと同じです.
+
+\input titlepage.sty
+
+
+%    ****************************************
+%    *          ページ・スタイル            *
+%    ****************************************
+%
+% ページ・スタイル 'foo' を定義するには,  \ps@foo というコマンドを
+% 定義します. このコマンドはローカル定義として扱われます.
+% これらのコマンドを定義するときには, 定義のなかにスペースが入らないように
+% 注意しないと, 実際にコマンドを使用したときに訳のわからないスペースを
+% 出力することになることもありますから, 注意してください.
+%
+% \ps@... コマンドは running head や feet---等を定義するために
+% \@oddhead, \@oddfoot, \@evenhead, および \@evenfoot マクロを定義します.
+% 例えば, \@oddhead は 奇数ページのヘッダ部分の出力を作成するマクロ定義です.
+% これは幅が \textwidth の \hbox のなかで呼ばれます.
+%
+% セクション・コマンドで決まる heading を作成するために, ページ・スタイル
+% では \chaptermark, \sectionmark, ... などのコマンドを定義しています. 
+% 例えば \chaptermark{TEXT} は \chapter を mark にセットするコマンドです.
+% \...mark コマンドや \...head マクロは次のマクロでの指定を使って
+% 定義しています. ( 全ての \...mark コマンドは no-ops に初期化されています)
+%
+% MARKING CONVENTIONS:
+% LaTeX ではTeX の \mark 機能を拡張して, 'left' マークと 
+% 'right' マークという2種類のマークを作成し, 次のコマンドを
+% 使用します.
+%     \markboth{LEFT}{RIGHT} : 両方のマークを加える.
+%     \markright{RIGHT}      : 'right' マークを加える.
+%     \leftmark  : \@oddhead, \@oddfoot, \@evenhead あるいは \@evenfoot
+%                  マクロの中で使用され, 現在の 'left' マークを調べます.
+%                  TeX の \botmark コマンドのようなものです.
+%     \rightmark : \@oddhead, \@oddfoot, \@evenhead あるいは \@evenfoot
+%                  マクロの中で使用され, 現在の 'right' マークを調べます.
+%                  TeX の \firstmark コマンドのようなものです.
+% マーキング・コマンドは左のマークに属している右のマークを使用している
+% 場合には問題ありません. --例えば, 左のマークは \chapter コマンドで変わり,
+% 右のマークは \section コマンドで変わるときなど. しかし同じページで 2 回
+% \bothmark が指定されると少しおかしなことが起こります.
+% 
+% \tableofcontents コマンドなどは, \@mkboth コマンドを使ってページ・スタイルの
+% マークを設定します.
+% \@mkbox コマンドというのは, ページ・スタイルのコマンド (\ps@...) が
+% heading を設定するために\markboth に \let しているか,  何もしないように
+% \@gobbletwo に \let しています.
+
+\mark{{}{}}   % Initializes TeX's marks
+
+% \ps@empty と \ps@plain は LATEX.TEX で定義しています.
+
+% 'headings' ページ・スタイルの定義.
+%  ##1 は \def\ps@headings の中で, パラメータ付きのコマンド(\def\chaptermark)
+%  を定義するために使用しています.
+%
+
+\if@twoside         % 両面印字のとき.
+\def\ps@headings{\let\@mkboth\markboth
+\def\@oddfoot{}\def\@evenfoot{}%       フッタには何も出さない.
+\def\@evenhead{\rm \thepage\hfil \sl \leftmark}%        左ページのヘッダ.
+\def\@oddhead{\hbox{}\sl \rightmark \hfil \rm\thepage}% 右ページのヘッダ.
+\def\chaptermark##1{\markboth {\uppercase{\ifnum \c@secnumdepth >\m@ne
+      \@chapapp\ \thechapter. \ \fi ##1}}{}}%
+\def\sectionmark##1{\markright {\uppercase{\ifnum \c@secnumdepth >\z@
+   \thesection. \ \fi ##1}}}}
+\else               % 片面印字のとき.
+\def\ps@headings{\let\@mkboth\markboth
+\def\@oddfoot{}\def\@evenfoot{}%     フッタには何も出さない.
+\def\@oddhead{\hbox {}\sl \rightmark \hfil \rm\thepage}% ヘッダ.
+\def\chaptermark##1{\markright {\uppercase{\ifnum \c@secnumdepth >\m@ne
+  \@chapapp\ \thechapter. \ \fi ##1}}}}
+\fi
+
+% 'myheadings' ページ・スタイルの定義.
+%
+\def\ps@myheadings{\let\@mkboth\@gobbletwo
+\def\@oddhead{\hbox{}\sl\rightmark \hfil \rm\thepage}%
+\def\@oddfoot{}\def\@evenhead{\rm \thepage\hfil\sl\leftmark\hbox {}}%
+\def\@evenfoot{}\def\sectionmark##1{}\def\subsectionmark##1{}}
+
+
+
+%    ****************************************
+%    *               その他                 *
+%    ****************************************
+%
+% 日付
+%
+\newif\if西暦\let\if西暦=\iffalse \def\西暦{\let\if西暦=\iftrue}
+\def\today{{\if西暦\count0=\year\else
+ \count0=\year\advance\count0 -1925 昭和\,\fi
+ \number\count0\,年\hspace{.5em}\nobreak
+ \number\month\,月\hspace{.5em}\nobreak\number\day\,日}}
+
+% 数式(equation 環境と eqnarray 環境) -- 
+%       \chapter を定義してから定義しなくてはならないのでここで定義します.
+%
+% \newcounter{equation}    
+%
+\@addtoreset{equation}{chapter}   % 章が変わると 'equation' はリセット.
+
+\def\theequation{\thechapter.\arabic{equation}}
+
+% \jot = 3pt      % eqnarray 環境との間の行間スペース.
+
+% \@eqnnum というマクロに数式番号を出力するためのコマンドを定義します.
+%
+% \def\@eqnnum{(\theequation)} 
+% 
+
+
+%    ****************************************
+%    *               初期化                 *
+%    ****************************************
+%
+% デフォルトに初期化
+
+\ps@plain                   % 'plain' ページ・スタイル
+\pagenumbering{arabic}      % ページ番号はアラビア数字で出力
+\onecolumn                  % 一段組.
+\if@twoside\else\raggedbottom\fi % twoside オプションがなければ ragged bottom.
+

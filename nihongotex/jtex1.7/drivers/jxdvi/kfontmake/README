@@ -1,0 +1,15 @@
+bdfresize を用いて、X11 用の xdvi に必要なフォントを生成します。
+中身は Makefile だけです。
+Makefile の中で、XSRCDIR を書き換える必要があると思います。
+
+！！警告！！
+この Makefile で make を行なうと、大量のディスクスペースとCPUタイムを
+消費します。単一サイトで複数の人がインストールすべきではありません。
+！！！！！！
+
+ディスクスペースは、作業用と結果にそれぞれ 7-8 Mbytes 必要です。
+作業が終ったらすぐに make clean しましょう。
+
+                                                 Hiroto KAGOTANI
+JUNET : kagotani@cs.titech.junet     
+

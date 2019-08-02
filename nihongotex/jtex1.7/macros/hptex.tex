@@ -1,0 +1,840 @@
+% This is the HP TeX text format version A.00.00 as of Feb. 14, 1984.
+% It is compatible with the plain TeX format that's described in The TeXbook.
+%
+% Copyright 1984 Hewlett-Packard Co.
+%
+% NOTE 1, NOTE 2, etc. refer to notes in the file HPTEX.DOC
+%
+
+\input plain.tex                                                     % NOTE 1
+
+\message{Preloading the HP TeX codes,}
+
+% SPECIAL CATCODES
+%
+\catcode`@=11                                                         % NOTE 2
+
+% HPTEX
+%
+\def\HPTEX{HP\nobreak\ \TeX}
+\let\HpTeX=\HPTEX
+\def\fmtname{HP TeX}\def\fmtversion{A.00.00}
+
+% LEADERS
+%
+\def\dotfil{\tenrm\leaders\hbox to8\p@{\hss.\hss}\hss}                % NOTE 3
+
+% CONSTANT VALUES
+%
+\chardef\zer@=0
+\chardef\f@ur=4
+\skipdef\skip@ii=2
+\maxdepth=2pt
+
+\message{fonts,}
+
+% FONTS                                                               % NOTE 4
+%
+\let\fontcheck=1                                                      % NOTE 5
+\def\fontdef#1=#2 {\def#1{\font@{#1}{#2}}}                            % NOTE 6
+\def\font@#1#2{{\let\fontcheck=0\ifx0\fontcheck\egroup\global\font#1=#2#1%
+    \else}\string#1 \fi}%--The space after \string#1 is necessary.
+
+% ROMAN TEXT
+%
+\fontdef\twentyfourrm={cmr10 scaled \magstep5}
+\fontdef\eighteenrm={cmr10 scaled \magstep3}
+\fontdef\fourteenrm={cmr10 scaled \magstep2}
+\font\twelverm=cmr10 scaled \magstep1
+%\font\tenrm=cmr10
+\font\ninerm=cmr9
+\font\eightrm=cmr8
+%\font\sevenrm=cmr7
+\font\sixrm=cmr6
+%\font\fiverm=cmr5
+
+% MATH ITALIC
+%
+\fontdef\twentyfouri={cmmi10 scaled \magstep5}
+\fontdef\eighteeni={cmmi10 scaled \magstep3}
+\fontdef\fourteeni={cmmi10 scaled \magstep2}
+\fontdef\twelvei={cmmi10 scaled \magstep1}
+%\font\teni=cmmi10
+\fontdef\ninei={cmmi9}
+\fontdef\eighti={cmmi8}
+%\font\seveni=cmmi7
+\fontdef\sixi={cmmi6}
+%\font\fivei=cmmi5
+
+% MATH SYMBOLS
+%
+\fontdef\twentyfoursy={cmsy10 scaled \magstep5}
+\fontdef\eighteensy={cmsy10 scaled \magstep3}
+\fontdef\fourteensy={cmsy10 scaled \magstep2}
+\fontdef\twelvesy={cmsy10 scaled \magstep1}
+%\font\tensy=cmsy10
+\fontdef\ninesy={cmsy9}
+\fontdef\eightsy={cmsy8}
+%\font\sevensy=cmsy7
+\fontdef\sixsy={cmsy6}
+%\font\fivesy=cmsy5
+
+% BOLD MATH SYMBOLS
+%
+\fontdef\tenbfsy={cmbsy10}
+
+% MATH EXTENSION
+%
+%\font\tenex=cmex10
+
+% SANS SERIF
+%
+\fontdef\fourteenss={cmss10 scaled \magstep2}
+\fontdef\twelvess={cmss10 scaled \magstep1}
+\font\tenss=cmss10
+\font\eightss=cmssq8
+
+% SANS SERIF ITALIC
+%
+\font\tenitss=cmssi10
+\font\eightitss=cmssqi8
+
+% BOLDFACE EXTENDED
+%
+\fontdef\twentyfourbf={cmbx10 scaled \magstep5}
+\fontdef\eighteenbf={cmbx10 scaled \magstep3}
+\fontdef\fourteenbf={cmbx10 scaled \magstep2}
+\font\twelvebf=cmbx10 scaled \magstep1
+%\font\tenbf=cmbx10
+\font\ninebf=cmbx9
+\font\eightbf=cmbx8
+%\font\sevenbf=cmbx7
+\font\sixbf=cmbx6
+%\font\fivebf=cmbx5
+
+% TYPEWRITER
+%
+\fontdef\twentyfourtt={cmtt10 scaled \magstep5}
+\fontdef\eighteentt={cmtt10 scaled \magstep3}
+\fontdef\fourteentt={cmtt10 scaled \magstep2}
+\fontdef\twelvett={cmtt10 scaled \magstep1}
+%\font\tentt=cmtt10
+\font\ninett=cmtt9
+\font\eighttt=cmtt8
+
+% SLANTED TYPEWRITER
+%
+\font\tensltt=cmsltt10
+
+% SLANTED ROMAN
+%
+\fontdef\twentyfoursl={cmsl10 scaled \magstep5}
+\fontdef\eighteensl={cmsl10 scaled \magstep3}
+\fontdef\fourteensl={cmsl10 scaled \magstep2}
+\fontdef\twelvesl={cmsl10 scaled \magstep1}
+%\font\tensl=cmsl10
+\font\ninesl=cmsl9
+\font\eightsl=cmsl8
+
+% TEXT ITALIC
+%
+\fontdef\twentyfourit={cmti10 scaled \magstep5}
+\fontdef\eighteenit={cmti10 scaled \magstep3}
+\fontdef\fourteenit={cmti10 scaled \magstep2}
+\fontdef\twelveit={cmti10 scaled \magstep1}
+%\font\tenit=cmti10
+\font\nineit=cmti9
+\font\eightit=cmti8
+\fontdef\sevenit={cmti7}
+
+% UNSLANTED TEXT ITALIC
+%
+\font\tenuit=cmu10
+
+
+% CAPS AND SMALL CAPS
+%
+\font\tencsc=cmcsc10
+
+% SANS SERIF BOLD EXTENDED
+%
+\font\tenbfss=cmssbx10
+
+
+% BOLD EXTENDED SLANTED
+%
+\font\tenslbf=cmbxsl10
+
+
+% DUNHILL STYLE
+%
+\font\tendh=cmdunh10
+
+% FOR TITLES
+%
+\font\titlefont=cmr7 scaled \magstep4
+
+
+% BIG FONT
+%
+\font\bigfont=cmssbx10 scaled \magstep2
+
+
+\message{macros,}
+
+% MACROS TO SET FSTYLE                                                % NOTE 7
+%
+\def\rm{\fam\z@\def\fstyle{rm}\setfont}
+\def\it{\fam\itfam\def\fstyle{it}\setfont}
+\def\bf{\fam\bffam\def\fstyle{bf}\setfont\ifmmode{\tenbfsy}%
+                                      \textfont2=\tenbfsy\fi}
+\def\sl{\fam\slfam\def\fstyle{sl}\setfont}
+\def\sa{\def\fstyle{ss}\setfont}
+\def\tt{\fam\ttfam\def\fstyle{tt}\setfont}
+
+\newfam\ssfam
+
+% MACROS TO SET FSIZE                                                 % NOTE 8
+%
+\def\fivepoint{\def\fsize{five}\setfont\let\sfont=\fivepoint%
+               \baselineskip7pt%
+               \setbox\strutbox=\hbox{\vrule height4.5pt depth1.5pt width0pt}%
+               \textfont0=\fiverm \scriptfont0=\fiverm%
+                                \scriptscriptfont0=\fiverm%
+                            \textfont1=\fivei \scriptfont1=\fivei%
+                                \scriptscriptfont1=\fivei%
+                            \textfont2=\fivesy \scriptfont2=\fivesy%
+                                \scriptscriptfont2=\fivesy}
+
+\def\sixpoint{\def\fsize{six}\setfont\let\sfont=\fivepoint%
+               \baselineskip8pt%
+               \setbox\strutbox=\hbox{\vrule height5pt depth2pt width0pt}%
+               \textfont0=\sixrm \scriptfont0=\fiverm%
+                              \scriptscriptfont0=\fiverm%
+               \scriptfont1=\fivei \scriptscriptfont1=\fivei%
+               \scriptfont2=\fivesy \scriptscriptfont2=\fivesy%
+               \def\changes{{\sixi\sixsy}%
+                            \textfont1=\sixi \textfont2=\sixsy}%
+                            \ifmmode\changes\else\everymath{\changes}%
+                                     \everydisplay{\changes}\fi}
+
+\def\sevenpoint{\def\fsize{seven}\setfont\let\sfont=\fivepoint%
+                  \baselineskip9pt%
+                  \setbox\strutbox=\hbox{\vrule height6pt depth2pt width0pt}%
+                  \textfont0=\sevenrm \scriptfont0=\sixrm%
+                             \scriptscriptfont0=\fiverm%
+                  \textfont1=\seveni \scriptscriptfont1=\fivei%
+                  \textfont2=\sevensy \scriptscriptfont2=\fivesy%
+                  \def\changes{{\sixi\sixsy}%
+                          \scriptfont1=\sixi%
+                          \scriptfont2=\sixsy}%
+               \ifmmode\changes\else\everymath{\changes}%
+                                               \everydisplay{\changes}\fi}
+
+\def\eightpoint{\def\fsize{eight}\setfont\let\sfont=\sixpoint%
+                  \baselineskip9pt%
+                  \setbox\strutbox=\hbox{\vrule height7pt depth2pt width0pt}%
+                  \textfont0=\eightrm \scriptfont0=\sixrm%
+                              \scriptscriptfont0=\fiverm%
+                  \scriptscriptfont1=\fivei%
+                  \scriptscriptfont2=\fivesy%
+                  \def\changes{{\eighti\sixi\eightsy\sixsy}%
+                            \textfont1=\eighti \scriptfont1=\sixi%
+                            \textfont2=\eightsy \scriptfont2=\sixsy}%
+               \ifmmode\changes\else\everymath{\changes}%
+                                   \everydisplay{\changes}\fi}
+
+\def\ninepoint{\def\fsize{nine}\setfont\let\sfont=\sixpoint%
+                  \baselineskip11pt%
+                  \setbox\strutbox=\hbox{\vrule height8pt depth3pt width0pt}%
+                  \textfont0=\ninerm \scriptfont0=\sevenrm%
+                               \scriptscriptfont0\fiverm%
+                  \scriptfont1=\seveni \scriptscriptfont1\fivei%
+                  \scriptfont2=\sevensy \scriptscriptfont2\fivesy%
+               \def\changes{{\ninei\ninesy}%
+                          \textfont1=\ninei%
+                          \textfont2=\ninesy}%
+                          \ifmmode\changes\else\everymath{\changes}%
+                                    \everydisplay{\changes}\fi}
+
+\def\tenpoint{\def\fsize{ten}\setfont\let\sfont=\sevenpoint%
+                \baselineskip12pt%
+                \setbox\strutbox=\hbox{\vrule height8.5pt depth3.5pt width0pt}%
+                \textfont0=\tenrm \scriptfont0=\sevenrm%
+                           \scriptscriptfont0\fiverm%
+                \textfont1=\teni \scriptfont1=\seveni%
+                             \scriptscriptfont1\fivei%
+                \textfont2=\tensy \scriptfont2=\sevensy%
+                             \scriptscriptfont2\fivesy}
+
+\def\twelvepoint{\def\fsize{twelve}\setfont\let\sfont=\eightpoint%
+                  \baselineskip14pt%
+                  \setbox\strutbox=\hbox{\vrule height10pt depth4pt width0pt}%
+                  \textfont0=\twelverm \scriptfont0=\ninerm%
+                             \scriptscriptfont0=\sevenrm%
+                  \scriptscriptfont1=\seveni%
+                  \scriptscriptfont2=\sevensy%
+                  \def\changes{{\twelvei\ninei\twelvesy\ninesy}%
+                           \textfont1=\twelvei \scriptfont1=\ninei%
+                           \textfont2=\twelvesy \scriptfont2=\ninesy}%
+               \ifmmode\changes\else\everymath{\changes}%
+                                     \everydisplay{\changes}\fi}
+\def\fourteenpoint{\def\fsize{fourteen}\setfont\let\sfont=\tenpoint%
+     \baselineskip16pt%
+     \setbox\strutbox=\hbox{\vrule height12pt depth4pt width0pt}%
+     \scriptfont0=\tenrm \scriptscriptfont0=\sevenrm%
+     \scriptfont1=\teni \scriptscriptfont1=\seveni%
+     \scriptfont2=\tensy \scriptscriptfont2=\sevensy%
+     \def\changes{{\fourteeni\fourteenrm\fourteensy}%
+                \textfont0=\fourteenrm%
+                \textfont1=\fourteeni%
+                \textfont2=\fourteensy}%
+     \ifmmode\changes\else\everymath{\changes}\everydisplay{\changes}\fi}
+
+\def\eighteenpoint{\def\fsize{eighteen}\setfont\let\sfont=\tenpoint%
+      \baselineskip18pt%
+      \setbox\strutbox=\hbox{\vrule height15pt depth3pt width0pt}%
+      \scriptfont0=\twelverm \scriptscriptfont0=\tenrm%
+      \scriptscriptfont1=\teni%
+      \scriptscriptfont2=\tensy%
+      \def\changes{{\eighteenrm\eighteeni\twelvei\eighteensy\twelvesy}%
+                 \textfont0=\eighteenrm%
+                 \textfont1=\eighteeni \scriptfont1=\twelvei%
+                 \textfont2=\eighteensy \scriptfont2=\twelvesy}%
+      \ifmmode\changes\else\everymath{\changes}%
+                            \everydisplay{\changes}\fi}
+\def\twentyfourpoint{\def\fsize{twentyfour}\setfont\let\sfont=\tenpoint%
+      \baselineskip24pt%
+      \setbox\strutbox=\hbox{\vrule height21.5pt depth2.5pt width0pt}%
+      \def\changes{{\twentyfourrm\eighteenrm\fourteenrm\twentyfouri%
+                    \eighteeni\fourteeni\twentyfoursy\eighteensy\fourteensy}%
+                \textfont0=\twentyfourrm \scriptfont0=\eighteenrm %
+                  \scriptscriptfont0=\fourteenrm%
+                \textfont1=\twentyfouri \scriptfont1=\eighteeni%
+                  \scriptscriptfont1=\fourteeni%
+                \textfont2=\twentyfoursy \scriptfont2=\eighteensy%
+                  \scriptscriptfont2=\fourteensy}%
+       \ifmmode\changes\else\everymath{\changes}\everydisplay{\changes}\fi}
+
+% MACROS TO SET CURRENT FONT USING FSTYLE AND FSIZE
+%
+\newif\ifnofont@
+\def\tryfont#1{\expandafter\ifx\csname#1\endcsname\relax\nofont@true % NOTE  9
+    \else\nofont@false\csname#1\endcsname\fi}
+\def\setfont{\tryfont{\ffam\fsize\fstyle}%                           % NOTE 10
+    \ifnofont@\tryfont{\ffam\fsize rm}%
+    \ifnofont@\tryfont{\ffam tenrm}%
+    \ifnofont@\tenrm\fi\fi\expandafter
+    \fonterr\csname\ffam\fsize\fstyle\endcsname{\the\font}\fi}
+\def\fonterr#1#2{\immediate\write\m@ne{! font #1is undefined,
+    I'm using #2instead.}\xdef#1{#2}}
+
+% DEFAULTS                                                            % NOTE 11
+%
+\fam\z@\tenrm\def\ffam{}\def\fstyle{rm}\def\fsize{ten}\let\sfont=\sevenpoint
+
+% LINE MACROS                                                         % NOTE 12
+%
+\def\lline#1{\hbox to\hsize{\hskip\leftskip#1\hskip\rightskip}}
+\def\leftline#1{\lline{#1\hss}}
+\def\rightline#1{\lline{\hss#1}}
+\def\centerline#1{\lline{\hss#1\hss}}
+
+% MORE MACROS
+%
+\def\narrow#1{\advance\leftskip#1\advance\rightskip#1}
+\def\narrower{\narrow\parindent}                                      % NOTE 13
+\def\narrow@{\narrow\inset}
+\def\inc#1{\advance#1\@ne}
+\def\dec#1{\advance#1\m@ne}
+\def\ignore#1{\relax}
+\def\okbreak{\par\penalty-200}
+\def\need{\afterassignment\need@\dimen@}                              % NOTE 14
+\def\need@{\vskip\dimen@ minus\dimen@\okbreak\vskip-\dimen@ minus-\dimen@}
+\def\for#1=#2to#3do#4{#1=#2\ifnum#2>#3\else\let\next@=\fnext@         % NOTE 15
+    \def\fcount@{#1}\def\fexit@{#3}\def\floop@{#4}\next@\fi}
+\def\fnext@{\floop@\ifnum\fcount@<\fexit@\inc\fcount@                 % NOTE 16
+    \else\let\next@=\relax\fi\next@}
+\def\super#1{\/\raise.4em\hbox{\sfont#1}\thinspace}
+\def\sub#1{\lower.25em\hbox{\sfont#1}\thinspace}
+\def\lbreak{\hfill\break}
+\def\uline#1{\setbox0=\hbox{#1}\dimen@=-\dp0\advance\dimen@ .23em     % NOTE 17
+    \ifvmode\indent\fi\hbox to \wd0{\lower.27em
+    \vbox{\box0\vskip\dimen@\hrule height.04em}}}
+
+% START AND FINISH GROUP STRUCTURE                                    % NOTE 18
+%
+\def\start#1{\errfalse\ifinvalid@{#1}\else\begingroup                 % NOTE 19
+    \def\blockname@{#1}\csname BEGIN#1\endcsname\fi\Error}
+\def\finish#1{\errfalse\ifinvalid@{#1}\else\matchup@{#1}\fi\Error}    % NOTE 20
+\def\ifinvalid@#1{\expandafter\ifx\csname BEGIN#1\endcsname\relax     % NOTE 21
+    \errset{I don't understand {#1}, it may be misspelled}}
+\def\matchup@#1{\def\test@{#1}%                                       % NOTE 22
+    \expandafter\ifx\csname blockname@\endcsname\relax
+            \errset{Extra \string\finish{\test@} ignored}%
+    \else\ifx\test@\blockname@\done
+    \else\errset{Missing \string\finish{\blockname@} inserted}%
+    \done\matchup@{#1}\fi\fi}
+\def\done{\csname END\blockname@\endcsname\endgroup}                  % NOTE 23
+
+% GENERAL ERROR HANDLING                                              % NOTE 24
+%
+\def\errfalse{\global\let\iferr=\iffalse}
+\def\errtrue{\global\let\iferr=\iftrue}
+\def\errset#1{\iferr\immediate\write0{! \error}\else\errtrue\fi\xdef\error{#1}}
+\def\Error{\iferr\errmessage{\error}\fi}
+
+% DATE AND TIME MACROS
+%
+\newcount\cntA@\newcount\cntB@\newcount\cntC@
+\def\mon{\ifcase\month\relax\or January\or February\or March\or       % NOTE 25
+    April\or May\or June\or July\or August\or September\or October\or
+    November\or December\fi}
+\def\date{\mon\nobreak\ \number\day, \number\year}                    % NOTE 26
+\def\hour{{\cntA@=\time \cntB@=\cntA@                                 % NOTE 27
+    \divide\cntA@60 \cntC@=\cntA@ \multiply\cntC@60
+    \advance\cntB@-\cntC@\ifnum\cntA@>11
+    \advance\cntA@-12 \def\time@{PM}\else\def\time@{AM}\fi
+    \ifnum\cntA@=0 \cntA@=12 \fi\number\cntA@
+    :\ifnum\cntB@<10 0\fi\number\cntB@\nobreak\ \time@}}
+
+% INDENTSTYLE
+%
+\newdimen\indentsize\indentsize=20pt
+\newif\ifindent\indenttrue                                            % NOTE 28
+\def\indentstyle{\parindent\indentsize                                % NOTE 29
+    \ifindent\else\indenttrue\advance\parskip-5\p@\fi}
+\def\noindentstyle{\parindent\z@                                      % NOTE 30
+    \ifindent\indentfalse\advance\parskip5\p@\fi}
+\def\indentspace{\afterassignment\indent@\indentsize}                 % NOTE 31
+\def\indent@{\ifindent\parindent\indentsize\fi}
+\newdimen\inset
+\inset.5in
+\def\BEGINindent{\advance\leftskip \inset}
+\let\ENDindent=\par
+
+% RAGGED MARGIN AND JUSTIFIED MARGIN MACROS
+%
+\def\fixmargin@{\dimen@=\rightskip\rightskip=\dimen@}                % NOTE 32
+\def\justify{\fixmargin@\spaceskip\z@\xspaceskip\z@}                 % NOTE 33
+\def\raggedright{\fixmargin@\advance\rightskip\z@ plus2em            % NOTE 34
+    \ifx\fstyle\tt@\else\spaceskip.3333em\xspaceskip.5em\fi}
+\def\tt@{tt}                                                         % NOTE 35
+
+% ITEM AND SUBITEM MACROS
+%
+\newcount\icount@\newcount\scount@
+\newcount\idigit@\newcount\sdigit@
+\def\itemset@#1#2#3{\dimen@=\hsize \advance\dimen@-#2\inset          % NOTE 36
+    \parshape=\@ne#1\inset\dimen@\noindent
+    \hbox to\z@{\hss#3\enspace}\ignorespaces}
+\def\itemlist#1{\medskip\resetsubitems\itemset@\@ne\tw@{#1}}         % NOTE 37
+\def\subitem#1{\smallskip\itemset@\tw@\f@ur{#1}}                     % NOTE 38
+\def\itempar{\smallskip\itemset@\@ne\tw@\empty}                      % NOTE 39
+\def\subitempar{\subitem\empty}                                      % NOTE 40
+\def\enditems{\bigskip\resetitems}
+
+% ITEMTAG AND SUBITEMTAG MACROS                                      % NOTE 41
+%
+\def\square{\hbox{\hskip.5pt\vrule height.4em width.4em depth 0em}}
+\def\dott{$\bullet$}
+\def\emdash{---}
+\def\itemn@#1{\number#1\global\inc#1}                                 % NOTE 42
+\def\itemr@#1{\romannumeral#1\global\inc#1}                           % NOTE 43
+\def\itemR@#1{\uppercase\expandafter{\romannumeral#1}\global\inc#1}   % NOTE 44
+\def\iteml@#1#2{{\loop\char#1\ifnum#2>\@ne\dec#2\repeat}\global\inc#1%% NOTE 45
+   \ifnum#1>122 \global#1=97 \global\inc#2\fi \ifnum#1=91 \global#1=65
+   \global\inc#2\fi}
+   \def\item@ #1,#2,#3{\def\itemtag{#3}%                              % NOTE 46
+   \def\resetitems{\global\icount@=#1\global\idigit@=#2}\resetitems}
+\outer\def\numbereditems{\item@ 1,0,{\itemn@\icount@}}
+\outer\def\lettereditems{\item@ 97,1,{\iteml@\icount@\idigit@}}
+\outer\def\Lettereditems{\item@ 65,1,{\iteml@\icount@\idigit@}}
+\outer\def\romanitems{\item@ 1,0,{\itemr@\icount@}}
+\outer\def\Romanitems{\item@ 1,0,{\itemR@\icount@}}
+\outer\def\squareditems{\let\itemtag=\square\let\resetitems=\relax}
+\outer\def\dotteditems{\let\itemtag=\dott\let\resetitems=\relax}
+\outer\def\dasheditems{\let\itemtag=\emdash\let\resetitems=\relax}
+\def\itm{\itemlist{\tenrm\itemtag\ifx\relax\resetitems\else.\fi}}     % NOTE 47
+
+\def\subitem@ #1,#2,#3{\def\subitemtag{#3}%                           % NOTE 48
+    \def\resetsubitems{\global\scount@=#1\global\sdigit@=#2}\resetsubitems}
+\outer\def\numberedsubitems{\subitem@ 1,0,{\itemn@\scount@}}
+\outer\def\letteredsubitems{\subitem@ 97,1,{\iteml@\scount@\sdigit@}}
+\outer\def\Letteredsubitems{\subitem@ 65,1,{\iteml@\scount@\sdigit@}}
+\outer\def\romansubitems{\subitem@ 1,0,{\itemr@\scount@}}
+\outer\def\Romansubitems{\subitem@ 1,0,{\itemR@\scount@}}
+\outer\def\squaredsubitems{\let\subitemtag=\square\let\resetsubitems=\relax}
+\outer\def\dottedsubitems{\let\subitemtag=\dott\let\resetsubitems=\relax}
+\outer\def\dashedsubitems{\let\subitemtag=\emdash\let\resetsubitems=\relax}
+\def\sitm{\subitem{\tenrm\subitemtag\ifx\relax\resetsubitems\else.\fi}}
+                                                                      % NOTE 49
+\numbereditems\letteredsubitems                                       % NOTE 50
+
+% NOTE AND WARNING MACROS
+%
+\def\BEGINnote{\bigskip\narrow@\narrow@\nobreak}                      % NOTE 51
+\let\ENDnote=\bigskip
+\def\BEGINwarning{\bigskip\nobreak\narrow@\narrow@\marginrule.02667in % NOTE 52
+    \nobreak\medskip\nobreak}
+\def\ENDwarning{\nobreak\medskip\nobreak\marginrule.02667in \bigskip}
+\def\marginrule#1 {\nointerlineskip\vbox to#1{\vss                    % NOTE 53
+    \lline{\leaders\hrule height#1\hss}}}
+
+
+% VERBATIM MODE                                                       % NOTE 54
+%
+\newskip\blanksize@
+\bgroup\catcode`\*=3 \catcode`\$=13 \catcode`\#=13
+    \catcode`\^=13 \catcode`\_=13 \catcode`\|=13 \catcode`\~=13
+\gdef\BEGINverbatim{\parskip=0pt plus1pt
+    \catcode`\$=13 \def${\indent\hbox to \the\fontdimen\tw@\the\font
+                         {\hss\$\hss}}
+    \catcode`\&=12
+    \catcode`\#=13 \def#{\indent\hbox to \the\fontdimen\tw@\the\font
+                           {\hss*\#*\hss}}
+    \catcode`\^=13 \def^{\indent\hbox to \the\fontdimen\tw@\the\font
+                           {\hss*\mathchar"327D*\hss}}
+    \catcode`\_=13 \def_{\indent\hbox to \the\fontdimen\tw@\the\font
+                           {\hss\_\hss}}
+    \catcode`\%=12
+    \catcode`\|=13 \def|{\indent\hbox to \the\fontdimen\tw@\the\font
+                          {\hss*\mathchar"326A*\hss}}
+    \catcode`\~=13 \def~{\indent\hbox to \the\fontdimen\tw@\the\font
+                          {\hss*\mathchar"3218*\hss}}
+    \parindent\z@\lumplines\lumpspaces}
+\egroup
+
+% LUMPLINE AND LUMPSPACE MACROS                                       % NOTE 55
+%
+{\catcode`\^^M=13 \gdef\lumplines{\catcode`\^^M=13 \let^^M=\lumpline@}}
+\def\lumpline@{\par\skip@=\z@\let\munch@=\lumpB@\futurelet\lump@\lumpA@}
+\def\lumpA@{\ifx\lumpline@\lump@\advance\skip@\baselineskip
+    \else\let\munch@=\relax\vskip\skip@\fi\munch@}
+\def\lumpB@#1{\futurelet\lump@\lumpA@}
+{\catcode`\ =13 \gdef\lumpspaces{\catcode`\ =13\relax\let =\lumpspace@}}
+\def\lumpspace@{\blanksize@=\the\fontdimen\tw@\the\font
+    \skip@=\z@\let\munch@=\lumpb@\futurelet\lump@\lumpa@}
+\def\lumpa@{\advance\skip@\blanksize@\ifx\lumpspace@\lump@
+    \else\let\munch@=\relax\hskip\skip@\fi\munch@}
+\def\lumpb@#1{\futurelet\lump@\lumpa@}
+\let\munch@=\relax
+
+% PAGE CONTROL MACROS                                                 % NOTE 56
+%
+\def\newpage{\balance\ifold@\null\vfill\eject\fi}
+\def\evenpage{\newpage\ifodd\pageno\null\vfill\eject\fi}
+\def\oddpage{\newpage\ifodd\pageno\else\null\vfill\eject\fi}
+
+% HEADING AND FOOTING MACROS                                         % NOTE 57
+%
+\newtoks\leftheading \newtoks\leftfooting
+\newtoks\rightheading \newtoks\rightfooting
+\newtoks\centerheading \newtoks\centerfooting
+\newtoks\insideheading \newtoks\insidefooting
+\newtoks\outsideheading \newtoks\outsidefooting
+\newtoks\headline \newtoks\footline
+\def\buildline{\let\lft=\zer@\let\rght=\@ne                          % NOTE 58
+    \ifdim\wd3=\z@\else\ifodd\pageno\let\lft=\thr@@\else\let\rght=\thr@@\fi\fi
+    \ifdim\wd4=\z@\else\ifodd\pageno\let\rght=\f@ur\else\let\lft=\f@ur\fi\fi
+    \triplehead\lft\tw@\rght}
+\def\triplehead#1#2#3{\skip@=1em\skip@ii=1em                         % NOTE 59
+    \dimen@=\wd#1\advance\dimen@-\wd#3%
+    \ifdim\dimen@>\z@\advance\skip@ii\dimen@ minus\dimen@
+    \else\advance\skip@-\dimen@ minus-\dimen@\fi
+    {\box#1\hskip\skip@\hfil\box#2\hfil\hskip\skip@ii\box#3}}
+\def\loadbox#1#2{\setbox#1=\hbox{\the#2}}                            % NOTE 60
+\newcount\headcount\newcount\footcount
+\def\suspendheading#1{\global\headcount=#1}
+\def\suspendfooting#1{\global\footcount=#1}
+\def\noheading{\suspendheading\m@ne}
+\def\nofooting{\suspendfooting\m@ne}
+\def\resumeheading{\suspendheading\zer@}
+\def\resumefooting{\suspendfooting\zer@}
+\headline{\ifnum\headcount=\z@\loadbox\tw@\centerheading            % NOTE 61
+        \loadbox\zer@\leftheading\loadbox\@ne\rightheading
+        \loadbox\thr@@\insideheading\loadbox\f@ur\outsideheading\buildline
+    \else\hfil\ifnum\headcount>\z@\global\dec\headcount\fi\fi}
+\footline{\ifnum\footcount=\z@\loadbox\tw@\centerfooting            % NOTE 62
+        \loadbox\zer@\leftfooting\loadbox\@ne\rightfooting
+        \loadbox\thr@@\insidefooting\loadbox\f@ur\outsidefooting\buildline
+    \else\hfil\ifnum\footcount>\z@\global\dec\footcount\fi\fi}
+\resumeheading
+\resumefooting
+% footline is normally a centered page number in font \tenrm
+\centerfooting{\tenrm\folio}
+
+% BOX MACROS
+%
+\newdimen\boxline
+\newdimen\boxspace
+\boxline .01332in
+\boxspace 5pt
+\newdimen\depthbox@
+\def\boxit#1{\hbox{\vrule width\boxline                              % NOTE 63
+                  \vbox{\hrule height\boxline\kern\boxspace
+                       \hbox{\kern\boxspace
+                            \vbox{\halign{\hfil##\hfil\cr\strut#1\strut\cr}}%
+                        \kern\boxspace}%
+                  \kern\boxspace\hrule height\boxline}%
+              \vrule width\boxline}}
+\def\centerbox#1{\vskip\abovedisplayskip                             % NOTE 64
+    \centerline{\boxit{#1}}%
+    \vskip\belowdisplayskip}
+\def\textbox#1{\depthbox@=\dp\strutbox\advance\depthbox@ by .4\p@    % NOTE 65
+        \ifvmode\indent\fi\setbox\z@\hbox{\vrule
+        \vbox{\hrule\hbox{\kern\p@#1\strut\kern\p@}\hrule}%
+        \vrule}\lower\depthbox@\box\z@}
+
+% HP2680A and HP2688A COPY CONTROL MACROS                            % NOTE 66
+%
+\newcount\oldcopy\newcount\copycnt
+%\def\copy@{\globalspecial{HP2688A,HP2680A COPIES \number\copycnt}}
+\def\copy@{}
+\def\selectcopycount{\afterassignment\copy@\copycnt}
+\def\copieson{\global\count\copycnt=\oldcopy\copy@}
+\def\copiesoff{\global\count\copycnt=1 \copy@}
+\def\copies{\afterassignment\copieson\global\oldcopy}
+\copycnt=1
+\oldcopy=2
+
+% HP2680A and HP2688A LOGICAL PAGE CONTROL (LPC) MACROS               % NOTE 67
+%
+%\def\lplist#1{\globalspecial{HP2688A,HP2680A ILP #1}}
+%\def\lpdef#1{\globalspecial{HP2688A,HP2680A LP #1}}
+\def\lplist#1{}
+\def\lpdef#1{}
+\newif\ifempty@\empty@true
+\newcount\lpcount@\newcount\nextlp@
+\def\selectlpcounter#1{\lpcount@#1 \setlpcount@{\the\lpcount@}}
+%\def\setlpcount@#1{\globalspecial{HP2688A,HP2680A ELP #1}}
+\def\setlpcount@#1{}
+\def\lpageto{\eject\afterassignment\lpeject@\nextlp@}
+\def\ppageto{\eject\afterassignment\lpage@\nextlp@}
+\def\lpeject@{\nextlp@=-\nextlp@\lpage@}
+\def\lpresume{\eject\nextlp@=\z@\lpage@}
+\def\lpreset{\eject\nextlp@=33 \lpage@ \nextlp@=\z@}
+\def\lpexit{\eject\nextlp@=34 \lpage@ \nextlp@=\z@}
+\def\lpage@{\ifempty@\count\lpcount@=\nextlp@\global\empty@false\fi}
+\everyjob{\message{Using HP TeX  Version \fmtversion}\selectlpcounter2 {}}
+
+% TABLE MACROS                                                        % NOTE 68
+%
+\newcount\maxcol@
+\newbox\topstrutbox \def\topstrut{\unhcopy\topstrutbox}
+\setbox\topstrutbox=\hbox{\vrule height11pt depth0pt width0pt}
+\newbox\botstrutbox \def\botstrut{\unhcopy\botstrutbox}
+\setbox\botstrutbox=\hbox{\vrule height0pt depth4pt width0pt}
+\newdimen\tableline \tableline.01332in
+\newskip\tablespace \tablespace5pt
+\def\paragraph#1{\vbox{\hrule height\z@ width\hsize depth\z@#1}}
+\def\tbar{\ifvmode\hrule\else\vrule width\hsize depth\z@\fi height\tableline}
+\def\uptoks@{\inc\cntA@\inc\cntB@                                     % NOTE 69
+    \ifnum\cntA@<\count19 \ifnum\cntB@<\count19 \else\err@\fi\else\err@\fi}
+\def\err@{\errmessage{Columns too wide for tabular format}}
+\def\bump@{\ifnum\cntC@<\maxcol@\inc\cntC@\uptoks@\fi}                % NOTE 70
+\def\tableformat#1{\tablelet\just@\just@\relax\parse@#1~\done@~}      % NOTE 71
+\def\tablerow#1{\tablelet\bbar@\wbar@\endrow@\parse@#1~\done@~}       % NOTE 72
+\def\tablebar#1{{\let\topstrut\relax\let\botstrut\relax\tablespace\z@%% NOTE 73
+    \tablerow{#1}}}
+\def\tablelet#1#2#3{\let\b@#1\let\w@#2\let\f@#3\cntA@\count15 \cntB@\count11%
+    \cntC@\z@\let\parse@=\parseline@\ifhmode\par\else\nointerlineskip\fi}
+                                                                     % NOTE 74
+\def\just@#1{\let\b@\tform@\let\w@\tform@\maxcol@\z@\let\tablejust@#1}
+                                                                     % NOTE 75
+
+\def\tform@#1{\tform@@#1~}                                            % NOTE 76
+\def\tform@@#1#2~{\uptoks@\toks\cntA@{#1}\dimen\cntB@#2\inc\maxcol@}  % NOTE 77
+\def\bbar@#1{\beginrow@{#1}\vrule width\tableline\vrule width\z@#1}   % NOTE 78
+\def\wbar@#1{\beginrow@{#1}\kern\tableline\vrule width\z@#1}          % NOTE 79
+\def\beginrow@#1{\let\b@\vbar@\let\w@\ibar@\setbox\z@=\hbox\bgroup%   % NOTE 80
+    \parindent\z@\leftskip\tablespace\rightskip\tablespace\let\span=\span@}
+\def\endrow@{\kern-\dimen\cntB@\egroup\tablejust@{\unhbox\z@}}        % NOTE 81
+\def\vbar@#1{\futurelet\lookahead@\cs@#1~\vrule width\tableline}      % NOTE 82
+\def\ibar@#1{\futurelet\lookahead@\cs@#1~\kern\tableline}             % NOTE 83
+\def\cs@#1~{\ifx\span@\lookahead@#1~\else\span@\@ne#1~\fi\lower\ht\z@\box\z@}
+                                                                      % NOTE 84
+\def\parseline@#1~{\ifx\done@#1\let\parse@\f@\else\let\p@ss\parsecol@%
+                     \p@ss#1|\done@|\fi\parse@}                       % NOTE 85
+\def\parsecol@#1|{\def\parsemode@{\ifx\done@\lookahead@\w@{#1}%       % NOTE 86
+    \let\p@ss\lastp@ss\else\b@{#1}\fi\p@ss}%
+    \futurelet\lookahead@\parsemode@}
+\def\lastp@ss#1|{}
+\def\span@#1#2~{\bump@\hsize\dimen\cntB@\edef\x@{\the\toks\cntA@}%    % NOTE 87
+    \for\count@=2to#1do%
+        {\bump@\advance\hsize\dimen\cntB@\advance\hsize\tableline}%
+    \setbox\z@=\x@{\topstrut#2\botstrut}}
+
+% SECTION AND HEADING MACROS                                          % NOTE 88
+%
+\newcount\basehead\basehead=\count10
+\advance\count10by4 % This allocates 4 counters for head counters
+\newcount\hdlevel
+\def\setlevelno#1{\hdlevel=0 \cntA@=\basehead\sethead@0#1.-1.\head@}  % NOTE 89
+\def\sethead@#1.{\ifnum-1=#1 \let\next@=\relax\else\let\next@=\sethead@
+                                                                      % NOTE 90
+    \ifnum\hdlevel<4 \inc\hdlevel\inc\cntA@\count\cntA@=#1\fi\fi\next@}
+\def\head#1{\ifnum#1>\hdlevel\uplevel@{#1}\else                       % NOTE 91
+    \hdlevel=#1\cntA@=#1\advance\cntA@\basehead\fi
+    \inc{\count\cntA@}\head@}
+\def\uplevel@#1{\inc\hdlevel\cntA@=\hdlevel                           % NOTE 92
+    \advance\cntA@\basehead\count\cntA@=0
+    \ifnum\hdlevel=#1 \else\uplevel@{#1}\fi}
+\def\head@{{\inc\basehead\xdef\levelno{\the\count\basehead}           % NOTE 93
+    \for\cntB@=\tw@ to\hdlevel do{\inc\basehead
+        \xdef\levelno{\levelno.\the\count\basehead}}}}
+\setlevelno{0}
+
+\newtoks\firstlevelhead   \def\headA@{\head\@ne\the\firstlevelhead}   % NOTE 94
+\newtoks\secondlevelhead  \def\headB@{\head\tw@\the\secondlevelhead}
+\newtoks\thirdlevelhead   \def\headC@{\head\thr@@\the\thirdlevelhead}
+\newtoks\fourthlevelhead  \def\headD@{\head\f@ur\the\fourthlevelhead}
+
+\def\level#1#2{\def\title{#2}%                                        % NOTE 95
+    \ifcase#1\relax\or\headA@\or\headB@\or\headC@\or\headD@\fi}
+\firstlevelhead{\vfill\eject\vbox to1.5in{}\centerline{\fourteenbf\title}%
+    \vskip1.0in\ctswrite{\vrule height20pt width0pt\tenbf\title}}
+\secondlevelhead{\need.75in\bigskip\leftline{\twelvebf\levelno\enspace\title}%
+    \medskip\ctswrite{\hskip15pt\tenrm\title}}
+\thirdlevelhead{\need.6in\medskip\leftline{\tenbf\levelno\enspace\title}%
+    \ctswrite{\hskip30pt\tenrm\title}}
+\fourthlevelhead{\need.5in\leftline{\tenrm\levelno\enspace\title}%
+     \ctswrite{\hskip45pt\tenrm\title}}
+
+% CONTENTS FILE MACROS
+%
+\newwrite\cnts@
+\newif\ifnocts@\nocts@true
+\newtoks\topofcontents
+\newtoks\botofcontents
+\let\content@=\let%                                                  % NOTE 96
+\def\ctswrite#1{\ifnocts@\openout\cnts@=\jobname*[*]. \nocts@false\fi% NOTE 97
+    {\def\_{\kern.06em \vbox{\hrule width.3em}}\let\the=0
+    \edef\a@{\write\cnts@{\content@{#1}{\the\pageno}}}\a@}}
+{\catcode`\@=12 \gdef\content@ #1#2{\need.5in\lline{#1\dotfil#2}}}
+\def\contents{\ifnocts@\else\closeout\cnts@\null\supereject          % NOTE 98
+    \begingroup\pageno\m@ne\null\the\topofcontents\input\jobname*.
+    \the\botofcontents\eject\endgroup\nocts@true\fi}
+\topofcontents{\noheading\vskip1in plus1fil
+    \centerline{\fourteenbf Table of Contents}\vskip1in plus1fil}
+\botofcontents{\vfil}
+
+% FOOTNOTES AND INSERTIONS
+%
+\def\vfootnote#1{\insert\footins\bgroup                               % NOTE 99
+    \interlinepenalty\interfootnotelinepenalty
+    \splittopskip\ht\strutbox % top baseline for broken footnotes
+    \splitmaxdepth\dp\strutbox \floatingpenalty\@MM
+    \realhsize\leftskip\z@skip \rightskip\z@skip
+    \baselineskip1\baselineskip
+    \textindent{#1}\footstrut\futurelet\next\fo@t}
+
+\newcount\notenumber
+\def\resetnotes{\global\notenumber=0 }
+\def\note{\global\inc\notenumber\footnote{$^{\the\notenumber}$}}     % NOTE 100
+\def\midinsert{\@midtrue\p@gefalse\@ins}                             % NOTE 101
+\def\@ins{\par\begingroup\setbox\z@\vbox\bgroup\realhsize\divide\vsize\nocol@}
+                                                                     % NOTE 102
+\def\endinsert{\egroup\count@-100 % finish the \vbox                 % NOTE 103
+  \ifp@ge\else\dimen@\ht\z@\advance\dimen@\dp\z@
+    \advance\dimen@12\p@\multiply\dimen@-\nocol@
+    \advance\dimen@-\pagetotal\advance\dimen@\pagegoal
+    \ifdim\dimen@<\z@\@midfalse\else\count@100 \fi\fi
+  \if@mid \balance@
+      \global\setbox\contrb@\vbox{\unvbox\contrb@\bigskip\box\z@}\newtotal@
+    \else\insert\topins{\penalty\count@ % floating insertion
+      \splittopskip\z@skip\splitmaxdepth\maxdimen\floatingpenalty\z@
+      \ifp@ge \divide\vsize\nocol@ \dimen@\dp\z@
+      \vbox to\vsize{\unvbox\z@\kern-\dimen@}% depth is zero
+      \else \box\z@\nobreak\bigskip\fi}\fi\endgroup}
+
+% COLUMN MACROS                                                     % NOTE 104
+%
+\def\BEGINtwocolumns{\multicol@\tw@}
+\def\BEGINthreecolumns{\multicol@\thr@@}
+\def\ENDtwocolumns{\balance@\goal@\divide\endgroup\newtotal@\begingroup}
+\let\ENDthreecolumns=\ENDtwocolumns
+\def\balance{\balance@\newtotal@}                                   % NOTE 105
+\def\balance@{\par{\let\ifreal@=\iffalse\eject}}                    % NOTE 106
+\def\newtotal@{{\each@{\the\toks\count@}                            % NOTE 107
+    \ifold@\insert\hacker@{}\prevtotal@\pagetotal-\dimen@\fi}}
+\def\multicol@#1{\ifnum\nocol@>\@ne\errset{You can't have columns   % NOTE 108
+        within columns. \string\start{\blockname@} ignored}\endgroup
+    \else\balance@\nocol@=#1\goal@\multiply\advance\hsize\columnspace
+    \divide\hsize#1\advance\hsize-\columnspace
+    \multiply\vsize#1\brokenpenalty\z@
+    \each@{\multiply\count\count@\nocol@\multiply\skip\count@\nocol@}%
+    \newtotal@\global\dimen@=\baselineskip\baselineskip\dimen@ plus\dimen@\fi}
+
+\message{output routines}
+
+% OUTPUT ROUTINES                                                    % NOTE 109
+%
+\newbox\contrb@ \newbox\out@
+\newdimen\columnspace
+\columnspace=.5in
+\let\ifreal@=\iftrue
+\newcount\nocol@ \nocol@=1
+\newinsert\hacker@
+\def\ifold@{\ifvoid\contrb@\else}
+\def\ifcol@{\ifnum\nocol@=\@ne\setbox\out@=\box\@cclv \else}
+\def\setboxA@{\inc\cntA@\setbox\cntA@}
+\def\boxA@{\inc\cntA@\box\cntA@}
+\def\each@#1{\for\count@=\count19 to254 do{#1}}
+\def\unglue@#1{\setbox#1=\vbox{\unvbox#1}}
+\def\realhsize{\advance\hsize\columnspace\multiply\hsize\nocol@
+    \advance\hsize-\columnspace}
+\output{\hpoutput}
+
+\def\hpoutput{\splittopskip=\topskip
+    \setbox\hacker@=\box\voidb@x
+    \ifvoid\contrb@\dimen@=\ht\@cclv
+    \else\prevtotal@\advance\dimen@\ht\@cclv\fi
+    \ifreal@\realoutput@\else\fakeoutput@\fi
+    \each@{\global\toks\count@\ifvoid\count@{}\else{\insert\count@{}}\fi}}
+
+\def\realoutput@{\ifcol@\splitcol@\split@\setheight@\setout@        % NOTE 110
+    \unvbox\@cclv \penalty\outputpenalty\fi
+    \setbox\@cclv=\pagestuff@{}\each@{\divide\skip\count@\nocol@}%
+    \realhsize\divide\vsize\nocol@\leftskip\z@\rightskip\z@
+    \plainoutput\global\empty@true
+    \global\count\lpcount@=\nextlp@\ifnum\nextlp@>32 \global\nextlp@\z@\fi}
+
+\def\fakeoutput@{\unglue@{\@cclv}\global\let\ifreal@=\iftrue        % NOTE 111
+    \ifcol@\dimen@=\baselineskip
+         \dimen@=\ifnum\nocol@>2 2\dimen@ \else 1.1667\dimen@ \fi
+         \advance\dimen@\ht\@cclv\splitcol@{\box\@cclv}\setmax@\setout@\fi
+     \dimen@=\dp\out@\global\setbox\contrb@=\pagestuff@{\vskip-\dimen@}}
+
+\def\makeheadline{\vbox to\z@{\vskip-22.5\p@
+  \lline{\vbox to8.5\p@{}\the\headline}\vss}\nointerlineskip}
+\def\makefootline{\baselineskip24\p@\lline{\the\footline}}
+
+\def\pagecontents{\ifvoid\topins\else\unvbox\topins\fi
+  \unvbox\@cclv % open up \box255
+  \ifvoid\footins\else % footnote info is present
+    \vskip\skip\footins
+    \footnoterule
+    \unvbox\footins\fi
+  \ifr@ggedbottom\vfil\fi}
+
+\def\splitcol@#1{\divide\dimen@\nocol@\cntA@=\count14
+    \for\count@=\tw@ to\nocol@ do{\setboxA@=\split@}\setboxA@=#1}
+\def\split@{\ifvoid\@cclv\vbox{\lline\hfil\vfil}\else\vsplit\@cclv to\dimen@\fi}
+\def\setheight@{\ifold@\setmax@\fi}
+\def\pagestuff@#1{\vbox{\ifold@\unvbox\contrb@\medskip\fi\unvbox\out@#1}}
+\def\setout@{\cntA@=\count14 \setbox\out@=\vbox{\hbox
+    {\for\count@=\tw@ to\nocol@ do{\boxA@\hskip\columnspace}\boxA@}}}
+\def\setmax@{\dimen@=\z@ \cntA@=\count14
+    \for\count@=\@ne to\nocol@ do{\inc\cntA@\unglue@{\cntA@}%
+    \ifdim\ht\cntA@>\dimen@ \dimen@=\ht\cntA@\fi}%
+    \for\count@=\@ne to\nocol@ do{\setbox\cntA@
+        =\vbox to\dimen@{\unvbox\cntA@\ifr@ggedbottom\vss\fi}\dec\cntA@}}
+\def\prevtotal@{\dimen@=\medskipamount
+    \advance\dimen@\ht\contrb@\multiply\dimen@-\nocol@}
+\def\goal@#1{\ifdim\pagegoal=\maxdimen\else
+    \dimen@=\pagegoal#1\dimen@\nocol@\pagegoal\dimen@\fi}
+
+
+\catcode`@=12                                                       % NOTE 112
+

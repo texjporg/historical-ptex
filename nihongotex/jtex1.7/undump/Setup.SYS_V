@@ -1,0 +1,5 @@
+#!/bin/sh
+# setup the ./undump area for System V
+cp Makefile.SYS_V Makefile
+cp undump.SYS_V.c undump.c
+

@@ -1,0 +1,3 @@
+# Strip comments in PostScript program.
+# It is assumed that string does not contain %
+sed -e '2,$s/[ 	]*%.*//' -e '/^[ 	]*$/d' -e 's/^[ 	]*//'

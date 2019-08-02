@@ -1,0 +1,116 @@
+#
+#	Makefile for lips3dvi related programs.
+#
+#	Written by H. Nagahara on June 17 1990.
+#	Copyright (C) 1990 by H. Nagahara.  All rights reserved.
+#
+DEFINES=
+CFLAGS=-Os -AC -G0 -W3 $(DEFINES)
+LDFLAGS=/NOI /STACK:16192 /NOE
+LIBS=
+BINMODE=\msc6\lib\binmode.obj
+VARSTACK=\msc6\lib\varstck.obj
+COMMAND=command
+
+COMMONOBJ=	download.obj readdvi.obj fontlist.obj pkfont.obj\
+		jxlfont.obj doprint.obj farfont.obj ems.obj\
+		cache.obj main.obj pxlfont.obj getopt.obj dosprn.obj
+COMMONSRC=	download.c readdvi.c fontlist.c pkfont.c jxlfont.c\
+		ems.c doprint.c	cache.c main.c pxlfont.c farfont.c\
+		getopt.c
+LIPS3DVIOBJ=	$(COMMONOBJ) lbp.obj
+LIPS3DVISRC=	$(COMMONSRC) lbp.c
+ESCPDVIOBJ=	$(COMMONOBJ) lp3000.obj
+ESCPDVISRC=	$(COMMONSRC) lp3000.src
+
+all:	lips3dvi.exe
+lips:	lips3dvi.exe
+escp:	escpdvi.exe
+
+lips3dvi.exe:	$(LIPS3DVIOBJ) lips3dvi.res
+	link @lips3dvi.res
+
+escpdvi.exe:	$(ESCPDVIOBJ) escpdvi.res
+	link @escpdvi.res
+
+clean:
+	rm -f *.res *.obj declears.h disp.exe makedecl.bat
+
+declears.h:	makedec.bat $(LIPS3DVISRC) lbp.c lp3000.c
+	$(COMMAND) /c makedec
+
+makedec.bat:	disp.exe #makefile
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) main.c | sed /^static/d > declears.h" > makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) fontlist.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) download.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) doprint.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) cache.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) readdvi.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) pkfont.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) pxlfont.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) jxlfont.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) farfont.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) ems.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) lbp.c | sed /^static/d >> declears.h" >> makedec.bat
+	disp "cl -nologo -Zg -DMAKEDECL $(DEFINES) lp3000.c | sed /^static/d >> declears.h" >> makedec.bat
+
+lips3dvi.res:	makefile.dos
+	echo main+ > lips3dvi.res
+	echo fontlist+ >> lips3dvi.res
+	echo download+ >> lips3dvi.res
+	echo doprint+ >> lips3dvi.res
+	echo cache+ >> lips3dvi.res
+	echo readdvi+ >> lips3dvi.res
+	echo pkfont+ >> lips3dvi.res
+	echo pxlfont+ >> lips3dvi.res
+	echo jxlfont+ >> lips3dvi.res
+	echo lbp+ >> lips3dvi.res
+	echo getopt+ >> lips3dvi.res
+	echo dosprn+ >> lips3dvi.res
+	echo farfont+ >> lips3dvi.res
+	echo ems+ >> lips3dvi.res
+	echo $(BINMODE)+$(VARSTACK) >> lips3dvi.res
+	echo lips3dvi.exe $(LDFLAGS); >> lips3dvi.res
+
+escpdvi.res:	makefile.dos
+	echo main+ > escpdvi.res
+	echo fontlist+ >> escpdvi.res
+	echo download+ >> escpdvi.res
+	echo doprint+ >> escpdvi.res
+	echo cache+ >> escpdvi.res
+	echo readdvi+ >> escpdvi.res
+	echo pkfont+ >> escpdvi.res
+	echo pxlfont+ >> escpdvi.res
+	echo jxlfont+ >> escpdvi.res
+	echo lp3000+ >> escpdvi.res
+	echo getopt+ >> escpdvi.res
+	echo dosprn+ >> escpdvi.res
+	echo farfont+ >> escpdvi.res
+	echo ems+ >> escpdvi.res
+	echo $(BINMODE)+$(VARSTACK) >> escpdvi.res
+	echo escpdvi.exe $(LDFLAGS); >> escpdvi.res
+
+disp.exe:	disp.c
+	cl -O -o disp.exe disp.c
+
+patlist.exe:	patlist.c dosprn.obj
+	cl $(CFLAGS) -o patlist.exe patlist.c dosprn.obj
+
+######
+dvidump.obj:	dvidump.c config.h declears.h dvi.h
+readdvi.obj:	readdvi.c config.h declears.h dvi.h
+fontlist.obj:	fontlist.c config.h declears.h dvi.h font.h drive.h
+download.obj:	download.c config.h declears.h font.h drive.h lbp.h
+pkfont.obj:	pkfont.c config.h declears.h font.h drive.h
+pxlfont.obj:	pxlfont.c config.h declears.h drive.h font.h
+jxlfont.obj:	jxlfont.c config.h declears.h font.h drive.h lbp.h ktype.h
+cache.obj:	cache.c config.h declears.h font.h drive.h ktype.h
+doprint.obj:	doprint.c config.h declears.h font.h drive.h lbp.h dvi.h
+main.obj:	main.c config.h declears.h dvi.h drive.h lbp.h version.h
+getopt.obj:	getopt.c
+dosprn.obj:	dosprn.c config.h declears.h
+farfont.obj:	farfont.c config.h declears.h drive.h font.h lbp.h
+ems.obj:	ems.c config.h declears.h font.h
+lbp.obj:	lbp.c config.h declears.h font.h drive.h convert.h lbp.h
+lp3000.obj:	lp3000.c config.h declears.h font.h drive.h drive.h convert.h lbp.h
+

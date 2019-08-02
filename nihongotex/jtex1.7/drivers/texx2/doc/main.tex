@@ -1,0 +1,57 @@
+\documentstyle[12pt,fullpage]{article}
+%
+\newcommand{\texx}{{\tt texx}}
+\newcommand{\texsun}{{\tt texsun}}
+\newcommand{\dvi}{{\tt dvi}}
+\newcommand{\iptex}{{\tt iptex}}
+%
+\title{DVI Output Guide}
+\author{
+Dirk Grunwald \\
+Dept. of Computer Science\\
+University of Illinois
+}
+\date{Sept. 1987}
+%
+\begin{document}
+\maketitle
+\begin{abstract}
+This document describes the features, use and installation of
+\iptex, \texx\  and \texsun.
+\iptex\ prints \dvi\ \TeX\ documents on an Imagen printer.
+\texx\ is a document previewer which uses the X-11 window system.
+\texsun\ is a document previewer under the SunView window system.
+\iptex\ was written by Chris Torek at the University of Maryland.
+
+Additionally, this version of \texx\ would not exist without the work of
+Steve Eichin at MIT and Chris Torek at the U. of Maryland.
+
+\texsun\ is the original work of the author.
+
+{\bf: NOTE - this documentation is somewhat out of date, and carries no
+information about TeXx2}
+\end{abstract}
+%
+\section{Introduction}
+This document is structured into two major sections.
+The first of these is a users manuals for \iptex, \texx and \texsun,
+and is the only section of interest for most people.
+The second section covers the installation and customization of
+the package.
+
+\section{Users Guide}
+In the manuals which follow, it is assumed that you have followed your
+local guide to produce a \dvi\ file from your \TeX\ or \LaTeX\ document.
+The first manual describes \iptex, used to print your \dvi\ file
+on an Imagen printer.
+The second manual describe \texx\ and \texsun.
+\input{iptex.tex}
+\input{texx.tex}
+
+\newpage
+\section{Installation Guide}
+This section of the guide should be ignored by users.
+It pertains to installing \iptex\ and \texx\,\texsun, and porting
+the code to new hardware.
+\input{installation.tex}
+\end{document}

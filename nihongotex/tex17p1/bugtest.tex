@@ -1,0 +1,97 @@
+% ASCII 日本語 TeX 2.99 - j1.7 の異常動作例
+% jplain でコンパイルして見てください。
+% それぞれの項目は独立なので、エラーが出て先に進めない場合にはエディタで
+% 適当に分割してテストしたい項目を最初にしてください。
+%--------------------------------------------------------------------
+%\let で代入した文字を出力すると文字コード異常
+\let\a=あ
+\a
+
+%--------------------------------------------------------------------
+% マクロパターンマッチ失敗
+\def\要注意#1日は#2の日{thuuui #1 niti ha #2 no hi }
+\要注意21日はひらがなの日
+
+%--------------------------------------------------------------------
+% \afterassignment 異常動作
+\def\dolist{\afterassignment\dodolist\let\next= }
+\def\dodolist{%
+  \ifx\next\endlist
+    \let\next\relax
+  \else
+    /\next\let\next\dolist
+  \fi
+  \next}
+\def\endlist{\dummy}
+\def\dummy{}
+
+\dolist This is a sample text.\endlist
+
+\dolist 漢字だよ4 a5 b6c 7 漢8 字9だ 0よ\endlist
+
+%--------------------------------------------------------------------
+% \if 漢字判断失敗
+\def\ka{あ}
+\def\kb{い}
+\def\kka{\ka}
+\def\kkb{\kb}
+\def\a{a}
+\def\b{b}
+\def\straa{ああ}
+\def\strab{あい}
+
+a: \if \ka\ka true \else false \fi (true)
+b: \if \ka\kb true \else false \fi (false)
+c: \if \kka\ka true \else false \fi (true)
+d: \if \kka\kb true \else false \fi (false)
+
+e: \if \straa true \else false \fi (true)
+f: \if \strab true \else false \fi (false)
+g: \if あ\kka true \else false \fi (true)
+h: \if あ\kkb true \else false \fi (false)
+
+h: \if \ka\a true \else false \fi (false)
+i: \if \kka\a true \else false \fi (false)
+j: \if a\straa true \else false \fi (false)
+k: \if a\kka true \else false \fi (false)
+
+l: \ifcat あう true \else false \fi (true)
+m: \ifcat 漢字 true \else false \fi (true)
+n: \ifcat ！？ true \else false \fi (true)
+ 
+p: \ifcat あa true \else false \fi (false)
+q: \ifcat !あ true \else false \fi (false)
+r: \ifcat あ漢 true \else false \fi (false)
+s: \ifcat ？漢 true \else false \fi (false)
+t: \ifcat ＝あ true \else false \fi (false)
+
+%--------------------------------------------------------------------
+% \endlinechar=-1 のとき全角１字のマクロが行末にあると異常
+\def\あ{11}
+\def\いう{22}
+\def\a{33}
+\def\ai{44}
+\def\漢{11}
+\def\文章{11}
+\def\；{55}
+\def\＠{66}
+
+A\あ
+A\いう
+A\a
+A\ai
+A\漢
+A\文章
+A\；
+A\＠
+A\endlinechar=-1
+A\あ
+A\いう
+A\a
+A\ai
+A\漢
+A\文章
+A\；
+A\＠
+%--------------------------------------------------------------------
+\end

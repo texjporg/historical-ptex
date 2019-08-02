@@ -1,0 +1,5 @@
+#!/bin/sh
+# setup the ./undump area for Sun3 running O.S. 3.0 or above
+cp Makefile.SUN_V3 Makefile
+cp undump.SUN_V3.c undump.c
+

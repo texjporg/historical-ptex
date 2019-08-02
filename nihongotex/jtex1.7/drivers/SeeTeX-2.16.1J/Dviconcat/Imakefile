@@ -1,0 +1,29 @@
+OBJS	=dviconcat.o
+SRCS	=dviconcat.c
+
+      LIBTEXROOT= ../
+      LIBTEXSRC	= ../libtex
+         LIBTEX	= $(LIBTEXSRC)/libtex.a
+      DEPLIBTEX	= $(LIBTEX)
+        DEPLIBS = $(DEPLIBTEX) $(DEPXAWLIB) $(DEPXMULIB) $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(LIBTEX)
+
+        DEFINES = -I$(LIBTEXROOT)
+
+FILES	=Imakefile dviconcat.man Makefile.raw $(SRCS)
+
+all: dviconcat
+
+SingleProgramTarget(dviconcat,$(OBJS),$(LOCAL_LIBRARIES),$(SYSLIBS))
+InstallProgram(dviconcat, $(BINDIR))
+InstallManPage(dviconcat,$(MANDIR))
+DependTarget()
+CleanTarget()
+TagsTarget()
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/Dviconcat/$$file; \
+	done

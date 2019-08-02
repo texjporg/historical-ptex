@@ -1,0 +1,314 @@
+*** code.c	Fri Aug 24 14:09:52 1990
+--- code.c.euc	Fri Aug 24 14:09:52 1990
+***************
+*** 9,15
+  register int	c;
+  {
+  	c &= 0377;
+! 	return ((c > 0x80 && c < 0xa0)||(c > 0xdf && c < 0xfd));
+  }
+  
+  boolean
+
+--- 9,15 -----
+  register int	c;
+  {
+  	c &= 0377;
+! 	return(c >= 0xa1 && c <= 0xfe);
+  }
+  
+  boolean
+***************
+*** 17,23
+  register int	c;
+  {
+  	c &= 0377;
+! 	return (c > 0x3f &&  c < 0xfd && c != 0x7f);
+  }
+  
+  /*
+
+--- 17,23 -----
+  register int	c;
+  {
+  	c &= 0377;
+! 	return(c >= 0xa1 && c <= 0xfe);
+  }
+  
+  /*
+***************
+*** 21,27
+  }
+  
+  /*
+! **	JIS X0208 to Shift JIS code conversion
+  */
+  unsigned short
+  JIStoSJIS(c)
+
+--- 21,27 -----
+  }
+  
+  /*
+! **	JIS X0208 to EUC code conversion
+  */
+  unsigned short
+  JIStoEUC(c)
+***************
+*** 24,30
+  **	JIS X0208 to Shift JIS code conversion
+  */
+  unsigned short
+! JIStoSJIS(c)
+  {
+  	register int high, low;
+  	register int	nh,nl;
+
+--- 24,30 -----
+  **	JIS X0208 to EUC code conversion
+  */
+  unsigned short
+! JIStoEUC(c)
+  {
+  	return(c | 0x8080);
+  }
+***************
+*** 26,50
+  unsigned short
+  JIStoSJIS(c)
+  {
+! 	register int high, low;
+! 	register int	nh,nl;
+! 
+! 	high = (c >> 8) & 0xff;
+! 	low = c & 0xff;
+! 	nh = ((high-0x21)>>1) + 0x81;
+! 	if (nh>0x9f)
+! 		nh += 0x40;
+! 	if (high & 1) {
+! 		nl = low + 0x1f;
+! 		if (low>0x5f)
+! 			nl++;
+! 	}
+! 	else
+! 		nl = low + 0x7e;
+! 	if(iskanji(nh) && iskanji2(nl))
+! 		return((nh << 8) | nl);
+! 	else
+! 		return(0x813f);
+  }
+  
+  /*
+
+--- 26,32 -----
+  unsigned short
+  JIStoEUC(c)
+  {
+! 	return(c | 0x8080);
+  }
+  
+  /*
+***************
+*** 48,54
+  }
+  
+  /*
+!  *	SJIStoJIS : Shift JIS to JIS Kanji code conversion
+   */
+  unsigned short
+  SJIStoJIS(kcode)
+
+--- 30,36 -----
+  }
+  
+  /*
+!  *	EUC to JIS
+   */
+  unsigned short
+  EUCtoJIS(c)
+***************
+*** 51,58
+   *	SJIStoJIS : Shift JIS to JIS Kanji code conversion
+   */
+  unsigned short
+! SJIStoJIS(kcode)
+! int	kcode;
+  {
+  	register short	byte1, byte2;
+  
+
+--- 33,39 -----
+   *	EUC to JIS
+   */
+  unsigned short
+! EUCtoJIS(c)
+  {
+  	return(c & 0x7f7f);
+  }
+***************
+*** 54,72
+  SJIStoJIS(kcode)
+  int	kcode;
+  {
+! 	register short	byte1, byte2;
+! 
+! 	byte1 = kcode >> 8;
+! 	byte2 = kcode & 0xff;
+! 	byte1 -= ( byte1>=0xa0 ) ? 0xc1 : 0x81;
+! 	kcode = ((byte1 << 1) + 0x21) << 8;
+! 	if( byte2 >= 0x9f ) {
+! 		kcode += 0x0100;
+! 		kcode |= (byte2 - 0x7e) & 0xff;
+! 	} else {
+! 		kcode |= (byte2 - ( (byte2<=0x7e) ? 0x1f : 0x20 )) & 0xff;
+! 	}
+! 	return(kcode);
+  }
+  
+  unsigned short	kuten2jis(incode)
+
+--- 35,41 -----
+  unsigned short
+  EUCtoJIS(c)
+  {
+! 	return(c & 0x7f7f);
+  }
+  
+  /*
+***************
+*** 69,76
+  	return(kcode);
+  }
+  
+! unsigned short	kuten2jis(incode)
+! unsigned short	incode;
+  {
+  	register unsigned short	byte_1, byte_2;
+  
+
+--- 38,49 -----
+  	return(c & 0x7f7f);
+  }
+  
+! /*
+!  *	Shift JIS to EUC Kanji code conversion
+!  */
+! short
+! SJIStoEUC(kcode)
+! register kcode;
+  {
+  	register k1;
+  	
+***************
+*** 72,91
+  unsigned short	kuten2jis(incode)
+  unsigned short	incode;
+  {
+! 	register unsigned short	byte_1, byte_2;
+! 
+! 	byte_1 = incode>>8;
+! 	byte_2 = incode&0x00ff;
+! 
+! /* in case of undefined in kuten code table */
+! 	if (byte_1 == 0 || byte_1 > 95 ||
+! 	    byte_2 == 0 || byte_2 > 95)
+! 		return(-1);
+! 
+! 	byte_1 += 0x0020;
+! 	byte_2 += 0x0020;
+! 
+! 	return ((unsigned short)(byte_1<<8|byte_2));
+  }
+  
+  /*
+
+--- 45,57 -----
+  SJIStoEUC(kcode)
+  register kcode;
+  {
+! 	register k1;
+! 	
+! 	kcode -= (kcode < 0xe000 ? 0x811f : 0xc11f);
+! 	k1 = ((kcode << 1) & 0xff00) + 0xa100;
+! 	kcode &= 0xff;
+! 	kcode += (kcode < 0x80 ? kcode < 0x61 ? 0x80 : 0x7f : 0x21);
+! 	return(k1 + kcode);
+  }
+  
+  /*
+***************
+*** 89,95
+  }
+  
+  /*
+!  *	SJIStoJIS : Shift JIS to JIS Kanji code conversion
+   */
+  unsigned short
+  KUTENtoSJIS(kcode)
+
+--- 55,61 -----
+  }
+  
+  /*
+!  *	KUTEN to EUC Kanji code conversion
+   */
+  unsigned short
+  KUTENtoEUC(kcode)
+***************
+*** 92,98
+   *	SJIStoJIS : Shift JIS to JIS Kanji code conversion
+   */
+  unsigned short
+! KUTENtoSJIS(kcode)
+  {
+  	return(JIStoSJIS(kuten2jis(kcode)));
+  }
+
+--- 58,65 -----
+   *	KUTEN to EUC Kanji code conversion
+   */
+  unsigned short
+! KUTENtoEUC(kcode)
+! register kcode;
+  {
+  	if(!((kcode>>8) >= 1 && (kcode>>8) <= 94 &&
+  		(kcode&255) >= 1 && (kcode&255) <= 94))
+***************
+*** 94,100
+  unsigned short
+  KUTENtoSJIS(kcode)
+  {
+! 	return(JIStoSJIS(kuten2jis(kcode)));
+  }
+  
+  short
+
+--- 61,70 -----
+  KUTENtoEUC(kcode)
+  register kcode;
+  {
+! 	if(!((kcode>>8) >= 1 && (kcode>>8) <= 94 &&
+! 		(kcode&255) >= 1 && (kcode&255) <= 94))
+! 			return(-1);
+! 	return(kcode + 0xa0a0);
+  }
+  
+  short
+***************
+*** 107,113
+  	c1=c >> 8;
+  	c2=c & 0xff;
+  	if(c1)
+! 		return((c2+(c2 << (c1-0x81)) & 0xff) << 1);
+  	else
+  		return(((c2+c2+1) & 0xff) << 1);
+  }
+
+--- 77,83 -----
+  	c1=c >> 8;
+  	c2=c & 0xff;
+  	if(c1)
+! 		return((c2+(c2 << (c1-0xa1)) & 0xff) << 1);
+  	else
+  		return(((c2+c2+1) & 0xff) << 1);
+  }

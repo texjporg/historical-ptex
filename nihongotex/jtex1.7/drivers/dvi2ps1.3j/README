@@ -1,0 +1,54 @@
+README for dvi2ps
+				桜井貴文(a87480@tansei.u-tokyo.ac.jp)
+				都立大数学科
+				&
+				風間一洋(kazama@expert-sun.ntt.jp)
+				NTTソフトウェア研究所
+				ソフトウェア基礎技術研究部
+
+このdvi2psはdvi2ps version 2.30を元に大幅に書き直したものです。
+version 2.30にまで至る過程はHISTORYというファイルにあります。
+今回、日本語用の機能を中心に大幅に書き直し／加えたので新たにversion番号を
+1.0jから始めることにしました。だだし、御存知のようにdvi2psという名前の
+プログラムは数多くあるので、このプログラムは dvi2ps j-version とか、
+dvi2ps 1.0j とか呼ぶことにしたいと思います。
+
+
+主な特徴は、
+・{NTT JTeX, ASCII JTeX} x {大日本フォント, プリンター内蔵フォント}の
+  4通りのすべてをサポートした。(ASCII JTeX x 大日本フォント は未完成。)
+・fontdesc方式を採用した。
+・必要なmagnificationに対応するフォントファイルがないとき代用フォントを
+　使う。
+・eepicに対応した。
+・EPSFファイルに対応した。
+・Macintoshの図形を取り込む際に、大きさがおかしくなるバグをなおした。
+（例えば、MacDrawなど）
+・用紙サイズを増やした。
+
+
+dvi2psのinstallの仕方は以下の通りです。
+1. Makefileの
+	DVI2PSLIB, BINAREA, FDNAME, PAGETYPE,
+	RESOLUTION, TOPMARGIN, LEFTMARGIN
+   を適当に設定する。
+   System Vの場合はCFLAGSに -DSYSV を加える。(ちゃんと動くかどうかは
+   未確認です。)
+2. DOCを読みfontdesc-*を参考にして、fontdescファイル${FDNAME}を
+   自分のサイトにあわせて書く。(%%DVI2PSLIB%%はinstall時に${DVI2PSLIB}
+   に置き換えられる。)
+3. make install する。
+
+
+また、tex.psの他に、tex.ps.oldがありますが、これはspecialを使っ
+て出力する場合に以前のものとの互換をとるファイルです。以前のファイルを
+新しいdvi2psで出力するとおかしくなる場合がありますから、その時は、
+
+	dvi2ps -h -i ${DVI2PSLIB}/tex.ps.old foo.dvi
+
+として出力してください。
+
+
+lprdviはおまけのプログラムです。機能はDOCを読んで下さい。
+気に入ったらfontdesc-pk,fontdesc-jsを自分のサイトに合わせて変更し、
+make install-lprdvi を実行して下さい。

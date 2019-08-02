@@ -1,0 +1,73 @@
+#
+#	Makefile for lips3dvi related programs.
+#
+#	Written by H. Nagahara on June 17 1990.
+#	Copyright (C) 1990 by H. Nagahara.  All rights reserved.
+#
+CFLAGS=-O
+LDFLAGS=
+LIBS=
+
+BINDIR=		/usr/local/bin
+LIBDIR=		/usr/local/lib/tex
+
+COMMONOBJ=	download.o readdvi.o fontlist.o pkfont.o\
+		jxlfont.o doprint.o cache.o main.o pxlfont.o
+COMMONSRC=	download.c readdvi.c fontlist.c pkfont.c\
+		jxlfont.c doprint.c cache.c main.c pxlfont.c
+LIPS3DVIOBJ=	$(COMMONOBJ) lbp.o
+LIPS3DVISRC=	$(COMMONSRC) lbp.c
+ESCPDVIOBJ=	$(COMMONOBJ) lp3000.o
+ESCPDVISRC=	$(COMMONSRC) lp3000.src
+DVIPRSRC=	dvipr.c
+LIPSBACKSRC=	lipsback.c
+
+lips:	lips3dvi dvipr lipsback
+escp:	escpdvi dvipr lipsback
+
+lips3dvi:	$(LIPS3DVIOBJ)
+	$(CC) -o lips3dvi $(CFLAGS) $(LDFLAGS) $(LIPS3DVIOBJ) $(LIBS)
+
+dvipr:		$(DVIPRSRC) config.h lbp.h
+	$(CC) -o dvipr $(CFLAGS) $(DVIPRSRC)
+
+lipsback:	$(LIPSBACKSRC) config.h
+	$(CC) -o lipsback $(CFLAGS) $(LIPSBACKSRC)
+
+escpdvi:	$(ESCPDVIOBJ)
+	$(CC) -o escpdvi $(CFLAGS) $(LDFLAGS) $(ESCPDVIOBJ) $(LIBS)
+
+install:	lips3dvi dvipr lipsback
+	cp lips3dvi lipsback $(LIBDIR)
+	cp dvipr $(BINDIR)
+
+installp:	escpdvi dvipr lipsback
+	cp escpdvi lipsback $(LIBDIR)
+	cp dvipr $(BINDIR)
+
+clean:
+	rm -f $(COMMONOBJ) lbp.o lp3000.o core
+
+makeversion:
+	sed "s&DATE&`date +%m/%d/%Y-%H:%M`&" version.dist > version.h
+
+######
+patlist:	patlist.c
+	cc -o patlist $(CFLAGS) patlist.c
+
+######
+dvidump.o:	dvidump.c config.h dvi.h
+readdvi.o:	readdvi.c config.h dvi.h
+fontlist.o:	fontlist.c config.h dvi.h font.h drive.h
+download.o:	download.c config.h font.h drive.h lbp.h
+pkfont.o:	pkfont.c config.h font.h drive.h
+pxlfont.o:	pxlfont.c config.h drive.h font.h
+jxlfont.o:	jxlfont.c config.h font.h drive.h lbp.h ktype.h
+cache.o:	cache.c config.h font.h drive.h ktype.h
+doprint.o:	doprint.c config.h font.h drive.h lbp.h dvi.h
+main.o:		main.c config.h dvi.h drive.h lbp.h font.h version.h
+lbp.o:		lbp.c config.h font.h drive.h convert.h lbp.h
+lp3000.o:	lp3000.c config.h font.h drive.h convert.h lbp.h
+
+dvipr.o:	dvipr.c config.h lbp.h
+lipsback.o:	lipsback.c config.h

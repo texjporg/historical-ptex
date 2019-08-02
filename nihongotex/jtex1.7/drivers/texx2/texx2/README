@@ -1,0 +1,194 @@
+v00INF1:  Welcome to comp.sources.x
+v00INF2:  Index for volume 0
+v00i002:  Ardent Window Manager(X11), Part01/13
+v00i003:  Ardent Window Manager(X11), Part02/13
+v00i004:  Ardent Window Manager(X11), Part03/13
+v00i005:  Ardent Window Manager(X11), Part04/13
+v00i006:  Ardent Window Manager(x11), Part05/13
+v00i007:  Ardent Window Manager(X11), Part06/13
+v00i008:  Ardent Window Manager(X11), Part07/13
+v00i009:  Ardent Window Manager(X11), Part08/13
+v00i011:  Ardent Window Manager(X11), Part10/13
+v00i012:  Ardent Window Manager, Part11/13
+v00i013:  Ardent Window Manager(X11), Part12/13
+v00i014:  Ardent Window Manager(X11), Part13/13
+v00i015:  xwatch: replacement for xbiff and the mailbox widget(X11), Part01/01
+v01INF2:  missing parts
+v01INF3:  comp.sources.x archives
+v01i001:  xtools: an easy way to start X programs(X11), Part01/01
+v01i002:  xfig: a MacDraw style line drawing editor(X11), Part01/11
+v01i003:  xfig: a MacDraw like line drawing editor(X11), Part02/11
+v01i004:  xfig: a MacDraw style line editor(X11), Part03/11
+v01i005:  xfig: a MacDraw style line editor(X11), Part04/11
+v01i006:  xfig: a MacDraw style line editor(X11), Part05/11
+v01i007:  xfig: a MacDraw style line editor(X11), Part06/11
+v01i008:  xfig: a MacDraw style line editor(X11), Part07/11
+v01i009:  xfig: a MacDraw style line editor(X11), Part08/11
+v01i010:  xfig: a MacDraw style line editor(X11), Part09/11
+v01i011:  xfig: a MacDraw style line editor(X11), Part10/11
+v01i012:  xfig: a MacDraw style line editor(X11), Part11/11
+v01INF4:  Guidelines for postings to comp.sources.x
+v01i013:  awm: Ardent Window Manager(X11), Patch7
+v01i014:  xfig: a MacDraw style line editor, Patch3
+v01i015:  Mailwatch widget, Patch1
+v01i016:  xipr: dumps an X window to an Imagen Printer, Part01/01
+v01i017:  xfig: a MacDraw like graphics editor, Patch4
+v01i018:  xmille: Mille Bourne for X, Part01/03
+v01i019:  xmille: Mille Bourne for X, Part02/03
+v01i020:  xmille: Mille Bourne for X, Part03/03
+v01i021:  xmille: Mille Bourne for X, Part04/18
+v01i022:  xmille: Mille Bourne for X, Part05/18
+v01i023:  xmille: Mille Bourne for X, Part06/18
+v01i024:  xmille: Mille Bourne for X, Part07/18
+v01i025:  xmille: Mille Bourne for X, Part08/18
+v01i026:  xmille: Mille Bourne for X, Part09/18
+v01i027:  xmille: Mille Bourne for X, Part10/18
+v01i028:  xmille: Mille Bourne for X, Part11/18
+v01i029:  xmille: Mille Bourne for X, Part12/18
+v01i030:  xmille: Mille Bourne for X, Part13/18
+v01i031:  xmille: Mille Bourne for X, Part14/18
+v01i032:  xmille: Mille Bourne for X, Part15/18
+v01i033:  xmille: Mille Bourne for X, Part16/18
+v01i034:  xmille: Mille Bourne for X, Part17/18
+v01i035:  xmille: Mille Bourne for X, Part18/18
+v01i036:  xmoire, a screensaver, Part01/01
+v01i037:  menupane: popup menu program for the X toolkit, Part01/01
+v01i038:  xmille: Mille Bourne for X, Part09/18
+v01i039:  xmille: Mille Bourne for X, Part10/18
+v01i040:  xmille: Mille Bourne for X, Part11/18
+v01i041:  xmille: Mille Bourne for X, Part12/18
+v01i042:  qix: An arcade games for X, Part01/01
+v01i043:  xsecure: Secures a screen under X10, Part01/01
+v01i044:  dclock: A digital clock widget and driver, Part01/01
+v01i045:  xplaces: toolplaces for X, Part01/01
+v01i046:  twm: Tom's Window Manager, Part01/07
+v01i047:  twm: Tom's Window Manager, Part02/07
+v01i048:  twm: Tom's Window Manager, Part03/07
+v01i049:  twm: Tom's Window Manager, Part04/07
+v01i050:  twm: Tom's Window Manager, Part05/07
+v01i051:  twm: Tom's Window Manager, Part06/07
+v01i052:  twm: Tom's Window Manager, Part07/07
+v01i053:  xphoon: display phase of moon in root window(X10), Part01/04
+v01i054:  xphoon: display phase of moon in root window(X10), Part02/03
+v01i055:  xphoon: display phase of the moon in root window(X10), Part03/03
+v01i056:  xphoon: Show phase of the Moon on root window, Part01/04
+v01i057:  xphoon: show phase of the moon on root window, Part02/04
+v01i058:  xphoon: show phase of the moon on root window, Part03/04
+v01i059:   xphoon: show phase of the moon on root window, Part04/04
+v01i060:  select: a selection widget, Part01/01
+v01i061:  mazedemo: a maze demo program, Part01/01
+v01i062:  torch: dialog utilities, Part01/04
+v01i063:  torch: dialog utilities, Part02/04
+v01i064:  torch: dialog utilities, Part03/04
+v01i065:  torch: dialog utilities, Part04/04
+v02INF1:  Introduction to comp.sources.x
+v02INF2:  large font distribution
+v02INF3:  List of sources in the archives
+
+v02i002:  A program for view 16 bit digital signals, Part01/02
+v02i003:  A program for view 16 bit digital signals, Part02/02
+v02i004:  update to xtools, Patch1
+v02i005:  a different interface to widget creation, Part01/01
+v02i006:  a maze graphical maze solver, Part01/01
+v02i007:  Ardent Window Manager, Patch8
+v02i008:  a differnet interface to widget creation, Patch1
+v02i009:  a colorful kaleidoscopic display, Part01/01
+v02i010:  a MacDraw like graphics editor, Patch5
+v02i011:  mille bourne for X, Patch1
+v02i012:  kaleidoscope, Patch1
+v02i013:  X11 Release 3, Patch1
+v02i014:  a ditroff previewer for X, Patch3
+v02i015:  HP Widget Set, Patch1
+v02i016:  X11 Release 3, Patch2
+v02i017:  Purdue speedups to Release 3 mfb code, Part01/02
+v02i018:  Purdue speedups to Release 3 mfb code, Part02/02
+v02i019:  draw and edit diagrams, figures, and pictures, Patch1
+v02i020:  draw and edit diagrams, figures and pictures, Patch2
+v02i021:  Another puzzle program, Part01/01
+v02i022:  monitor X11 Server/Client communications, Part01/04
+v02i023:  monitor X11 Server/Client communications, Part02/04
+v02i024:  monitor X11 Server/Client communications, Part03/04
+v02i025:  monitor X11 Server/Client communications, Part04/04
+v02i026:  a MacDraw like graphics editor, Patch 5
+v02i027:  generic bitmap to Impress converter, Patch1
+v02i028:  gnu chess for X, Part01/06
+v02i029:  gnu chess for X, Part02/06
+v02i030:  gnu chess for X, Part03/06
+v02i031:  gnu chess for X, Part04/06
+v02i032:  gnu chess for X, Part05/06
+v02i033:  gnu chess for X, Part06/06
+v02i034:  set the root background, Patch1
+v02i035:  multiplayer startrek game, Part01/07
+v02i036:  multiplayer startrek game, Part02/07
+v02i037:  multiplayer startrek game, Part03/07
+v02i038:  multiplayer startrek game, Part04/07
+v02i039:  multiplayer startrek game, Part05/07
+v02i040:  multiplayer startrek game, Part06/07
+v02i041:  multiplayer startrek game, Part07/07
+v02i042:  Gnu emacs for X/VMS, Patch1
+v02i043:  X11 Release 3, Patch3
+v02INF4:  extraction shell script for hpdoc
+v02i044:  HP Widgets Documentation, Part01/20
+v02i045:  HP Widgets Documentation, Part02/20
+v02i046:  HP Widgets Documentation, Part03/20
+v02i047:  HP Widgets Documentation, Part04/20
+v02i048:  HP Widgets Documentation, Part05/20
+v02i049:  a colorful kaleidoscopic display, version 2, Part01/01
+v02i050:  monitor X11 Server/Client communications, Patch1
+v02i051:  HP Widgets Documentation, Part06/20
+v02i052:  HP Widgets Documentation, Part07/20
+v02i053:  HP Widgets Documentation, Part08/20
+v02i054:  HP Widgets Documentation, Part09/20
+v02i055:  HP Widgets Documentation, Part10/20
+v02i056:  subroutine to print events in human readable form, Part01/01
+v02i057:  HP Widgets Documentation, Part11/20
+v02i058:  HP Widgets Documentation, Part12/20
+v02i059:  HP Widgets Documentation, Part13/20
+v02i060:  HP Widgets Documentation, Part14/20
+v02i061:  HP Widgets Documentation, Part15/20
+v02i062:  HP Widgets Documentation, Part16/20
+v02i063:  HP Widgets Documentation, Part17/20
+v02i064:  HP Widgets Documentation, Part18/20
+v02i065:  HP Widgets Documentation, Part19/20
+v02i066:  HP Widgets Documentation(Chapter 3), Part01/02
+v02i067:  HP Widgets Documentation(Chapter 3), Part02/02
+v02i068:  new improved toolplacements replacement, Part01/01
+v02i069:  a browser, Part01/03
+v02i070:  a browser, Part02/03
+v02i071:  a browser, Part03/03
+v02i072:  A demo of continuous graphics in a Toolkit window, Part01/02
+v02i073:  A demo of continuous graphics in a Toolkit window, Part02/02
+v02i074:  postit notes, Part01/02
+v02i075:  postit notes, Part02/02
+v02i076:  XReadBitmapFile() that reads Suntools icons, Sun rasterfile, Part01/02
+v02i077:  XReadBitmapFile() that reads Suntools icons, Sun rasterfile, Part02/02
+v02i078:  X11 Release 3, Patch4
+v02i079:  programs to display sun bitmaps under X11, Part01/01
+new xbgsun and xviewsun
+v02i080:  X11 Release 3, Patch4
+v02i081:  X11 Release 3, Patch5
+v02i082:  X11 Release 3, Patch7
+v02i083:  X11 Release 3, Patch6
+v02i084:  ICCCM Status Report, Part01/01
+v02i085:  Inter-Client Communication Conventions Manual, Part01/07
+v02i086:  Inter-Client Communication Conventions Manual, Part02/07
+v02i087:  Inter-Client Communication Conventions Manual, Part03/07
+v02i088:  Inter-Client Communication Conventions Manual, Part05/07
+v02i089:  Inter-Client Communication Conventions Manual, Part06/07
+v02i090:  Inter-Client Communication Conventions Manual, Part07/07
+v02i091:  Inter-Client Communication Conventions Manual, Part04/07
+v03INF1:  Introduction to comp.sources.x
+v03INF2:  List of sources in the archives
+v03i001:  programs to display sun bitmaps under X11, Patch1
+v03i002:  cbs@cad.cs.cmu.edu, Part01/01
+v03i003:  Purdue speedups to R3 server, Release 2, Part01/04
+v03i004:  Purdue speedups to R3 server, Release 2, Part02/04
+v03i005:  Purdue speedups to R3 server, Release 2, Part03/04
+v03i006:  Purdue speedups to R3 server, Release 2, Part04/04
+v03i007:  Purdue speedups to R3 server, Release 2, Patch1
+v03i008:  display the default colormap, Part01/01
+v03i009:  X11 Release 3, Patch8
+v03INF3:  Renunciation of Moderator's Copyright
+v03i010:  toolplaces replacement, Patch1
+v03i011:  display the default colormap, Patch1
+v03i012:  program to display gif images, Patch1

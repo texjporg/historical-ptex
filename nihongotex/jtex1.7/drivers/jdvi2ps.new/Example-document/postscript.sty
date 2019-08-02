@@ -1,0 +1,117 @@
+%
+% Postscriptbox and psbox macros for use with dvips and pstex.
+%
+% Neil Hunt, Schlumberger Palo Alto Research.
+% hunt@spar.slb.com
+%
+% HISTORY
+%
+% $Log:	postscript.sty,v $
+% Revision 1.5  89/01/09  13:05:38  hunt
+% Updated to use a single .psz file per job rather than a .tps file
+% for each included figure.
+% 
+% Revision 1.4  88/09/20  13:12:18  hunt
+% Cosmetic changes
+% 
+% Revision 1.3  88/08/04  12:33:19  hunt
+% A new psbox feature has been added for use with pstex:
+% This replaces the old psbox, and simplifies things a lot.
+% 
+% Revision 1.2  88/08/04  09:50:46  hunt
+% Added RXB's psbox hacks:
+% {1}	18-Apr-88  Rafael Bracho (rxb) at Schlumberger Austin Systems Center
+% 	The postscriptbox macros were created by Neil Hunt at SPAR, I've
+% 	added the psbox ones to use the InsertFile special.  Since I
+% 	fixed InsertFile, I don't know if we still need the postscriptbox
+% 	special, though.
+% 
+% Revision 1.1  88/08/04  09:41:01  hunt
+% Initial revision - useful with early embed program versions.
+%
+
+%
+% Primitive: postscriptbox macros.
+% ===============================
+%
+% \postscriptbox{w}{h}{file}		Box of size w, h.
+% \postscriptbox(w,h){file}		Picture env. box of size w, h.
+%
+
+\def \postscriptbox{\@ifnextchar ({\@postscriptpicbox}{\@postscriptbox}}
+
+\def \@postscriptpicbox(#1,#2)#3{%
+\@postscriptbox{#1\unitlength}{#2\unitlength}{#3}}
+
+\def \@postscriptbox#1#2#3{%	<width> <height> <file>
+\@xdim=#1\divide\@xdim 1000\multiply\@xdim\mag%
+\@ydim=#2\divide\@ydim 1000\multiply\@ydim\mag%
+\mbox{\vbox to #2{\vfil\hbox to #1%
+{\special{postscriptbox {\the\@xdim}{\the\@ydim}{#3}}\hfil}}}}
+
+%
+% Higher level macros.
+% ===================
+%
+% \psbox[dimensions-options]{psfile}
+% 1	\psbox writes to .aux ``\psboxaux[dimensions-options]{psfile}''
+% 2	pstex reads .aux files, writes \pssize macros to .psz file.
+% 3	.psz file is input, defines size macros by figure name.
+% 4	\psbox invokes size macros for each figure.
+%
+
+% Counters to disambiguate multiple references to the same figure.
+% t@psctr counts multiple occurrences of psboxaux's in .aux file.
+% f@psctr counts multiple occurrences of pssize's in .psz file.
+\newcounter{t@psctr}
+\newcounter{f@psctr}
+
+\def\psbox{\@ifnextchar [{\@psbox}{\@psbox[]}}
+
+%
+% First we write an entry on the aux file: psboxaux[args]{filename}
+% Next we generate the handle f@name used for this figure:
+% we check whether the tag `t@<filename>' is defined:
+%	If not, this is the first time PS file <filename> has been used,
+%	so we def \f@name = f@<filename>, and define the tag t@<filename>.
+%	Otherwise, this filename has been used before, and we will add
+%	a unique number to the name to disambiguate:
+%	we def \f@name = fN@<filename> where N is the value of t@psctr++.
+% Now we try to access the \postscriptbox macro which is the expansion
+% of \f@name.  If \f@name is undefined, we write a warning, and a placeholder.
+%
+
+\def\@psbox[#1]#2{%
+\if@filesw\immediate\write\@auxout{\string\psboxaux{#1}{#2}}\fi
+\@ifundefined{t@#2}%
+{\def\f@name{f@#2}\global\@namedef{t@#2}{\relax}}%	% t@#2 undef'ed
+{\def\f@name{f\arabic{t@psctr}@#2}\stepcounter{t@psctr}}% t@#2 defined
+\@ifundefined{\f@name}{%
+\framebox[2in]{Figure {\tt #2}\rule[-1in]{0in}{2in}}%	% \f@name undef
+\@warning{Figure `#2' on page \thepage \space undefined}}%
+{\csname \f@name \endcsname}}				% \f@name def'd
+
+%
+% Prepare to read the .aux file:
+%	Define psboxaux as null; it is only used as a flag for pstex.
+%
+
+\let\psboxaux\@gobbletwo
+
+%
+% Prepare to read the .psz file:
+%	Define \pssize as a macro to build f@name in an identical manner to
+%	above, and then define \f@name as the proper \postscriptbox macro.
+%
+
+\def\pssize#1#2#3{%
+\@ifundefined{f@#3}%
+{\def\f@name{f@#3}}%					% f@#2 undef'ed
+{\def\f@name{f\arabic{f@psctr}@#3}\stepcounter{f@psctr}}% f@#2 defined
+\global\@namedef{\f@name}{\postscriptbox{#1}{#2}{#3}}}
+
+%
+% Read the .psz file to define the sizes for each figure.
+%
+
+\@input{\jobname.psz}

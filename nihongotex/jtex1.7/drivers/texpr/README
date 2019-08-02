@@ -1,0 +1,99 @@
+Copyright (c) Japan TeX Users Group, 1986 1987
+
+1. Last year we posted Canon LBP-8 driver for Berkeley UNIX (called
+   TeXpr).  This is a new version (v1.2) of TeXpr.   Known bugs were
+   fixed and some functions were added.
+   Most notable change is that the driver supports PK font file format
+   in addition to PXL format.
+
+   This driver adopts 2-pass algorithm. Pass-1 (front end) runs as a
+   user process, and pass-2 (back end) runs as a "d-filter" of printer
+   daemon.
+   We have not tested on System V UNIX, but we think you can run with
+   a little change of source codes.
+
+2. Contents
+   this directory contains following files/directories.
+	README --- this file
+	texpr  --- front end of texpr
+	dvi2lbp--- back end of texpr
+	common --- common subroutines and headers
+	other  --- example of output filter
+	man.tex--- texpr manual
+
+3. LBP-8 setup
+   Setup your LBP-8, by setting DIP-SW suitably.
+	. 8 bit, 1 stop-bit, no-parity, 9600 baud
+	. full paint mode
+	. no jam retry mode
+   And check to run lpr normally.
+   You can use 19200 baud if your host responds to XON/XOFF quickly.
+   An example of the DIP-SW setting is 55 88 00 13 in hex.
+
+4. Output filter check
+   If your output filter issues hard reset command (\033c), change it to
+   soft reset command (\033<). Hard reset command erases down-loaded font,
+   so we can't use the font many times.
+   Sample output filter is in ./other directory.
+
+5. Site dependent editing
+   
+   1) common/def.h
+	Define your LBP-8 model name. You can select one of five choices,
+	LASERSHOT, LBP_8_A2, LBP_8_AJ2, LBP_8II_A2, or LBP_8II_AJ2.
+	Other models (A1, AJ1) are inadequate for TeX, because "full paint
+	mode" is not available.
+
+        Define PK_FORMAT if you use PK font file, otherwise (PXL file)
+        comment out that line.
+
+	LIB means font library area name, change this if you wish.
+	Default is /usr/lib/tex/fonts.
+
+	LPR defines execl argument. If the device name of your LBP-8
+	is other than "lp", add argument "-Pxxx" to the line.
+
+   2) dvi2lbp/Makefile
+	Default installation destination of dvi2lbp is /usr/local/lib,
+	edit the name if you want.
+
+   3) texpr/Makefile
+	Default installation destination of texpr is /usr/local, you may
+	edit this.
+
+   4) /etc/printcap
+	Add next line to your device description part.
+	:df=/usr/local/lib/dvi2lbp:
+        Sample flag setting of tty port is
+        :fc#06300:fs#022:xs#040:
+        
+        Meaning of the sample flag is
+             . CBREAK mode
+             . LITOUT (8 bit output) mode
+             . EVENP & ODDP (8 bit input) mode
+        To set 8 bit input mode, you must set EVENP & ODDP in 4.2BSD,
+        but you must clear EVENP & ODDP in Ultrix (CAUTION!!).
+
+        Don't use RAW mode, because it disables XON/XOFF flow control.
+        For more details, read Unix manual tty(4), printcap(5), and
+        "4.2BSD Line Printer Spooler Manual".
+
+   5) LIB(=/usr/lib/tex/fonts)
+	Do chmod LIB writable to daemon.
+	Daemon creates .down_font file to the directory.
+
+6. make & install
+
+   # cd texpr
+   # make
+   # make install
+   # cd ../dvi2lbp
+   # make
+   # make install
+
+
+Thats all, good luck!
+
+Japan TeX Users Group		Nobuo Saito (ns@keio.junet)
+				Yoichi Kawabata (kawabata@canon.junet)
+				Shigeyuki takagi (takagi@icot.junet)

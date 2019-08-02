@@ -1,0 +1,32 @@
+%
+% "b5j" document style option.
+%
+\@ifundefined{@twoc}{%
+\oddsidemargin0pt
+\evensidemargin0pt
+\parindent1zw
+\@ifundefined{@lands}{\topmargin-.3in
+\ifcase \@ptsize
+    % mods for 10 pt
+    \textheight26\baselineskip
+    \textwidth28zw
+\or % mods for 11 pt 
+    \textheight26\baselineskip
+    \textwidth25zw
+\or % mods for 12 pt
+    \textheight25\baselineskip
+    \textwidth24zw
+\fi}{\topmargin-.6in
+\ifcase\@ptsize
+    % mods for 10 pt
+    \textheight17\baselineskip
+    \textwidth47zw
+\or % mods for 11 pt 
+    \textheight17\baselineskip
+    \textwidth42zw
+\or % mods for 12 pt
+    \textheight16\baselineskip
+    \textwidth40zw
+\fi}
+\advance\textheight\topskip
+\def\@ps@{2}}{\@warning{Sorry, I igunored `a5j' style}}

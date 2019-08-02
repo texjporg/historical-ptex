@@ -1,0 +1,17 @@
+% for use with LaTeX, comment out the following lines
+%\font\sevrm=cmr7
+%\font\twltt=cmtt12
+%\def\mbox=\relax
+
+% constants
+\let\pics=2
+\let\dottedpics=1
+\let\nopics=0
+
+% commands to change picture drawing mode
+\newcommand{\nopictures}{\let\picturemode=\nopics}
+\newcommand{\dottedpictures}{\let\picturemode=\dottedpics}
+\newcommand{\pictures}{\let\picturemode=\pics}
+
+% set default
+\pictures

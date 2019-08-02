@@ -1,0 +1,249 @@
+JBibTeX(C Version) ver. 0.30 の概要				1991-1-2
+
+				（財）電力中央研究所　情報システム部　松井 正一
+						〒100　千代田区大手町 1-6-1
+					　　　	JUNET: matsui@denken.or.jp
+						CompuServe: 70064,645
+【始めに】
+
+　JBibTeX は BibTeX 0.99c(C Version) を基に NTT版JTeX, ASCII版日本語TeXのどち
+らにも対応して日本語化したものである．
+
+　主な変更は以下の通りである．
+
+ (1) 漢字コードは内部的には EUC で表現する．ファイルから一行を読み込む時点で，
+　　EUC ならそのまま， JIS 漢字は EUC にコード変換する．
+    端末，ファイルへの出力コード系は，コンパイル時に指定するが，
+    利用者単位にも，それぞれ次の環境変数で指定できる．
+	端末		BIBTERMCODE
+	ファイル	BIBFILECODE
+    指定は，NTT版 JTeXの \kanjitermicalcode, \kanjifilecode と同じ，
+	1,2,3,4,5,6,10(SJIS),20(EUC)
+    で行う．MS-DOS 版では SJIS がデフォルトの設定で exe が作成してある．
+
+ (2) 漢字コードを通すように BibTeX の Change File を変更して, 文字を 7bits から
+　　8bits に変更した（これに合せて bibext.c も変更されている)．
+
+ (3) 組込み関数の中で substring$, text.prefix$ に対しては，
+　　１単位の漢字コードの間で(1バイト目と2バイト目の真ん中で)文字列が分断され
+　　ないようにした．
+　　  例えば，"漢字" の先頭から 3 文字を抜出すと "字"の 2バイト目がなくなって
+    しまうので，このような場合には，4バイト目まで切出すようにした．
+ 
+ (4) (3)との関係で， chr.to.int$ は stack top が漢字ならば single character
+　  でなくても warning を出さず， 1byte 目の値を返すようにした．
+
+ (5) 漢字コードを含む文字列であるかどうかの判定用に，組み込み関数として
+     is.kanji.str$ を追加した．
+
+ (6) add.period$ 関数では `!', `?', `.' の後には，`.' を付け加えないので，
+     対応する全角文字の `！', `？', `．', `。' の後にも `.' を付け加えない
+　　 ようにした．
+
+ (7) 複数氏名は " and " を間にはさんで並べるが，漢字氏名の場合には " and "
+     の代わりに，全角の句点 `，', `、' を使ってもよいようにした．
+     (この変更により，影響を受ける関数は format.name$ と num.names$ 関数)
+
+ (8) ver. 0.20 までは，漢字氏名の姓と名の区切りとしては半角のスペースしか
+     許していなかったが，全角のスペースでもよいようにした．
+
+ (9) bib file の項目のどこに漢字コードを使ってよいかは， test.bib などを参照
+　　 されたい．
+
+(10) bib ファイル中の漢字著者名の姓と名の間にはスペース(半角でも全角でも)を
+　 　置くことを標準とした（なくても問題ないが，結果がちゃんとならないことが
+     あるし，警告メッセージが出力される）．
+
+(11) 文献スタイルとして plain, abbrv, alpha, unsrt に対応する日本語対応
+     スタイルとして， jplain, jabbrv, jalpha, junsrt が用意されている．また
+     情報処理学会論文誌(tipsj), 英文論文誌(jipsj), 電子情報通信学会論文誌
+     (tieice), 日本オペレーションズリサーチ学会論文誌(jorsj) 用のスタイルも
+　　 用意されている．
+
+(12) MS-DOS 版では文献のフォーマットスタイルファイル(*.bst)は，先ずカレント
+　　ディレクトリから探し，なければまず，\jtex\bst ディレクトリから，そこに
+　　なければ \jtex\sty ディレクトリから探す．このサーチバスは TEXINPUTS という
+　　環境変数で変更できる．指定は
+
+	set TEXINPUTS=.:\usr\lib\tex\sty
+
+　　のように : (半角のコロン)で区切ってパスを並べる．
+    　UNIX 版では TEXINPUTS のデフォールトはサイト毎に決められているはずで
+　　あるが，環境変数を使って変更できるのは MS-DOS 版と同じである．
+
+(13) MS-DOS 版では文献データベースファイル(*.bib)は，先ずカレントディレクトリ
+　　 から探し，なければ \jtex\bib ディレクトリから探す．このサーチパスは
+　　 BIBINPUTS という環境変数で変更できる．指定は
+
+	set BIBINPUTS=.:\usr\lib\tex\bib
+
+　　のように : (半角のコロン)で区切ってパスを並べる．
+    　UNIX 版では BIBINPUTS のデフォールトはサイト毎に決められているはずで
+　　あるが，環境変数を使って変更できるのは MS-DOS 版と同じである．
+
+(14) MS-DOS 版は UNIX 上で C に展開したソースに手で変更を加えて作成した．
+　　 Turbo-C の Huge model でコンパイルした jbibtex.exe と関連ファイルのみを
+　　 配布し，ソースは配布しない．これは変更があまり人に見せられるものでは
+　　 ない，きたない物であるから :-)．
+　　（げてもの好きな人がどうしても欲しいという場合には特に拒む理由はないが）．
+
+    　MS-DOS なら漢字は内部的にも SJIS で表示して，入出力時点でのコード
+　　変換を行なわなくてもいいようにした方が効率的であるが，ソースの変更が
+　　面倒なので UNIX 版のままである．
+
+
+【ver. 0.10, ver. 0.20 利用者への注意】
+
+　文献スタイル(bst)は ver. 0.30 で変更した機能を前提として作成されているので，
+jbibtex ver. 0.10, ver. 0.20 では使えない． jbibtex を ver. 0.30 にしてから，
+bst ファイルを入れ換えること．jbibtex ver. 0.30 で古い(ver. 0.20 以前用)を
+使っても問題はない．
+
+【MS-DOS版での制約】
+
+　メモリの制約から，chkdsk したときに表示される利用可能メモリが 470K 程度の
+場合には，処理できる引用文献の数(\cite{}の数)ははぼ300件以内である．
+  \nocite{*} を使って bib ファイルの中身を全部処理する場合などには，簡単に
+300件以上になるが，安全を見て 250 件以内にとどめるのが望ましい．これより
+多い文献を処理した場合の結果は保証しない(こんなデータベースはないと思うかも
+しれないが，RAND Corp. で保守している REDUCE に関する bib ファイルにはもう
+700件近く入っているのですねー)．
+
+　実用上は問題ないと思われるが，これでは不足する場合には fep, tsr をはずすなど
+して，利用可能メモリを増やせばいい．システムで設定してある引用文献の数の
+上限は450であるが，それに達しない前にメモリ不足になる場合もある．
+
+
+【配布ファイルの説明】
+
+MS-DOS 版ではパス名中の / を \ で置き換えて読む事．
+
+  パス名      		説明
+-------------------------------------------------------------------------
+readme.1st.euc		UNIX 版
+readme.1st		MS-DOS 版
+			著作権などに関することが書かれてる
+readme			この文書
+jbibtex.exe		jbibtex プログラム (UNIX 版にはない)
+
+UNIX 版用の JBibTeX 生成用ファイル群(MS-DOS版にはない)
+
+bibtex.ch		JBibTeX 用の change file
+Makefile		Makefile の例
+*.c, *.h		補助用のプログラム，ヘッダーファイル群
+
+
+文書類 （ doc-NTT の下の j*.tex ファイルは NTT 版の(J)LaTeX 用のファイル，
+	  doc-ASCII の下のファイルが ASCII 版である．）
+
+doc-*/jbibtex.tex	JBibTeX についての説明
+doc/btxdoc.tex		オリジナルの利用説明
+doc-*/jbtxdoc.tex	上の日本語訳
+doc/btxhak.tex		オリジナルの *.bst ファイルの作成方法の説明
+doc-*/jbtxhak.tex	上の日本語訳
+doc/btxbst.doc		オリジナルの *.bst のドキュメント，マスターファイル
+doc/jbtxbst.doc		上の日本語版（追加 bst も含まれている）
+
+UNIX 用のマニュアル用 roff ファイル
+
+doc/jbibtex.1		JBibTeX の man 用の roff ファイル
+
+参考用の (J)LaTeX ファイル
+
+sample/jplain.aux	テスト用の aux ファイル
+sample/jplain.sav	上記を jbibtex で処理した結果の bbl の参照例
+
+sample/test.tex		参考用の jlatex ファイル
+sample/new.tex		同上
+sample/sin.tex		同上
+
+(J)BibTeX 用の引用文献フォーマット用のスタイル
+
+bst/abbrv.bst		abbrv スタイル用
+bst/jabbrv.bst		上記の日本語対応版
+bst/alpha.bst		alpha スタイル用
+bst/jalpha.bst		上記の日本語対応版
+bst/plain.bst		plain スタイル用
+bst/jplain.bst		上記の日本語対応版
+bst/unsrt.bst		unsrt スタイル用
+bst/junsrt.bst		上記の日本語対応版 
+bst/tipsj.bst		情報処理学会学会誌，和文論文誌用
+bst/jipsj.bst		情報処理学会英文論文誌用
+bst/tieice.bst		電子通信学会論文誌用
+bst/jorsj.bst		日本オペレーションズリサーチ学会論文誌用
+bst/jname.bst           jalpha と jabbrv の混合スタイル
+
+bst/cpp.awk             cpp で btxbst.doc, jbtxbst.doc が処理できない場合用の
+			gawk script．この中で読み込むファイルを指定している
+			ので，UNIX 版では注意が必要．cpp を使うよりもこれを
+			使った方が，コンパクトな bst ファイルが簡単に作れる．
+
+bst/generate.bat	上記を利用して bst を作り出すだめのバッチファイル
+			UNIX 版では意味がない．
+
+bst/generate.sh		上記を利用して bst を作り出すだめの shell script
+			MS-DOS 版では意味がない．
+
+(J)LaTeX 用の補助（オプション）スタイルファイル
+
+sty/ipsjcite.sty	情報処理学会学会誌用補助スタイル
+sty/jipsjcit.sty	情報処理学会英文論文誌用補助スタイル
+sty/tieiceci.sty	電子通信学会論文誌用補助スタイル
+sty/tables.sty		doc/中の *.tex の処理に必要なオプションスタイル
+sty/openbib.sty		以下はオリジナルに付属の補助スタイル
+sty/clbiba.sty		
+sty/clbibr.sty
+sty/opbiba.sty
+sty/opbibr.sty
+
+参考文献データベースの例
+
+bib/btxdoc.bib		オリジナルの btxdoc.tex, btxhak.tex ファイル用
+bib/jbtxdoc.bib		日本語版の jbtxdoc.tex, btxhak.tex ファイル用
+bib/jbibtex.bib		jbibtex.tex 用
+bib/jxampl.bib		テスト用，オリジナルの xampl.bib に例を追加したもの
+
+
+【改変，配布制限など】
+
+(1) オリジナルの TeX システムの Copyright Notice に原則的に従う．
+
+　　営利目的に利用しない限りにおいて，コピー，配布，転載は自由とする．
+
+　　AS IS で配布するものであり，このプログラムの利用によって障害が生じたと
+　　しても，著者は何の責任も負わない．バグの発見者に賞金を出したりしない．
+
+(2) コピー，配布，転載する場合には jbibtex.lzh 内のファイルをすべて一括して
+　　コピー，配布，転載すること(MS-DOSの場合)．UNIX 版では配布キットを一括
+　　して再配布すること．
+
+(3) jbibtex.exe の改変は禁止する(MS-DOS版のみ)．
+
+(4) jbibtex.exe 以外の改変は jbtxbst.doc, *.bst のについての改変制約
+　　(jbtxbst.doc を参照のこと)を除いて，自由である．特に日本語訳の改善は
+　　歓迎される．改変に関しては readme.1st.euc あるいは readme.1st を
+　　参照されたい．
+
+(5) 連絡は電子メールによるものが一番望まれるが，利用できない場合には
+    通常の郵便でかまわない．ただし著者は1991年の7月頃まで，アメリカにいるので，
+    通常の郵便では連絡に時間がかかることに注意すること（電子メールのアドレスは
+　　頭に書いてあるものでかまわないが，アメリカのサイトにメールを送れる場合には
+　　matsui@grebyn.com に直接出した方が，速いであろう．CompuServe でもいいが，
+　　こちらは１日１回しかチェックしない）．
+
+　　アメリカの住所は
+	Shouichi Matsui
+	c/o ICF Resources, Inc.
+	9300 Lee Highway
+	Fairfax, VA 22031-1207
+
+	tel. (703)-934-3882, fax. (703) 691-3349
+　　である．
+
+(6) バグを見つけても賞金をあげたりはしない．
+　　バグの報告は嬉しい事ではないが，拒否したりしない :-)．
+
+　　お礼の手紙，寄付は拒まない :-)．
+
+　　新しい文献フォーマットスタイル(bst ファイル)を特に歓迎する．
+

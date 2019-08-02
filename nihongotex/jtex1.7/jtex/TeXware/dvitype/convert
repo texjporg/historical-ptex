@@ -1,0 +1,6 @@
+#!/bin/sh
+# Convert TeXware programs to C
+cat web2c.defines $1 \
+	| ../../web2cdir/web2c -hweb2c.h -c`basename $1 .p` \
+	| ../../web2cdir/fixwrites > $2
+rm -f stack.stack

@@ -1,0 +1,52 @@
+#!/bin/sh
+FONTDPI=300
+TFMFONTDIR=/usr/lib/tex/fonts/tfm
+DPI=$1
+XFONTDIR=/usr/lib/X11/fonts/${DPI}dpi
+
+# MAG=1000*DPI/FONTDPI
+case "$DPI" in
+150)	MAG=500;;
+100)	MAG=333;;
+ 75)	MAG=250;;
+  *)	echo "Unknown size $1" 1>&2; exit 1;;
+esac
+
+if test ! -d $XFONTDIR
+then 
+   echo Cannot find $XFONTDIR
+   exit 1
+fi
+
+TMPDIR=/tmp/tfm2snf$$
+trap 'rm -rf /tmp/$TMPDIR; exit' 0 1 2 3 15
+mkdir $TMPDIR
+cd $TMPDIR
+
+rm -f *.bdf
+for tfm in $TFMFONTDIR/*.tfm
+do
+    tfmbase=`basename $tfm .tfm`
+    for scale in "1000" "1098" "1200" "1440" "1728" "2074" "2488" \
+		"2988" "3583" "4300" "5160"
+    do
+	mftobdf -mag $MAG -scaled $scale $tfmbase
+    done
+    for file in *.bdf
+    do
+	if test -s $file
+	then
+	    bdfbase=`basename $file .bdf`
+	    echo Processing $bdfbase
+	    bdftosnf $bdfbase.bdf > $XFONTDIR/$bdfbase.snf
+	fi
+    done
+    rm -f *.bdf
+done
+
+#  Process bdf files.
+#
+cd $XFONTDIR
+rm -rf $TMPDIR
+mkfontdir
+

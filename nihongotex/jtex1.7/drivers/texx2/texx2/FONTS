@@ -1,0 +1,9 @@
+-scaled 1000
+cmr10 cmex10 cmr17 cmbx12 cmr12 cmtt10 cmbx10 cmti10 cmsy10 cmmi10
+cmbx9 cmsy9 cmmi9 cmr9 cmbx8 cmti8 cmti12 cmsy8 cmmi8 cmr8 cmsy7 cmmi7
+cmr7 cmsy6 cmmi6 cmr6 cmsy5 cmmi5 cmr5 cmsl10 lasy10
+-scaled 1200 cmcsc10
+-scaled 1440 cmbx10 cmr10
+-scaled 1728 cmcsc10 cmti10
+-scaled 1200 cmcsc10
+-scaled 2488 cmbx10 cmr10

@@ -1,0 +1,71 @@
+%
+\subsection{Installation}
+Installation of the \iptex\ and \texx\ is usually done by a system
+administrator.
+This section describes the installation procedure, and assumes that you
+have already ``unpacked'' the files.
+%
+\subsubsection{Installtion}
+There are three variables in the main makefile which will need to
+be changed for each system.
+
+The first, {\tt FONTDESC} is the name of a file which the \dvi\ library
+uses to locate \TeX\ fonts.
+This file is usually stored in {\tt /usr/local/lib/tex82/fontdesc}, but
+your local conventions may differ.
+
+The second, {\tt BINDIR} is the directory for the final binaries.
+Similarly, {\tt MANDIR} is the directory for the the man pages for
+the utilities.
+
+When you have changed these variables,
+execute ``{\tt make install}'' to install
+\iptex, {\tt imagen1}, {\tt dviselect} and \texx.
+If you modify the library routines and need to recompile them, you
+should do so from the main makefile (using ``{\tt make thelib}'')
+to insure that the {\tt FONTDESC} variable is passed to the
+library makefile.
+
+The font description file provides a sequence of directories to
+search for fonts.
+Normally, all fonts are stored in a single directory.
+That directory contains the {\tt .tfm} files for the fonts
+and a subdirectory for each font containing all the magsteps for that font.
+The fontdesc file also determines which font storage format is used,
+i.e. wither {\tt pxl}, {\tt gf} or {\tt pk}.
+A sample fontdesc is shown in table \ref{table:fontdesc}.
+%
+\begin{table}[hbtn]
+\centering
+\input{fontdesc}
+\caption{A sample fontdesc}
+\label{table:fontdesc}
+\end{table}
+%
+\subsection{Porting \& Customization}
+\iptex\ and the \dvi\ library have been ported to the AT\&T 3B,
+the DEC VAX, Sun 3, and IBM PC/RT series of computers.
+\texx\ is known to work on the IBM PC/RT and Sun workstations.
+
+When porting to a new system, the file {\tt h/types.h} may need
+to be changed.
+That file contains macros to properly sign-extend byte, short and long
+words integers for the {\tt pk} format fonts.
+
+Font shrinking for \texx\ is done in byte-order independent manner,
+but it depends on a type (usually {\tt short}) being 16 bits long.
+If you have troubles installing \texx, look at the file
+{\tt previewers/dvistuff.c} to see if you need to change anything.
+
+You may also want to change {\tt previewers/dvistuff.h} to change
+the default values for margins and the device resolution of your
+font family.
+
+\iptex\ currently understands a set of \dvi\ {\tt special} commands
+which allow it to draw lines using Imagen primitives.
+At the Univ. of Illinois, we have a program called {\tt texpic},
+a version of PIC for \TeX, which uses these specials to draw pictures.
+A subset of these specials are implemented by \texx.
+In the future, it is hoped that PostScript specials will be provided,
+but don't hold your breath.
+

@@ -1,0 +1,102 @@
+.TH DVI2NWP l "25 October 1989"
+.SH NAME
+dvi2nwp \- print out dvi-file to NWP-533/537
+.SH SYNOPSIS
+.B dvi2nwp \-di
+.RB[
+.IRoptions
+.RB]
+\fIdvifile\fP[\fB.dvi\fP]
+.br
+	or
+.br
+.B lpr \-d \fIdvifile\fP.dvi
+.SH DESCRIPTION
+Dvi2nwp is a program which converts the dvi file to a sequence of 
+NWP-533/537 commands and sends them to the printer. Dvi2nwp can also
+be used as a filter with lpr command (see the second form of SYNOPSIS).
+In the direct mode (the first form of SYNOPSIS), dvi2nwp does
+not spool dvi file, but then the following options are available.
+.SH OPTIONS
+.IP "\fB\-ds"
+double side mode: even pages are offset to the left.
+.IP \fB\-o
+print out odd pages only.
+.IP \fB\-e
+print out even pages only.
+.IP \fB\-l
+landscape mode. The paper size (A4 or B4) will be selected automatically.
+.IP "\fB\-bp \fIpage"
+begin printing from
+.I page.
+.IP "\fB\-ep \fIpage"
+end printing at
+.I page.
+.IP "\fB\-xo \fIdot"
+offset
+.I dot
+left.
+.IP "\fB\-yo \fIdot"
+offset
+.I dot
+up.
+.SH NOTE
+Dvi2nwp uses 400 dpi tex fonts, in either pk or pxl format, for
+one-byte characters. For two-byte characters dvi2nwp uses either sony
+extended fonts (NWF-605), or standard fonts (NWF-604), but not both.
+
+When the standard fonts are used, the inter-character spaces look somewhat
+narrower. This is because the fonts NWF-604 are slightly larger than the
+fonts specified by the tfm file. Also, some larger fonts may be replaced by
+normal-sized fonts, with spaces unchanged from those for the specified fonts.
+
+When the extended fonts are used, dvi2nwp dynamically generates bitmaps of
+the right size from the extended fonts, and so the font size and spaces
+become as expected. One can also use pre-generated bitmap fonts to speed up.
+Check your site which fonts are installed.
+
+Or, if the dvi2nwp has been compiled with a DNF definition,
+dvi2nwp searches the Dai-Nippon kanji fonts (DNF) first, and uses them.
+Moreover, when the corresponding kanji fonts are not found in the DNF,
+dvi2nwp can use the NWF-604 or NWF-605 fonts instead, if it has compiled with
+the simultanious definition of NWF_604 or NWF_605 and DNF.
+
+In the landscape mode, bitmaps of fonts will be rotated when transfered to
+the frame buffer of lbp. But the white spaces will not be copied as white
+bitmaps, so that the printing doesn't take much longer than the portrait
+mode.
+
+When dvi2nwp is used with lpr, the second usage must be used, namely,
+
+	lpr -d \fIdvifile.\fPdvi
+
+In this case, /etc/printcap must contain
+
+	df=/usr/local/dvi2nwp
+
+where /usr/local is the directory that contains dvi2nwp. So the entry
+in /etc/printcap looks something like this:
+
+sjlbp|nwp533|NWP-533:\\
+.br
+	:lp=/dev/lbp:sh:\\
+.br
+	:sd=/usr/spool/nwp533:\\
+.br
+	:df=/usr/local/dvi2nwp:\\
+.br
+	:if=/usr/sony/lib/lpf=nwp533:
+
+.SH AUTHORS
+Originally developed by Atsuo KAWAGUCHI, then at Osaka University,
+now at Hitachi Advanced Reserch Laboratory (atsuo@harl.hitachi.co.jp).
+Manabu MATSUI at Tohoku University, SHINODA at Tokyo Institue of Technology,
+Shingo ICHII at KEK, Setsu SUZUKI at Advanced Materials Laboratory, Inc.,
+Takeshi YAMAOKA at Keio Univesity, Akira SAWADA 
+at Kyoto University have contributed
+to bug-fix. KURASAWA at ASCII Corp and Hitoaki SAKAMOTO have helped in 
+distribution and tests. The patch for the landscape option is due to
+Setsu SUZUKI at AML (setsu@candase.aml.co.jp). The DNF kanji suport 
+is also due to Setsu SUZUKI.
+This manual is written by Susumu SAKAKIBARA at Iwaki
+Meisei University. 

@@ -1,0 +1,2376 @@
+% BibTeX `plain' family
+	% version 0.98c for BibTeX versions 0.98i or later, LaTeX version 2.08
+	% Copyright (C) 1985, all rights reserved
+	% Copying of this file is authorized only if either
+	% (1) you make absolutely no changes to your copy, including name, or
+	% (2) if you do make changes, you name it something other than
+	% btxbst.doc, plain.bst, unsrt.bst, alpha.bst, and abbrv.bst
+	% This restriction helps ensure that all standard styles are identical
+% This is file btxbxt.doc; it helps document bibliography styles,
+% and is also a template file that you can use to make
+% several different style files, if you have access to a C preprocessor.
+% For example, the standard styles were made by something like
+%	cpp -P -DPLAIN btxbst.doc plain.txt
+%	cpp -P -DUNSRT btxbst.doc unsrt.txt
+%	cpp -P -DALPHA btxbst.doc alpha.txt
+%	cpp -P -DABBRV btxbst.doc abbrv.txt
+% and then renaming after removing unwanted comments and blank lines.
+%
+% KANJI: The kanji versions were made similarly, but with KANJI also defined.
+%	 A makefile exists that does the complete job. Just type "make".
+% END KANJI
+%
+% If you don't have access,
+% you can edit this file by hand to imitate the preprocessor,
+% with the following explanation of the C preprocessor constructs used here.
+%
+% The output of the preprocessor is the same as the input, except that certain
+% lines will be excluded (and some blank lines will be added).  The sequence
+%	#if VAR
+%	    lines to be included when VAR is not zero
+%	#else
+%	    lines to be included when VAR is zero
+%	#endif
+% (with the #-signs appearing in column 1) means that one set or the other of
+% the lines are to be included depending on the value of VAR.
+% The #else part is optional.  Comments can be added after #else and #endif.
+% Variables can be set by
+%	#define VAR value
+% and one can also use #ifdef VAR to see if VAR has any value, and #ifndef
+% to see if it has none.
+% Another #if form used in this file is #if !VAR, which includes the lines
+% after the #if only if VAR is zero.
+%
+% Convention: Use all uppercase identifiers for these preprocessor variables
+% so you can spot them easily
+%
+% The command line to the preprocessor should define one of PLAIN, UNSRT, ALPHA
+% or ABBRV (though PLAIN will be used by default if none is given),
+% and the following lines will set various boolean variables to control the
+% various lines that are chosen from the rest of the file.
+% Each boolean variable should be set true (1) or false (0) in each style.
+% Here are the current variables, and their meanings:
+%	LAB_ALPH:	an alphabetic label is used (if false then a numeric
+%			    label is used)
+%	SORTED:		the entries should be sorted by label (if nonnumeric)
+%			    and other info, like authors (if false, then
+%			    entries remain in order of occurrence)
+%	NAME_FULL:	the authors, editors, etc., get the full names as
+%			    given in the bibliograph (if false, the first
+%			    names become initials)
+%	ATIT_LOWER:	titles of non-"books" (e.g., articles) should be
+%			    converted to lower-case, except the first letter
+%			    (if false then they appear as in the database)
+%	MONTH_FULL:	months are spelled out in full (if false, then
+%			    they're abbreviated)
+%	JOUR_FULL:	macro journal names are spelled out in full
+%			    (if false then they are abbreviated, currently
+%			    as they appear in ACM publications)
+%
+% KANJI:
+%	KANJI_SPACE_NAME parts of kanji names have spaces added between them.
+%			    (if false then no spaces are included in name)
+% END KANJI
+
+#ifdef KANJI
+#undef KANJI
+#define KANJI 1
+#else
+#define KANJI 0
+#endif
+
+#ifndef UNSRT
+#   ifndef ALPHA
+#	ifndef ABBRV
+#	    define PLAIN 1
+#	endif
+#   endif
+#endif
+#ifdef PLAIN
+% plain style (sorted numbers)
+#   define LAB_ALPH 0
+#   define SORTED 1
+#   define NAME_FULL 1
+#   define ATIT_LOWER 1
+#   define MONTH_FULL 1
+#   define JOUR_FULL 1
+#if KANJI
+#   define KANJI_SPACE_NAME 1
+#endif
+#endif
+#ifdef UNSRT
+% unsrt style (unsorted numbers)
+#   define LAB_ALPH 0
+#   define SORTED 0
+#   define NAME_FULL 1
+#   define ATIT_LOWER 1
+#   define MONTH_FULL 1
+#   define JOUR_FULL 1
+#if KANJI
+#   define KANJI_SPACE_NAME 1
+#endif
+#endif
+#ifdef ALPHA
+% alpha style (sorted short alphabetics)
+#   define LAB_ALPH 1
+#   define SORTED 1
+#   define NAME_FULL 1
+#   define ATIT_LOWER 1
+#   define MONTH_FULL 1
+#   define JOUR_FULL 1
+#if KANJI
+#   define KANJI_SPACE_NAME 1
+#endif
+#endif
+#ifdef ABBRV
+% abbrv style (sorted numbers, with abbreviations)
+#   define LAB_ALPH 0
+#   define SORTED 1
+#   define JOUR_FULL 0
+#   define MONTH_FULL 0
+#   define ATIT_LOWER 1
+#   define NAME_FULL 0
+#if KANJI
+#   define KANJI_SPACE_NAME 1
+#endif
+#endif
+%
+%   Entry formatting: Similar to that recommended by Mary-Claire van Leunen
+%	in "A Handbook for Scholars".  Book-like titles are italicized and
+%	non-book titles are converted to sentence capitilization
+%	(and not enclosed in quotes).
+%	This file outputs a \newblock between major blocks of an entry
+%	(the name \newblock is analogous to the names \newline and \newpage)
+%	so that the user can obtain an "open" format, which has a line break
+%	before each block and lines after the first are indented within blocks,
+%	by giving an optional \documentstyle argument; currently there is a
+%	required `optional' \documentstyle argument, one of
+%		opbiba, opbibr, clbiba, or clbibr,
+%	giving an open or closed format for an article or report.
+%	For the next version of LaTeX there will be just one, truly optional
+%	style, for the open format
+%	(among other things, it will have improved page breaking).
+%	The default will be the "closed" format---blocks runs together.
+%
+%   Citation alphabetic label format:
+%		[Knu73] for single author (or editor or key)
+%		[AHU83] (first letters of last names) for multiple authors
+%
+%   Citation label numberic format:
+%		[number]
+%
+%   Reference list ordering for sorted, alphabetic lables:
+%		alphabetical by citation label, then by author(s) or whatever
+%		passes for author in the absence of one, and then by title.
+%
+%   Reference list ordering for sorted, numeric lables:
+%		alphabetical by author(s) or whatever passes
+%		passes for author in the absence of one, and then by title.
+%
+%   Reference list ordering for unsorted:
+%		by the order cited in the text
+%
+%   History
+%   12/16/84	(HWT)	Original `plain' version, by Howard Trickey.
+%   12/23/84	(LL)	Some comments made by Leslie Lamport.
+%    2/16/85	(OP)	Changes based on LL's comments, Oren Patashnik
+%    2/17/85	(HWT)	template file and other standard styles made
+%    3/28/85		First release, version 0.98b for BibTeX 0.98f
+%    5/ 9/85		version 0.98c for BibTeX 0.98i
+%			 : fixed Theoretical Computer Science macro name
+%			 : fixed the format.vol.num.pages function
+%
+% The ENTRY declaration
+%   Like Scribe's (according to pages 231-2 of the April '84 edition),
+%   but no fullauthor or editors fields because BibTeX does name handling.
+%   The annote field is commented out here because this family doesn't
+%   include an annotated bibliography style
+
+ENTRY
+% Fields:
+  { address
+%	    Publisher's address
+%    annote
+%	    Long annotation used for annotated bibliographies (begins sentence)
+    author
+%	    Name(s) of author(s), in BibTeX name format
+    booktitle
+%	    Book title when the thing being referenced isn't the whole book.
+%	    For book entries, the title field should be used instead.
+    chapter
+%	    Chapter number
+    edition
+%	    Edition of a book (e.g., "second")
+    editor
+%	    Name(s) of editor(s), in BibTeX name format.
+%	    If there is also an author field, then the editor field should be
+%	    for the book or collection that the work appears in
+    howpublished
+%	     How something strange has been published (begins sentence)
+    institution
+%	    Sponsoring institution
+    journal
+%	    Journal name (macros are provided for many)
+    key
+%	    Alphabetizing and labeling key (needed when no author or editor)
+    month
+%	    Month (macros are provided)
+    note
+%	    To help the reader find a reference (begins sentence)
+    number
+%	    Number of a journal or technical report
+    organization
+%	    Organization (sponsoring a conference)
+    pages
+%	    Page number or numbers (use `--' to separate a range)
+    publisher
+%	    Publisher name
+    school
+%	    School name (for theses)
+    series
+%	    The name of a series or set of books.
+%	    An individual book will will also have it's own title
+    title
+%	    The title of the thing being referenced
+    type
+%	    Type of a Techreport (e.g., "Research Note") to be used instead of
+%	    the default "Technical Report"
+    volume
+%	    Volume of a journal or multivolume work
+    year
+%	    Year---should contain only numerals
+  }
+#if KANJI
+% This integer entry variable tells us to format this entry in Japanese style.
+  {kanji.style}
+#else !KANJI
+% There are no integer entry variables
+  {}
+#endif KANJI
+% These string entry variables are used to form the citation label.
+% In a storage pinch, sort.label can be easily computed on the fly.
+#if LAB_ALPH
+#if SORTED
+  { label extra.label sort.label }
+#else !SORTED
+% It still doesn't seem like a good idea to use an order-of-citation
+% reference list when using alphabetic labels, but when this happens we
+% do things a little differently
+  {label}
+#endif SORTED
+#else !LAB_ALPH
+  {label}
+#endif LAB_ALPH
+
+% Each entry function starts by calling output.bibitem, to write the
+% \bibitem and its arguments to the .BBL file.  Then the various fields
+% are formatted and printed by output or output.check.  Those functions
+% handle the writing of separators (commas, periods, \newblock's),
+% taking care not to do so when they are passed a null string.
+% Finally, fin.entry is called to add the final period and finish the
+% entry.
+%
+% A bibliographic reference is formatted into a number of `blocks':
+% in the open format, a block begins on a new line and subsequent
+% lines of the block are indented.  A block may contain more than
+% one sentence (well, not a grammatical sentence, but something to
+% be ended with a sentence ending period).  The entry functions should
+% call new.block whenever a block other than the first is about to be
+% started.  They should call new.sentence whenever a new sentence is
+% to be started.  The output functions will ensure that if two
+% new.sentence's occur without any non-null string being output between
+% them then there won't be two periods output.  Similarly for two
+% successive new.block's.
+%
+% The output routines don't write their argument immediately.
+% Instead, by convention, that argument is saved on the stack to be
+% output next time (when we'll know what separator needs to come
+% after it).  Meanwhile, the output routine has to pop the pending
+% output off the stack, append any needed separator, and write it.
+%
+% To tell which separator is needed, we maintain an output.state.
+% It will be one of these values:
+%	before.all		just after the \bibitem
+%	mid.sentence		in the middle of a sentence: comma needed
+%					if more sentence is output
+%	after.sentence		just after a sentence: period needed
+%	after.block		just after a block (and sentence):
+%					period and \newblock needed.
+% Note: These styles don't use after.sentence
+%
+% VAR: output.state : INTEGER		-- state variable for output
+%
+% The output.nonnull function saves its argument (assumed to be nonnull)
+% on the stack, and writes the old saved value followed by any needed
+% separator.  The ordering of the tests is decreasing frequency of
+% occurrence.
+%
+% output.nonnull(s) ==
+%  BEGIN
+%	s := argument on stack
+%	if output.state = mid.sentence then
+%	    write$(pop() * ", ")
+%		  -- "pop" isn't a function: just use stack top
+%	else
+%	    if output.state = after.block then
+%		write$(add.period$(pop()))
+%		newline$
+%		write$("\newblock ")
+%	    else
+%		if output.state = before.all then
+%		    write$(pop())
+%		else	    -- output.state should be after.sentence
+%		    write$(add.period$(pop()) * " ")
+%		fi
+%	    fi
+%	fi
+%	push s on stack
+%	output.state := mid.sentence
+%  END
+%
+% The output function calls output.nonnull if its argument is non-null
+%
+% output(s) ==
+%  BEGIN
+%	if s <> "" then output.nonnull(s)
+%	fi
+%  END
+%
+% The output.check function calls output.nonnull if s is non-null
+% and warns the user that the t field shouldn't be empty (this is
+% because it won't be a good reference without the field;  the entry
+% functions try to make the formatting look reasonable even when such
+% fields are empty).
+%
+% output.check(t,s) ==
+%  BEGIN
+%	if s = "" then
+%	    top$("Warning: the " * t * " shouldn't be empty in " * cite$)
+%	else output.nonnull(s)
+%	fi
+%  END
+%
+% The output.bibitem function writes the \bibitem for the current entry
+% (the label should already have been set up), and sets up the separator
+% state for the output functions.  And, it leaves a string on the stack
+% as per the output convention.
+%
+% output.bibitem ==
+%  BEGIN
+%	newline$
+%	write$("\bibitem[")	% for alphabetic labels,
+%	write$(label)		% these three lines
+%	write$("]{")		% are used
+%	write$("\bibitem{")		% this line for numeric labels
+%	write$(cite$)
+%	write$("}")
+%	push "" on stack
+%	output.state := before.all
+%  END
+%
+% The fin.entry function finishes off an entry by adding a period to the
+% string remaining on the stack.  If the state is still before.all
+% then nothing was produced for this entry, so the result will look bad,
+% but the user deserves it. (We don't omit the whole entry because the
+% entry was cited, and a bibitem is needed to define the citation label.)
+%
+% fin.entry ==
+%  BEGIN
+%	write$(add.period$(pop()))
+%	newline$
+%  END
+%
+% The new.block function prepares for a new block to be output, and
+% new.sentence prepares for a new sentence.
+%
+% new.block ==
+%  BEGIN
+%	if output.state <> before.all then
+%	    output.state := after.block
+%	fi
+%  END
+%
+% new.sentence ==
+%  BEGIN
+%	if output.state <> after.block then
+%	    if output.state <> before.all then
+%		output.state :=  after.sentence
+%	    fi
+%	fi
+%  END
+%
+
+INTEGERS { output.state before.all mid.sentence after.sentence after.block }
+
+FUNCTION {init.state.consts}
+{ 'before.all #0 :=
+  'mid.sentence #1 :=
+  'after.sentence #2 :=
+  'after.block #3 :=
+}
+
+% the variables s and t are temporary string holders
+
+STRINGS { s t }
+
+FUNCTION {output.nonnull}
+{ 's swap$ :=
+  output.state mid.sentence =
+    { ", " * write$ }
+    { output.state after.block =
+	{ add.period$ write$
+	  newline$
+	  "\newblock " write$
+	}
+	{ output.state before.all =
+	    'write$
+	    { add.period$ " " * write$ }
+	  if$
+	}
+      if$
+    }
+  if$
+  'output.state mid.sentence :=
+  s
+}
+
+#if KANJI
+FUNCTION {huge.num} {#100000}
+
+FUNCTION {add.kanji.period}
+{
+  add.period$
+  duplicate$ #-1 #1 substring$ "." =
+    { #-2 huge.num substring$ "．" * }
+    'skip$
+  if$
+}
+
+FUNCTION {output.kanji.nonnull}
+{ 's swap$ :=
+  output.state mid.sentence =
+    { "，" * write$ }
+    { output.state after.block =
+	{ add.kanji.period write$
+	  newline$
+	  "\newblock " write$
+	}
+	{ output.state before.all =
+	    'write$
+	    { add.kanji.period "　" * write$ }
+	  if$
+	}
+      if$
+    }
+  if$
+  'output.state mid.sentence :=
+  s
+}
+#endif KANJI
+
+FUNCTION {output}
+{ 's swap$ :=
+  s "" =
+    'skip$
+#if KANJI
+    { kanji.style
+        { s output.kanji.nonnull }
+        { s output.nonnull }
+      if$
+    }
+#else !KANJI
+    { s output.nonnull }
+#endif KANJI
+  if$
+}
+
+FUNCTION {output.check}
+{ 's swap$ :=
+  't swap$ :=
+  s "" =
+    { "Warning: the " t * " shouldn't be empty in " * cite$ * top$ }
+#if KANJI
+    { kanji.style
+        { s output.kanji.nonnull }
+        { s output.nonnull }
+      if$
+    }
+#else !KANJI
+    { s output.nonnull }
+#endif KANJI
+  if$
+}
+
+FUNCTION {output.bibitem}
+{ newline$
+#if LAB_ALPH
+  "\bibitem[" write$
+  label write$
+  "]{" write$
+#else
+  "\bibitem{" write$
+#endif
+  cite$ write$
+  "}" write$
+  newline$
+  ""
+  'output.state before.all :=
+}
+
+% This function finishes all entries.  Note: For an otherwise empty entry
+% (which is probably due to a user error) this function prints a period
+
+#if KANJI
+FUNCTION {fin.entry}
+{ kanji.style
+    { add.kanji.period }
+    { add.period$ }
+  if$
+  write$
+  newline$
+}
+#else !KANJI
+FUNCTION {fin.entry}
+{ add.period$
+  write$
+  newline$
+}
+#endif KANJI
+
+FUNCTION {new.block}
+{ output.state before.all =
+    'skip$
+    { 'output.state after.block := }
+  if$
+}
+
+% This function isn't used in these styles
+
+FUNCTION {new.sentence}
+{ output.state after.block =
+    'skip$
+    { output.state before.all =
+	'skip$
+	{ 'output.state after.sentence := }
+      if$
+    }
+  if$
+}
+
+% These three functions pop one or two (integer) arguments from the stack
+% and push a single one, either 0 or 1.
+% The 'skip$ in the `and' and `or' functions are used because
+% the corresponding if$ would be idempotent
+
+FUNCTION {not}
+{   { #0 }
+    { #1 }
+  if$
+}
+
+FUNCTION {and}
+{   'skip$
+    { pop$ #0 }
+  if$
+}
+
+FUNCTION {or}
+{   { pop$ #1 }
+    'skip$
+  if$
+}
+
+% Here are some functions for formatting chunks of an entry.
+% By convention they either produce a string that can be followed by
+% a comma or period (using add.period$, so it is OK to end in a period),
+% or they produce the null string.
+%
+% A useful utility is the field.or.null function, which checks if the
+% argument is the result of pushing a `missing' field (one for which no
+% assignment was made when the current entry was read in from the database),
+% and returns the null string if so, otherwise it returns the field string.
+%
+% field.or.null(s) ==
+%  BEGIN
+%	if missing$(s) then return ""
+%	else return s
+%  END
+%
+% Another helper function is italicize, which returns the string that
+% italicizes the argument string, if that is non-null, otherwise it
+% returns the null string.  Italic corrections aren't used, so this
+% function should be used when punctation will follow the result.
+% Also, it needn't be \em (instead of \it) because the user shouldn't be
+% emphasizing the whole bibliography.
+%
+% italicize(s) ==
+%  BEGIN
+%	if s = "" then return ""
+%	else return "{\it " * s * "}"
+%
+% The format.names function formats the argument (which should be in
+% BibTeX name format) into "First Von~Last, Junior", separated by commas
+% and with an "and" before the last (but ending with "et al." if the last
+% of multiple authors is "others")
+%
+% KANJI:
+% A kanji name is formatted differently to a roman name. The two parts of
+% the name are put together in the order they are given in the
+% .bib file, and, if KANJI_SPACE_NAME is true then a space is put between the
+% two parts, otherwise nothing is put between them.
+%
+% A name is considered a kanji name if it does not have von and junior parts,
+% and there is at least one kanji in the first or last names.
+%
+% If any of the names is considered a kanji name then
+%	the final 'and' at the end of a list of names is replaced by a comma,
+%	the 'et al.' is replaced by 他
+% END KANJI
+%
+% VAR: nameptr, namesleft, numnames: INTEGER
+%      nameresult: STRING
+%
+% format.names(s) ==
+%  BEGIN
+%	nameptr := 1
+%	nameresult := ""
+%	numnames := num.names$(s)
+%	namesleft := numnames
+%	while namesleft > 0
+%	  do
+%				% for full names:
+%	    t := format.name$(s, nameptr, "{ff }{vv~}{ll}{, jj}")
+%				% for abbreviated first names:
+%	    t := format.name$(s, nameptr, "{f.~}{vv~}{ll}{, jj}")
+%	    if nameptr > 1 then
+%		if namesleft > 1 then nameresult := nameresult * ", " * t
+%		else if numnames > 2
+%		       then nameresult := nameresult * ","
+%		     fi
+%		     if t = "others"
+%		       then nameresult := nameresult * " et al."
+%		       else nameresult := nameresult * " and " * t
+%		     fi
+%		fi
+%	    else nameresult := nameresult * t
+%	    fi
+%	    nameptr := nameptr + 1
+%	    namesleft := namesleft - 1
+%	  od
+%	return nameresult
+%  END
+%
+% The format.authors function returns the result of format.names(author)
+% if the author is present, or else it returns the null string
+%
+% format.authors ==
+%  BEGIN
+%	if missing$(author) then return ""
+%	else return format.names(author)
+%	fi
+%  END
+%
+% Format.editors is like format.authors, but it uses the editor field,
+% and appends ", editor" or ", editors"
+%
+% format.editors ==
+%  BEGIN
+%	if missing$(editor) then return ""
+%	else
+%	    if num.names$(editor) > 1 then
+%		return format.names(editor) * ", editors"
+%	    else
+%		return format.names(editor) * ", editor"
+%	    fi
+%	fi
+%  END
+%
+% Other formatting functions are similar, so no "comment version" will be
+% given for them.
+%
+% The `pop$' in this function gets rid of the duplicate `missing' value and
+% the `skip$' returns the duplicate field value
+
+FUNCTION {field.or.null}
+{ duplicate$
+  missing$
+    { pop$ "" }
+    'skip$
+  if$
+}
+
+FUNCTION {italicize}
+{ 's swap$ :=
+  s "" =
+    { "" }
+    { "{\it " s * "}" * }
+  if$
+}
+
+INTEGERS { nameptr namesleft numnames }
+
+STRINGS {nameresult}
+
+FUNCTION {format.names}
+{ 's swap$ :=
+  'nameptr #1 :=
+  'nameresult "" :=
+  'numnames s num.names$ :=
+  'namesleft numnames :=
+    { namesleft #0 > }
+    {
+#if NAME_FULL
+      't s nameptr "{ff }{vv~}{ll}{, jj}" format.name$ :=
+#else
+      't s nameptr "{f.~}{vv~}{ll}{, jj}" format.name$ :=
+#endif
+      nameptr #1 >
+	{ namesleft #1 >
+	    { 'nameresult nameresult ", " * t * := }
+	    { numnames #2 >
+		{ 'nameresult nameresult "," * := }
+		'skip$
+	      if$
+	      t "others" =
+		{ 'nameresult nameresult " et al." * := }
+		{ 'nameresult nameresult " and " * t * := }
+	      if$
+	    }
+	  if$
+	}
+	{ 'nameresult nameresult t * := }
+      if$
+      'nameptr nameptr #1 + :=
+      'namesleft namesleft #1 - :=
+    }
+  while$
+  nameresult
+}
+
+#if KANJI
+
+FUNCTION {format.kanji.names}
+{ 's swap$ :=
+  'nameptr #1 :=
+  'nameresult "" :=
+  'numnames s num.names$ :=
+  'namesleft numnames :=
+    { namesleft #0 > }
+    {
+      't s nameptr 
+      s nameptr "{ff}{ll}" format.name$ find.kanji$
+      s nameptr "{vv{}}{jj{}}" format.name$ "" =
+      and
+#if KANJI_SPACE_NAME
+	{ "{ff{　}　}{ll{　}}" }
+#else
+	{ "{ff{}}{ll{}}" }
+#endif
+#if NAME_FULL
+        { "{ff }{vv~}{ll}{, jj}" }
+#else
+        { "{f.~}{vv~}{ll}{, jj}" }
+#endif
+      if$
+      format.name$ :=
+      'nameresult nameresult
+      nameptr #1 >
+	{ "，" *
+	  namesleft #1 =
+	  t "others" =
+	  and
+	    { "他" }
+	    { t }
+	  if$
+	}
+	{ t }
+      if$
+      * :=
+      'nameptr nameptr #1 + :=
+      'namesleft namesleft #1 - :=
+    }
+  while$
+  nameresult
+}
+
+#endif KANJI
+
+FUNCTION {format.authors}
+{ author missing$
+    { "" }
+#if KANJI
+    { author duplicate$ find.kanji$
+        { format.kanji.names }
+        { format.names }
+    if$
+    }
+#else !KANJI
+    { author format.names }
+#endif KANJI
+  if$
+}
+
+FUNCTION {format.editors}
+{ editor missing$
+    { "" }
+#if KANJI
+    { editor find.kanji$
+	{ editor format.kanji.names "，編集者" * }
+	{
+	  editor format.names ", editor" *
+          editor num.names$ #1 >
+	    { "s" * }
+	    { skip$ }
+	  if$
+	}
+      if$
+    }
+#else !KANJI
+    { editor num.names$ #1 >
+	{ editor format.names ", editors" * }
+	{ editor format.names ", editor" * }
+      if$
+    }
+#endif KANJI
+  if$
+}
+
+% The format.title function is used for non-book-like titles.
+% For most styles we convert to lowercase (except for the very first letter),
+% and hope the user has brace-surrounded words that need to stay capitilized;
+% for some, however, we leave it as it is in the database.
+
+FUNCTION {format.title}
+#if ATIT_LOWER
+{ title missing$
+    { "" }
+    { title "ul" change.case$ }
+  if$
+#else
+{ title field.or.null
+#endif ATIT_LOWER
+}
+
+% The entry.string.max function is set to BibTeX's ent_str_size constant,
+% the maximum length of an entry string variable.
+%
+% The global.string.max function is set to BibTeX's glob_str_size constant,
+% the maximum length of a global string variable.
+
+FUNCTION {entry.string.max} { #100 }
+
+FUNCTION {global.string.max} { #300 }
+
+% The n.dashify function makes each single `-' in a string a double `--'
+% if it's not already
+%
+% VAR: pageresult: STRING
+%
+% n.dashify(s) ==
+%  BEGIN
+%	t := s
+%	pageresult := ""
+%	while (not (t = ""))
+%	  do
+%	    if (first character of t = "-")
+%	      then
+%		if (next character isn't)
+%		  then
+%		    pageresult := pageresult * "--"
+%		    t := t with the "-" removed
+%		  else
+%		    while (first character of t = "-")
+%		      do
+%			pageresult := pageresult * "-"
+%			t := t with the "-" removed
+%		      od
+%		fi
+%	      else
+%		pageresult := pageresult * the first character
+%		t := t with the first character removed
+%	    fi
+%	  od
+%	return pageresult
+%  END
+
+STRINGS {pageresult}
+
+FUNCTION {n.dashify}
+{ 't swap$ :=
+  'pageresult "" :=
+    { t "" = not }
+    { t #1 #1 substring$ "-" =
+	{ t #1 #2 substring$ "--" = not
+	    { 'pageresult pageresult "--" * :=
+	      't t #2 global.string.max substring$ :=
+	    }
+	    {   { t #1 #1 substring$ "-" = }
+		{ 'pageresult pageresult "-" * :=
+		  't t #2 global.string.max substring$ :=
+		}
+	      while$
+	    }
+	  if$
+	}
+	{ 'pageresult pageresult t #1 #1 substring$ * :=
+	  't t #2 global.string.max substring$ :=
+	}
+      if$
+    }
+  while$
+  pageresult
+}
+
+% The format.date function is for the month and year, but we give a warning if
+% there's a missing year but the month is there, and we return the empty string
+% if they're both missing
+
+FUNCTION {format.date}
+{ year missing$
+    { month missing$
+	{ "" }
+	{ "Warning: there's a month but no year in " cite$ * top$
+	  month
+	}
+      if$
+    }
+    { month missing$
+	{ year }
+#if KANJI
+	{ month
+	  kanji.style
+	    { "　" }
+	    { " " }
+	  if$
+	  * year *
+	}
+#else !KANJI
+	{ month " " * year * }
+#endif KANJI
+      if$
+    }
+  if$
+}
+
+% The format.btitle is for formatting the title field when it is a book-like
+% entry---the style used here keeps it in uppers-and-lowers and italicizes it.
+
+FUNCTION {format.btitle}
+{ title field.or.null
+  italicize
+}
+
+% The format.bvolume function is for formatting the volume number and/or
+% series name of a multivolume book.  If the volume field is missing, we
+% output either the series field italicized if it exists or the null string
+% otherwise.  If both the volume and series fields are there, we assume the
+% series field is the title of the whole multivolume work (the title field
+% should be the title of the one referred to), and add an "of <series>".
+% A tie (~) is put between the "Volume" and the volume number.
+% We capitilize Volume because this function is used at the beginning of a
+% block.
+
+FUNCTION {format.bvolume}
+{ volume missing$
+    { series missing$
+	{ "" }
+	{ series italicize }
+      if$
+    }
+#if KANJI
+    { kanji.style
+        { series missing$
+	    { "第" volume * "巻" * }
+	    { series find.kanji$
+	        { series "第" * volume * "巻" * }
+	        { "Volume~" volume * " of " * series italicize * }
+              if$
+	    }
+          if$
+        }
+        { "Volume~" volume *
+          series missing$
+	    'skip$
+	    { " of " * series italicize * }
+          if$
+        }
+      if$
+    }
+#else !KANJI
+    { "Volume~" volume *
+      series missing$
+	'skip$
+	{ " of " * series italicize * }
+      if$
+    }
+#endif KANJI
+  if$
+}
+
+% The format.edition function appends " edition" to the edition, if present.
+% We lowercase the edition (it should be something like "Third"), because
+% this doesn't start a sentence.
+
+FUNCTION {format.edition}
+{ edition missing$
+    { "" }
+#if KANJI
+    { kanji.style
+        { "第" edition * "版" * }
+        { edition "ll" change.case$ " edition" * }
+      if$
+    }
+#else !KANJI
+    { edition "ll" change.case$ " edition" * }
+#endif KANJI
+  if$
+}
+
+% The format.pages function is used for formatting a page range in a book
+% (and in rare circumstances, an article).
+% The multi.page.check function examines the page field for a "-" or a ","
+% so that format.pages can use "page" instead of "pages" if neither exists.
+% Note: global.string.max, set above, here means "take the rest of the string"
+%
+% VAR: multiresult: INTEGER	(actually, a boolean)
+%
+% multi.page.check(s) ==
+%  BEGIN
+%	t := s
+%	multiresult := false
+%	while ((not multiresult) and (not (t = "")))
+%	  do
+%	    if (first character of t = "-" or ",")
+%	      then multiresult := true
+%	      else t := t with the first character removed
+%	    fi
+%	  od
+%	return multiresult
+%  END
+
+INTEGERS {multiresult}
+
+FUNCTION {multi.page.check}
+{ 't swap$ :=
+  'multiresult #0 :=
+    { multiresult not
+      t "" = not
+      and
+    }
+    { t #1 #1 substring$ "-" =
+      t #1 #1 substring$ "," =
+      or
+	{ 'multiresult #1 := }
+	{ 't t #2 global.string.max substring$ := }
+      if$
+    }
+  while$
+  multiresult
+}
+
+% This function doesn't begin a sentence so "pages" isn't capitalized
+% other functions that use this should keep that in mind
+
+FUNCTION {format.pages}
+{ pages missing$
+    { "" }
+#if KANJI
+    { kanji.style
+	{ pages n.dashify "ペ－ジ" * }
+        { pages multi.page.check
+	    { "pages~" pages n.dashify * }
+	    { "page~" pages n.dashify * }
+          if$
+        }
+      if$
+    }
+#else !KANJI
+    { pages multi.page.check
+	{ "pages~" pages n.dashify * }
+	{ "page~" pages n.dashify * }
+      if$
+    }
+#endif KANJI
+  if$
+}
+
+% The format.vol.num.pages function is for the volume, number, and page range
+% of a journal article.  We use the format:  vol(number):pages, with minor
+% variations for missing fields.  This doesn't begin a sentence.
+
+FUNCTION {format.vol.num.pages}
+{ volume field.or.null
+  number missing$
+    'skip$
+    { "(" number * ")" * *
+      volume missing$
+	{ "Warning: there's a number but no volume in " cite$ * top$ }
+	'skip$
+      if$
+    }
+  if$
+  pages missing$
+    'skip$
+    { duplicate$ "" =
+	'skip$
+	{ ":" * }
+      if$
+      pages n.dashify *
+    }
+  if$
+}
+
+% The format.chapter.pages puts "chapter~" in front of a chapter number,
+% if present, and then appends the pages, if present.
+% This doesn't begin a sentence.
+
+FUNCTION {format.chapter.pages}
+{ chapter missing$
+    'format.pages
+#if KANJI
+    { kanji.style
+	{ "第" chapter * "章" * }
+	{ "chapter~" chapter * }
+      if$
+      pages missing$
+	'skip$
+	{ kanji.style
+	    { "，" * format.pages * "ペ－ジ" * }
+	    { ", " * format.pages * }
+          if$
+	}
+      if$
+    }
+#else !KANJI
+    { "chapter~" chapter *
+      pages missing$
+	'skip$
+	{ ", " * format.pages * }
+      if$
+    }
+#endif KANJI
+  if$
+}
+
+% The format.in.ed.booktitle function is used for starting out a sentence
+% that begins "In <booktitle>", putting an editor before the title if one
+% exists.
+
+FUNCTION {format.in.ed.booktitle}
+{ booktitle missing$
+    { "" }
+#if KANJI
+    { kanji.style
+        { 's format.editors :=
+          s "" =
+	    { "，" booktitle italicize * }
+	    { "，" s * "，" * booktitle italicize * }
+          if$
+        }
+        { 's format.editors :=
+          s "" =
+	    { "In " booktitle italicize * }
+	    { "In " s * ", " * booktitle italicize * }
+          if$
+        }
+      if$
+    }
+#else !KANJI
+    { 's format.editors :=
+      s "" =
+	{ "In " booktitle italicize * }
+	{ "In " s * ", " * booktitle italicize * }
+      if$
+    }
+#endif KANJI
+  if$
+}
+
+% The format.tr.number makes a string starting with "Technical Report"
+% (or type, if that field is defined), followed by the number if there
+% is one (but return the first part even if there is no number)
+
+FUNCTION {format.tr.number}
+{ type missing$
+    { kanji.style
+        { "技報" }
+        { "Technical Report" }
+      if$
+    }
+    { type }
+  if$
+  number missing$
+    'skip$
+    { "~" * number * }
+  if$
+}
+
+% Now we define the type functions for all entry types that may appear
+% in the .BIB file---e.g., functions like `book' and `article'.  These
+% are the routines that actually generate the .BBL-file output for
+% the entry.  These must all precede the READ command.  In addition, the
+% style designer should have a function `default.type' for unknown types.
+% Note: The fields (within each list) are listed in order of appearance,
+% except as described for a `proceedings'.
+%
+% The article function is for an article in a journal.
+%	Required fields: author, title, journal, year
+%	Optional fields: volume, number, pages, month, note
+%
+% article ==
+%  BEGIN
+%	output.bibitem
+%	output.check("author",format.authors)
+%	new.block
+%	output.check("title",format.title)
+%	new.block
+%	output.check("journal",italicize(field.or.null(journal)))
+%	output(format.vol.num.pages)
+%	output.check("year",format.date)
+%	new.block
+%	output(field.or.null(note))
+%	fin.entry
+%  END
+%
+% The book function is for a whole book.
+%	Required fields: author or editor, title, publisher, year
+%	Optional fields: volume, series, address, edition, month, note
+%
+% book ==
+%  BEGIN
+%	if missing$(author) then output.check("author and editor",
+%								format.editors)
+%	else output.check("author",format.authors)
+%	fi
+%	new.block
+%	output.check("title",format.btitle)
+%	new.block
+%	output(format.bvolume)
+%	output.check("publisher",field.or.null(publisher))
+%	output(field.or.null(address))
+%	output(format.edition)
+%	output.check("year",format.date))
+%	new.block
+%	output(field.or.null(note))
+%	fin.entry
+%  END
+%
+% The other entry functions are all quite similar, so no "comment version"
+% will be given for them.
+
+FUNCTION {article}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.title output.check
+  new.block
+  "journal" journal field.or.null italicize output.check
+  format.vol.num.pages output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+FUNCTION {book}
+{ output.bibitem
+  author missing$
+    { "author and editor" format.editors output.check }
+    { "author" format.authors output.check }
+  if$
+  new.block
+  "title" format.btitle output.check
+  new.block
+  format.bvolume output
+  "publisher" publisher field.or.null output.check
+  address field.or.null output
+  format.edition output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% A booklet is a bound thing without a publisher or sponsoring institution
+%	Required: title
+%	Optional: author, howpublished, address, month, year, note
+
+FUNCTION {booklet}
+{ output.bibitem
+  format.authors output
+  new.block
+  "title" format.btitle output.check
+  new.block
+  howpublished field.or.null output
+  address field.or.null output
+  format.date output
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% For the conference entry type, see inproceedings
+
+% An inbook is a piece of a book: either a chapter and/or a page range.
+%	Required: author or editor, title, chapter and/or pages, publisher,year
+%	Optional: volume, series, address, edition, month, note
+
+FUNCTION {inbook}
+{ output.bibitem
+  author missing$
+    { "author and editor" format.editors output.check }
+    { "author" format.authors output.check }
+  if$
+  new.block
+  "title" format.btitle output.check
+  "chapter and pages" format.chapter.pages output.check
+  new.block
+  format.bvolume output
+  "publisher" publisher field.or.null output.check
+  address field.or.null output
+  format.edition output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% An incollection is like inbook, but where there is a separate title
+% for the referenced thing (and perhaps an editor for the whole)
+%	Required: author, title, booktitle, publisher, year
+%	Optional: editor, chapter, pages, address, month, note
+
+FUNCTION {incollection}
+{ output.bibitem
+  "authors" format.authors output.check
+  new.block
+  "title" format.title output.check
+  new.block
+  "booktitle" format.in.ed.booktitle output.check
+  format.chapter.pages output
+  "publisher" publisher field.or.null output.check
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% An inproceedings is an article in a conference proceedings
+%	Required: author, title, booktitle, year
+%	Optional: editor, pages, organization, publisher, address, month, note
+
+FUNCTION {inproceedings}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.title output.check
+  new.block
+  "booktitle" format.in.ed.booktitle output.check
+  format.pages output
+  organization field.or.null output
+  publisher field.or.null output
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% The conference function is included for Scribe compatibility
+
+FUNCTION {conference} { inproceedings }
+
+% A manual is technical documentation
+%	Required: title
+%	Optional: author, organization, address, edition, month, year, note
+
+FUNCTION {manual}
+{ output.bibitem
+  format.authors output
+  new.block
+  "title" format.btitle output.check
+  new.block
+  organization field.or.null output
+  address field.or.null output
+  format.edition output
+  format.date output
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% A mastersthesis is a Master's thesis
+%	Required: author, title, school, year
+%	Optional: address, month, note
+
+FUNCTION {mastersthesis}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.btitle output.check
+  new.block
+  kanji.style
+    { "修士論文" output }
+    { "Master's thesis" output }
+  if$
+  "school" school field.or.null output.check
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% a misc is something that doesn't fit elsewhere
+%	Required: none
+%	Optional: author, title, howpublished, month, year, note
+
+FUNCTION {misc}
+{ output.bibitem
+  format.authors output
+  new.block
+  format.title output
+  new.block
+  howpublished field.or.null output
+  format.date output
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% A phdthesis is like a mastersthesis
+%	Required: author, title, school, year
+%	Optional: address, month, note
+
+FUNCTION {phdthesis}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.btitle output.check
+  new.block
+  kanji.style
+    { "博士論文" output }
+    { "PhD thesis" output }
+  if$
+  "school" school field.or.null output.check
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% a proceedings is a conference proceedings
+% if there is an organization but no editor field, the organization will
+% appear as the first optional field (we try to make the first block nonempty)
+%	Required: title, year
+%	Optional: editor, publisher, organization, address, month, note
+
+FUNCTION {proceedings}
+{ output.bibitem
+  editor missing$
+    { organization missing$
+	'skip$
+	{ organization field.or.null output }
+      if$
+    }
+    { format.editors output }
+  if$
+  new.block
+  "title" format.btitle output.check
+  editor missing$
+    'skip$
+    { organization field.or.null output }
+  if$
+  publisher field.or.null output
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% a techreport is a technical report.
+%	Required: author, title, institution, year
+%	Optional: type, number, address, month, note
+
+FUNCTION {techreport}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.btitle output.check
+  new.block
+  format.tr.number output
+  "institution" institution field.or.null output.check
+  address field.or.null output
+  "year" format.date output.check
+  new.block
+  note field.or.null output
+  fin.entry
+}
+
+% an unpublished is something that hasn't been published
+%	Required: author, title, note
+%	Optional: month, year
+
+FUNCTION {unpublished}
+{ output.bibitem
+  "author" format.authors output.check
+  new.block
+  "title" format.title output.check
+  new.block
+  format.date output
+  new.block
+  "note" note field.or.null output.check
+  fin.entry
+}
+
+% We use entry type book for an unknown type and give a warning
+
+FUNCTION {default.type} { book }
+
+% Here are macros for common things that may vary from style to style.
+% Users are encouraged to use these macros.
+%
+% Months are either written out in full or abbreviated
+
+#if MONTH_FULL
+
+MACRO {jan} {"January"}
+
+MACRO {feb} {"February"}
+
+MACRO {mar} {"March"}
+
+MACRO {apr} {"April"}
+
+MACRO {may} {"May"}
+
+MACRO {jun} {"June"}
+
+MACRO {jul} {"July"}
+
+MACRO {aug} {"August"}
+
+MACRO {sep} {"September"}
+
+MACRO {oct} {"October"}
+
+MACRO {nov} {"November"}
+
+MACRO {dec} {"December"}
+
+#else !MONTH_FULL
+
+MACRO {jan} {"Jan."}
+
+MACRO {feb} {"Feb."}
+
+MACRO {mar} {"March"}
+
+MACRO {apr} {"Apr."}
+
+MACRO {may} {"May"}
+
+MACRO {jun} {"June"}
+
+MACRO {jul} {"July"}
+
+MACRO {aug} {"Aug."}
+
+MACRO {sep} {"Sep."}
+
+MACRO {oct} {"Oct."}
+
+MACRO {nov} {"Nov."}
+
+MACRO {dec} {"Dec."}
+
+#endif MONTH_FULL
+
+% Journals are either written out in full or abbreviated;
+% the abbreviations are like those found in ACM publications.
+%
+% To get a completely different set of abbreviations, it may be best to make
+% a separate .bib file with nothing but those abbreviations; users could then
+% include that file name as the first argument to the \bibliography command
+
+#if JOUR_FULL
+
+MACRO {acmcs} {"ACM Computing Surveys"}
+
+MACRO {acta} {"Acta Informatica"}
+
+MACRO {cacm} {"Communications of the ACM"}
+
+MACRO {ibmjrd} {"IBM Journal of Research and Development"}
+
+MACRO {ibmsj} {"IBM Systems Journal"}
+
+MACRO {ieeese} {"IEEE Transactions on Software Engineering"}
+
+MACRO {ieeetc} {"IEEE Transactions on Computers"}
+
+MACRO {ieeetcad}
+ {"IEEE Transactions on Computer-Aided Design of Integrated Circuits"}
+
+MACRO {ipl} {"Information Processing Letters"}
+
+MACRO {jacm} {"Journal of the ACM"}
+
+MACRO {jcss} {"Journal of Computer and System Sciences"}
+
+MACRO {scp} {"Science of Computer Programming"}
+
+MACRO {sicomp} {"SIAM Journal on Computing"}
+
+MACRO {tocs} {"ACM Transactions on Computer Systems"}
+
+MACRO {tods} {"ACM Transactions on Database Systems"}
+
+MACRO {tog} {"ACM Transactions on Graphics"}
+
+MACRO {toms} {"ACM Transactions on Mathematical Software"}
+
+MACRO {toois} {"ACM Transactions on Office Information Systems"}
+
+MACRO {toplas} {"ACM Transactions on Programming Languages and Systems"}
+
+MACRO {tcs} {"Theoretical Computer Science"}
+
+#else !JOUR_FULL
+
+MACRO {acmcs} {"ACM Comput. Surv."}
+
+MACRO {acta} {"Acta Inf."}
+
+MACRO {cacm} {"Commun. ACM"}
+
+MACRO {ibmjrd} {"IBM J. Res. Dev."}
+
+MACRO {ibmsj} {"IBM Syst. J."}
+
+MACRO {ieeese} {"IEEE Trans. Softw. Eng."}
+
+MACRO {ieeetc} {"IEEE Trans. Comput."}
+
+MACRO {ieeetcad}
+ {"IEEE Trans. Comput.-Aided Design Integrated Circuits"}
+
+MACRO {ipl} {"Inf. Process. Lett."}
+
+MACRO {jacm} {"J. ACM"}
+
+MACRO {jcss} {"J. Comput. Syst. Sci."}
+
+MACRO {scp} {"Sci. Comput. Programming"}
+
+MACRO {sicomp} {"SIAM J. Comput."}
+
+MACRO {tocs} {"ACM Trans. Comput. Syst."}
+
+MACRO {tods} {"ACM Trans. Database Syst."}
+
+MACRO {tog} {"ACM Trans. Gr."}
+
+MACRO {toms} {"ACM Trans. Math. Softw."}
+
+MACRO {toois} {"ACM Trans. Office Inf. Syst."}
+
+MACRO {toplas} {"ACM Trans. Prog. Lang. Syst."}
+
+MACRO {tcs} {"Theoretical Comput. Sci."}
+
+#endif JOUR_FULL
+
+% Now we read in the .BIB entries.
+
+READ
+
+#if KANJI
+
+% For each entry determine if we should set it in English style or Japanese
+% style.
+
+FUNCTION {set.kanji.style}
+{
+  'kanji.style
+  author missing$
+    {
+      editor missing$
+        { 
+	  title missing$
+	    { #0 }
+	    { title find.kanji$
+		{ #1 }
+		{ #0 }
+	      if$
+	    }
+	  if$
+	}
+        {
+          editor find.kanji$
+	    { #1 }
+	    { #0 }
+          if$
+        }
+      if$
+    }
+    {
+      author find.kanji$
+	{ #1 }
+	{ #0 }
+      if$
+    }
+  if$
+  :=
+}
+
+ITERATE {set.kanji.style}
+
+#endif KANJI
+
+% The sortify function converts to lower case after purify$ing; it's
+% used in sorting and in computing alphabetic labels after sorting
+
+#if SORTED
+
+FUNCTION {sortify}
+{ purify$
+  "ll" change.case$
+}
+
+#endif SORTED
+
+% This long comment applies only to alphabetic labels
+%
+% The format.lab.names function makes a short label by using the initials of
+% the von and Last parts of the names (but if there are more than four names,
+% (i.e., people) it truncates after three and adds a "*";
+% it also adds a "*" if the last of multiple authors is "others").
+% If there is only one name, and its von and Last parts combined have just
+% a single name-token ("Knuth" has a single token, "Brinch Hansen" has two),
+% we take the first three letters of the last name.
+%
+% format.lab.names(s) ==
+%  BEGIN
+%	numnames := num.names$(s)
+%	if numnames > 1 then
+%	    if numnames > 4 then
+%		namesleft := 3
+%	    else
+%		namesleft := numnames
+%	    nameptr := 1
+%	    nameresult := ""
+%	    while namesleft > 0
+%	      do
+%		if (name_ptr = numnames) and
+%			format.name$(s, nameptr, "{ff}{vv}{ll}{jj}") = "others"
+%		    then nameresult := nameresult * "*"
+%		    else nameresult := nameresult *
+%				format.name$(s, nameptr, "{v{}}{l{}}")
+%		nameptr := nameptr + 1
+%		namesleft := namesleft - 1
+%	      od
+%	    if numnames > 4 then
+%		nameresult := nameresult * "*"
+%	else
+%	    t := format.name$(s, 1, "{v{}}{l{}}")
+%	    if substring$(t, 2, 1) = "" then	% there's just one name-token
+%		nameresult := substring$(purify$(format.name$(s, 1, "{ll}")),
+%									1, 3)
+%	    else
+%		nameresult := t
+%	    fi
+%	fi
+%	nameresult
+%  END
+%
+% Here is a function for calculating the preliminary label of an entry.
+% It is formed by calculating format.lab.names on the author field
+% (or on the editor field if there is no author, or using the first three
+% letters of the key field if there is no editor either), and appending the
+% last two characters (digits) of the year.  It is an error if there is no
+% author, editor or key field, and we use the first three letters of the title
+% in desperation when this happens.  The resulting label is purify$ed, except
+% for possibly a "*" if there are too many authors.
+%
+% This function also calculates the version of this label to be used in sorting
+%
+% The final label may need a trailing 'a', 'b', etc., to distinguish it from
+% otherwise identical labels, but we can't calculated those "extra.label"s
+% until after sorting.
+%
+% calc.label ==
+%  BEGIN
+%	if missing$(author) then
+%	    if missing$(editor) then
+%		if missing$(key) then
+%		    top$("Warning: need a key to make a label in " * cite$)
+%		    label := substring$(purify$(field.or.null(title)), 1, 3)
+%		else
+%		    label := substring$(purify$(key), 1, 3)
+%		fi
+%	    else
+%		label := format.lab.names(editor)
+%	    fi
+%	else
+%	    label := format.lab.names(author)
+%	fi
+%	label := label * substring$(purify$(field.or.null(year)), -1, 2)
+%		% assuming we will also sort, we calculate a sort.label
+%	sort.label := sortify(label)
+%  END
+
+#if LAB_ALPH
+
+FUNCTION {format.lab.names}
+{ 's swap$ :=
+  'numnames s num.names$ :=
+  numnames #1 >
+    { numnames #4 >
+	{ 'namesleft #3 := }
+	{ 'namesleft numnames := }
+      if$
+      'nameptr #1 :=
+      'nameresult "" :=
+	{ namesleft #0 > }
+	{ nameptr numnames =
+	    { s nameptr "{ff}{vv}{ll}{jj}" format.name$ "others" =
+		{ 'nameresult nameresult "*" * := }
+		{ 'nameresult nameresult s nameptr "{v{}}{l{}}" format.name$
+		  * :=
+		}
+	      if$
+	    }
+	    { 'nameresult nameresult s nameptr "{v{}}{l{}}" format.name$
+	      * :=
+	    }
+	  if$
+	  'nameptr nameptr #1 + :=
+	  'namesleft namesleft #1 - :=
+	}
+      while$
+      numnames #4 >
+	{ 'nameresult nameresult "*" * := }
+	'skip$
+      if$
+    }
+    { 't s #1 "{v{}}{l{}}" format.name$ :=
+      'nameresult
+      t #2 #1 substring$ "" =
+	{ s #1 "{ll}" format.name$ purify$ #1 #3 substring$ }
+	{ t }
+      if$
+      :=
+    }
+  if$
+  nameresult
+}
+
+#if KANJI
+
+FUNCTION {format.kanji.lab.names}
+{ 's swap$ :=
+  'numnames s num.names$ :=
+  numnames #1 >
+    { numnames #4 >
+	{ 'namesleft #3 := }
+	{ 'namesleft numnames := }
+      if$
+      'nameptr #1 :=
+      'nameresult "" :=
+	{ namesleft #0 > }
+	{ nameptr numnames =
+	  s nameptr "{ff}{vv}{ll}{jj}" format.name$ "others" =
+	  and
+	    { 'nameresult nameresult "*" * := }
+	    { 't s nameptr
+              s nameptr "{ff{}}{ll{}}" format.name$ find.kanji$
+	        {
+                  s nameptr "{ff{}}" format.name$ find.kanji$
+		    { "{f{}}" }
+		    { "{l{}}" }
+		  if$
+		}
+		{ "{v{}}{l{}}" }
+	      if$
+	      format.name$ :=
+	      nameresult #-1 #1 substring$ find.kanji$
+	      t #1 #1 substring$ find.kanji$ not
+	      and
+	      nameresult #-1 #1 substring$ find.kanji$ not
+	      t #1 #1 substring$ find.kanji$
+	      and
+	      or
+	      nameresult "" = not
+	      and
+		{'nameresult nameresult "\kern0pt " * t * := }
+		{'nameresult nameresult t * := }
+	      if$
+	    }
+	  if$
+	  'nameptr nameptr #1 + :=
+	  'namesleft namesleft #1 - :=
+	}
+      while$
+      numnames #4 >
+	{ 'nameresult nameresult "*" * := }
+	'skip$
+      if$
+    }
+    {
+      s #1 "{ff{}}{ll{}}" format.name$ find.kanji$
+	{
+	  'nameresult s #1
+          s #1 "{ff{}}" format.name$ find.kanji$
+	    { "{ff{}}" }
+	    { "{ll{}}" }
+	  if$
+	  format.name$ :=
+	}
+	{
+          't s #1 "{v{}}{l{}}" format.name$ :=
+          'nameresult
+          t #2 #1 substring$ "" =
+	    { s #1 "{ll}" format.name$ purify$ #1 #3 substring$ }
+	    { t }
+          if$
+          :=
+	}
+      if$
+    }
+  if$
+  nameresult
+}
+
+#endif KANJI
+
+FUNCTION {calc.label}
+{ 'label
+  author missing$
+    { editor missing$
+	{ key missing$
+	    { "Warning: need a key to make a label in " cite$ * top$
+	      title field.or.null purify$ #1 #3 substring$
+	    }
+	    { key purify$ #1 #3 substring$ }
+	  if$
+	}
+#if KANJI
+	{ editor duplicate$ find.kanji$
+	    { format.kanji.lab.names }
+	    { format.lab.names }
+          if$
+	}
+#else !KANJI
+	{ editor format.lab.names }
+#endif KANJI
+      if$
+    }
+#if KANJI
+    { author duplicate$ find.kanji$
+	{ format.kanji.lab.names }
+	{ format.lab.names }
+      if$
+    }
+#else !KANJI
+    { author format.lab.names }
+#endif KANJI
+  if$
+#if KANJI
+  duplicate$ #-1 #1 substring$ find.kanji$
+    {
+      year field.or.null purify$ #-1 #2 substring$
+      duplicate$ #1 #1 substring$ find.kanji$ not
+        { "\kern0pt " swap$ * }
+	'skip$
+      if$
+    }
+    {
+      year field.or.null purify$ #-1 #2 substring$
+      duplicate$ #1 #1 substring$ find.kanji$
+        { "\kern0pt " swap$ * }
+	'skip$
+      if$
+    }
+  if$
+#else !KANJI
+  year field.or.null purify$ #-1 #2 substring$
+#endif KANJI
+  *
+  :=
+#if KANJI
+  label find.kanji$ key missing$ not and
+    { 'sort.label key
+      year field.or.null purify$ #-1 #2 substring$
+      * sortify := }
+    { 'sort.label label sortify := }
+  if$
+#else !KANJI
+  'sort.label label sortify :=
+#endif KANJI
+}
+
+% It doesn't seem like a particularly good idea to use an order-of-citation
+% reference list when using alphabetic labels, but we need to have a
+% special pass to calculate labels when this happens.
+
+#if !SORTED
+
+ITERATE {calc.label}
+
+#endif !SORTED
+
+#endif LAB_ALPH
+
+% When sorting, we compute the sortkey by executing "presort" on each entry.
+% The presort key contains a number of "sortify"ed strings, concatenated
+% with multiple blanks between them.  This makes things like "brinch  per"
+% come before "brinch hansen  per"
+%
+% The fields used here are:
+% the sort.label for alphabetic labels (as set by calc.label),
+% followed by the author names (or editor names, if those are missing,
+% or the key field if both are), followed by the first bit
+% of the title (chopping off a leading "The ", "A ", or "An ").
+% Names are formatted: Von Last First Junior.
+% The names within a part will be separated by a single blank
+% (such as "brinch hansen"), two will separate the name parts themselves
+% (except the von and last), three will separate the names,
+% and four will separate the names from the title (and label, if alphabetic).
+%
+% The sort.format.names function takes an argument that should be in
+% BibTeX name format, and returns a string containing "   "-separated
+% names in the format described above.  The function is almost the same
+% as format.names.
+
+#if SORTED
+
+FUNCTION {sort.format.names}
+{ 's swap$ :=
+  'nameptr #1 :=
+  'nameresult "" :=
+  'numnames s num.names$ :=
+  'namesleft numnames :=
+    { namesleft #0 > }
+    { nameptr #1 >
+	{ 'nameresult nameresult "   " * := }
+	'skip$
+      if$
+#if KANJI
+      't s nameptr 
+      s nameptr "{ff}{ll}" format.name$ find.kanji$
+      s nameptr "{vv{}}{jj{}}" format.name$ "" =
+      and
+#if KANJI_SPACE_NAME
+	{ "{ff{　}　　}{ll{　}}" }
+#else
+	{ "{ff{}}{ll{}}" }
+#endif
+#if NAME_FULL
+	{ "{vv{ } }{ll{ }}{  ff{ }}{  jj{ }}" }
+#else
+	{ "{vv{ } }{ll{ }}{  f{ }}{  jj{ }}" }
+#endif NAME_FULL
+      if$
+      format.name$ :=
+#else !KANJI
+#if NAME_FULL
+      't s nameptr "{vv{ } }{ll{ }}{  ff{ }}{  jj{ }}" format.name$ :=
+#else
+      't s nameptr "{vv{ } }{ll{ }}{  f{ }}{  jj{ }}" format.name$ :=
+#endif NAME_FULL
+#endif KANJI
+      nameptr numnames = t "others" = and
+	{ 'nameresult nameresult "et al" * := }
+	{ 'nameresult nameresult t sortify * := }
+      if$
+      'nameptr nameptr #1 + :=
+      'namesleft namesleft #1 - :=
+    }
+  while$
+  nameresult
+}
+
+% The chop.word(w,len,s) function returns either s or, if the first len
+% letters of s equals w (this comparison is done in the third line of the
+% function's definition), it returns that part of s after w.
+
+INTEGERS {len}
+
+FUNCTION {chop.word}
+{ 's swap$ :=
+  'len swap$ :=
+  s #1 len substring$ =
+    { s len #1 + global.string.max substring$ }
+    { s }
+  if$
+}
+
+% The sort.format.title function returns the argument,
+% but first any leading "A "'s, "An "'s, or "The "'s are removed.
+% The chop.word function uses s, so we need another string variable, t
+
+FUNCTION {sort.format.title}
+{ 't swap$ :=
+  "A " #2
+    "An " #3
+      "The " #4 t chop.word
+    chop.word
+  chop.word
+  #1 global.string.max substring$
+  sortify
+}
+
+% There is a limit on the length of an entry string variable, which
+% is what its sort.key$ is.  The limit is currently entry.string.max, so we
+% take at most that many characters of the constructed key, and hope
+% there aren't many references that match to that many characters!
+
+FUNCTION {presort}
+{
+#if LAB_ALPH
+  calc.label
+  sort.label
+  "    "
+  *
+#endif LAB_ALPH
+#if KANJI
+  author missing$
+    {
+      editor missing$
+        { key field.or.null sortify }
+        {
+          editor find.kanji$
+          key missing$ not and
+            { key field.or.null sortify }
+            { editor sort.format.names }
+          if$
+        }
+      if$
+    }
+    {
+      author find.kanji$
+      key missing$ not and
+        { key field.or.null sortify }
+        { author sort.format.names }
+      if$
+    }
+  if$
+#else !KANJI
+  author missing$
+    { editor missing$
+	{ key field.or.null sortify }
+	{ editor sort.format.names }
+      if$
+    }
+    { author sort.format.names }
+  if$
+#endif KANJI
+#if LAB_ALPH
+  *
+#endif LAB_ALPH
+  "    "
+  *
+  title field.or.null
+  sort.format.title
+  *
+  #1 entry.string.max substring$
+  'sort.key$ swap$ :=
+}
+
+ITERATE {presort}
+
+% And now we can sort
+
+SORT
+
+#endif SORTED
+
+% This long comment applies only to alphabetic labels, when sorted
+%
+% Now comes the final computation for alphabetic labels, putting in the 'a's
+% and 'b's and so forth if required.  This involves two passes: a forward
+% pass to put in the 'b's, 'c's and so on, and a backwards pass
+% to put in the 'a's (we don't want to put in 'a's unless we know there
+% are 'b's).
+% We have to keep track of the longest (in width$ terms) label, for use
+% by the "thebibliography" environment.
+%
+% VAR: longest.label, last.sort.label, next.extra: string
+%      longest.label.width, last.extra.num: integer
+%
+% initialize.longest.label ==
+%  BEGIN
+%	longest.label := ""
+%	last.sort.label := ""
+%	next.extra := ""
+%	longest.label.width := 0
+%	last.extra.num := 0
+%  END
+%
+% forward.pass ==
+%  BEGIN
+%	if last.sort.label = sort.label then
+%	    last.extra.num := last.extra.num + 1
+%	    extra.label := int.to.chr$(last.extra.num)
+%	else
+%	    last.extra.num := chr.to.int$("a")
+%	    extra.label := ""
+%	    last.sort.label := sort.label
+%	fi
+%  END
+%
+% reverse.pass ==
+%  BEGIN
+%	if next.extra = "b" then
+%	    extra.label := "a"
+%	fi
+%	label := label * extra.label
+%	if width$(label) > longest.label.width then
+%	    longest.label := label
+%	    longest.label.width := width$(label)
+%	fi
+%	next.extra := extra.label
+%  END
+
+#if LAB_ALPH
+
+#if SORTED
+
+STRINGS { longest.label last.sort.label next.extra }
+
+INTEGERS { longest.label.width last.extra.num }
+
+FUNCTION {initialize.longest.label}
+{ 'longest.label "" :=
+  'last.sort.label "" :=
+  'next.extra "" :=
+  'longest.label.width #0 :=
+  'last.extra.num #0 :=
+}
+
+FUNCTION {forward.pass}
+{ last.sort.label sort.label =
+    { 'last.extra.num last.extra.num #1 + :=
+      'extra.label last.extra.num int.to.chr$ :=
+    }
+    { 'last.extra.num "a" chr.to.int$ :=
+      'extra.label "" :=
+      'last.sort.label sort.label :=
+    }
+  if$
+}
+
+FUNCTION {reverse.pass}
+{ next.extra "b" =
+    { 'extra.label "a" := }
+    'skip$
+  if$
+  'label label extra.label * :=
+  label width$ longest.label.width >
+    { 'longest.label label :=
+      'longest.label.width label width$ :=
+    }
+    'skip$
+  if$
+  'next.extra extra.label :=
+}
+
+EXECUTE {initialize.longest.label}
+
+ITERATE {forward.pass}
+
+REVERSE {reverse.pass}
+
+#else !SORTED
+
+% It still doesn't seem like a good idea to use an order-of-citation
+% reference list when using alphabetic labels, but when this happens we
+% must compute the longest label
+
+STRINGS {longest.label}
+
+INTEGERS {longest.label.width}
+
+FUNCTION {initialize.longest.label}
+{ 'longest.label "" :=
+  'longest.label.width #0 :=
+}
+
+FUNCTION {longest.label.pass}
+{ label width$ longest.label.width >
+    { 'longest.label label :=
+      'longest.label.width label width$ :=
+    }
+    'skip$
+  if$
+}
+
+EXECUTE {initialize.longest.label}
+
+ITERATE {longest.label.pass}
+
+#endif SORTED
+
+#else !LAB_ALPH
+
+% Now comes the computation for numeric labels.
+% We use either the sorted order or original order.
+% We still have to keep track of the longest (in width$ terms) label, for use
+% by the "thebibliography" environment.
+
+STRINGS {longest.label}
+
+INTEGERS { number.label longest.label.width }
+
+FUNCTION {initialize.longest.label}
+{ 'longest.label "" :=
+  'number.label #1  :=
+  'longest.label.width #0 :=
+}
+
+FUNCTION {longest.label.pass}
+{ 'label number.label int.to.str$ :=
+  'number.label number.label #1 + :=
+  label width$ longest.label.width >
+    { 'longest.label label :=
+      'longest.label.width label width$ :=
+    }
+    'skip$
+  if$
+}
+
+EXECUTE {initialize.longest.label}
+
+ITERATE {longest.label.pass}
+
+#endif LAB_ALPH
+
+% Now we're ready to start writing the .BBL file.
+% First we write the `preamble' containing the command
+%     \begin{thebibliography}{...}
+% where the `...' is the longest label.
+%
+% Then we call init.state.consts, for use by the output routines.
+
+FUNCTION {preamble}
+{ "\begin{thebibliography}{"  longest.label  * "}" * write$
+  newline$
+}
+
+EXECUTE {preamble}
+
+EXECUTE {init.state.consts}
+
+% Now we produce the output for all the entries
+
+ITERATE {call.type$}
+
+% Finally, we finish up by writing the `\end{thebibliography}' command.
+
+FUNCTION {finish.up} { newline$ "\end{thebibliography}" write$ newline$ }
+
+EXECUTE {finish.up}

@@ -1,0 +1,4 @@
+# /bin/sh
+# setup the ./undump area for Sequent Balance/DYNIX
+cp Makefile.BALANCE Makefile
+cp undump.BALANCE.c undump.c

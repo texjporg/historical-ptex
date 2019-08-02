@@ -1,0 +1,22 @@
+/*
+ * Documentation subdirectory.
+ */
+
+FILES	= Imakefile \
+	Install.tex tree.tex fullpage.sty Xfonts.ps macros.tex
+
+all: Install.ps
+
+Install.ps:
+	dvips -o Install.ps Install.dvi
+
+Install.dvi:
+	latex Install
+	latex Install
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/Doc/$$file; \
+	done

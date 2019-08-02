@@ -1,0 +1,812 @@
+%!PS-Adobe-2.0
+%%Title: jtex.ps
+%%Creator: T.Kakiuchi
+%%EndComments
+%              for use by jdvi2kps Version 2.00
+% a start (Ha!) at a TeX mode for PostScript.
+% The following defines procedures assumed and used by program "jdvi2kps"
+% and must be downloaded or sent as a header file for all TeX jobs.
+
+% By:  Neal Holtz, Carleton University, Ottawa, Canada
+%      <holtz@cascade.carleton.cdn>
+%      <holtz%cascade.carleton.cdn@ubc.csnet>
+%      June, 1985
+%      Last Modified: Aug 25/85
+% oystr 12-Feb-1986
+%   Changed @dc macro to check for a badly formed bits in character
+%   definitions.  Can get a <> bit map if a character is not actually
+%   in the font file.  This is absolutely guaranteed to drive the
+%   printer nuts - it will appear that you can no longer define a
+%   new font, although the built-ins will still be there.
+% pam 5-Jan-1988 
+%   Expanded arrays for 256 character gf fonts.
+% oka 9-Feb-1989
+%   Kanji Post Script
+
+% To convert this file into a downloaded file instead of a header
+% file, uncomment all of the lines beginning with %-%
+
+%-%0000000 			% Server loop exit password
+%-%serverdict begin exitserver
+%-%  systemdict /statusdict known
+%-%  {statusdict begin 9 0 3 setsccinteractive /waittimeout 300 def end}
+%-% if
+
+/TeXDict 200 dict def
+TeXDict begin
+
+true setpacking		% set packing mode true
+
+% Define working dictionary cut 89,03,10
+
+/Inch  {Resolution mul} bind def  % converts inches to internal units
+/mm { 2.8346519 mul } bind def
+/Mtrx 6 array def
+
+%%%%%%%%%%%%%%%%%%%%% Page setup (user) options %%%%%%%%%%%%%%%%%%%%%%%%
+
+% jdvi2kps will output coordinates in the TeX system ([0,0] 1" down and in
+% from top left, with y +ive downward).  The default PostScript system
+% is [0,0] at bottom left, y +ive up.  The Many Matrix Machinations in
+% the following code are an attempt to reconcile that. The intent is to
+% specify the scaling as 1 and have only translations in the matrix to
+% properly position the text.  Caution: the default device matrices are
+% *not* the same in all PostScript devices; that should not matter in most 
+% of the code below (except for lanscape mode -- in that, rotations of
+% -90 degrees resulted in the the rotation matrix [ e 1 ]
+%                                                 [ 1 e ]
+% where the "e"s were almost exactly but not quite unlike zeros.
+
+%oka 27-Feb-1989
+/@a4
+  { a4 initmatrix
+    /PaperWidth 210 mm def
+    /PaperHeight 297 mm def
+    72 Resolution div dup neg scale
+    Resolution dup -10.68 mul translate
+    Mtrx currentmatrix pop
+  } bind def
+
+/@b4
+  { b4 initmatrix
+    /PaperWidth 257 mm def
+    /PaperHeight 364 mm def
+    72 Resolution div dup neg scale
+    Resolution dup -13.33 mul translate
+    Mtrx currentmatrix pop
+  } bind def
+
+/@a4landscape
+  { a4 initmatrix
+    /PaperWidth 297 mm def
+    /PaperHeight 210 mm def
+    72 Resolution div dup neg scale
+    -90 rotate
+    Resolution dup translate
+    Mtrx currentmatrix pop
+  } bind def
+
+/@b4landscape
+  { b4 initmatrix
+    /PaperWidth 364 mm def
+    /PaperHeight 257 mm def
+    72 Resolution div dup neg scale
+    -90 rotate
+    Resolution dup translate
+    Mtrx currentmatrix pop
+  } bind def
+%oka 27-Feb-1989
+
+/@letter
+  { letter initmatrix
+    /PaperWidth 215.9 mm def
+    /PaperHeight 279.4 mm def
+    72 Resolution div dup neg scale          % set scaling to 1.
+    Resolution dup 10 add exch -10 mul -5 add translate
+				% move origin to top (these are not exactly 1"
+    Mtrx currentmatrix pop   % and -10" because margins aren't set exactly right)
+  } def
+        % note mode is like letter, except it uses less VM
+/@note
+  { note initmatrix
+    /PaperWidth 195.3 mm def
+    /PaperHeight 258.1 mm def
+    72 Resolution div dup neg scale          % set scaling to 1.
+    Resolution dup 10 add exch -10 mul -5 add translate
+							% move origin to top
+    Mtrx currentmatrix pop
+  } def
+
+/@landscape
+  { letter initmatrix
+    /PaperWidth 279.4 mm def
+    /PaperHeight 215.9 mm def
+    72 Resolution div dup neg scale          % set scaling to 1.
+%    -90 rotate                              % it would be nice to be able to do this
+    Mtrx currentmatrix 0 0.0 put             % but instead we have to do things like this because what
+    Mtrx 1 -1.0 put                          % should be zero terms aren't (and text comes out wobbly)
+    Mtrx 2 1.0 put                           % Fie!  This likely will not work on QMS printers
+    Mtrx 3 0.0 put                           % (nor on others where the device matrix is not like
+    Mtrx  setmatrix                          %  like it is on the LaserWriter).
+    Resolution dup 10 add translate    % move origin to top
+    Mtrx currentmatrix pop
+  } bind def
+
+/@legal
+  { legal initmatrix
+    /PaperWidth 170.7 mm def
+    /PaperHeight 330.2 mm def
+    72 Resolution div dup neg scale          % set scaling to 1.
+    Resolution 5 sub Resolution -10 mul -880 add translate
+							% move origin to top
+    Mtrx currentmatrix pop
+  } bind def
+
+/@manualfeed
+   { statusdict /manualfeed true put
+   } bind def
+        % n @copies -   set number of copies
+/@copies
+   { /#copies exch def
+   } bind def
+
+%%%%%%%%%%%%%%%%%%%% Procedure Defintions %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/@newfont       % @newfont -         -- initialize a new font dictionary
+  { /newname exch def
+    newname 7 dict def          % allocate new font dictionary
+    newname load begin
+        /FontType 3 def
+        /FontMatrix [1 0 0 -1 0 0] def
+        /FontBBox [0 0 1 1] def
+% pam 5-Jan-1988 array enlarged for gf fonts
+        /BitMaps 256 array def
+        /BuildChar {CharBuilder} def
+        /Encoding 256 array def
+        0 1 255 {Encoding exch /.undef put} for
+        end
+    newname newname load definefont pop
+  } bind def
+
+
+% the following is the only character builder we need.  it looks up the
+% char data in the BitMaps array, and paints the character if possible.
+% char data  -- a bitmap descriptor -- is an array of length 6, of 
+%          which the various slots are:
+
+/ch-image {ch-data 0 get} bind def   % the hex string image
+/ch-width {ch-data 1 get} bind def   % the number of pixels across
+/ch-height {ch-data 2 get} bind def  % the number of pixels tall
+/ch-xoff  {ch-data 3 get} bind def   % number of pixels below origin
+/ch-yoff  {ch-data 4 get} bind def   % number of pixels to left of origin
+/ch-tfmw  {ch-data 5 get} bind def   % spacing to next character
+
+/CharBuilder    % fontdict ch Charbuilder -     -- image one character
+  { /ch-code exch def           % save the char code
+    /font-dict exch def         % and the font dict.
+    /ch-data font-dict /BitMaps get ch-code get def     % get the bitmap descriptor for char
+    ch-data null eq not
+      { ch-tfmw   0   ch-xoff neg   ch-yoff neg   ch-width ch-xoff sub   ch-height ch-yoff sub
+            setcachedevice
+        ch-width ch-height true [1 0  0 1  ch-xoff ch-yoff]
+            {ch-image} imagemask
+      }
+    if
+  } bind def
+
+
+/@sf            % fontdict @sf -        -- make that the current font
+  /setfont load def
+
+                % in the following, the font-cacheing mechanism requires that
+                % a name unique in the particular font be generated
+
+/@dc            % char-data ch @dc -    -- define a new character bitmap in current font
+  { /ch-code exch def
+% ++oystr 12-Feb-86++
+    dup 0 get
+    length 2 lt
+      { pop [ <00> 1 1 0 0 8.00 ] } % replace <> with null
+    if
+% --oystr 12-Feb-86--
+    /ch-data exch def
+    currentfont /BitMaps get ch-code ch-data put
+    currentfont /Encoding get ch-code 
+       dup (   ) cvs cvn   % generate a unique name simply from the character code
+       put
+  } bind def
+
+/@bop0           % @bop0 -              -- begin the char def section of a new page
+  { erasepage initgraphics
+    Mtrx setmatrix
+    /SaveImage save def
+  } bind def
+
+/@bop1           % @bop1 -              -- begin a brand new page
+  {
+  } def
+
+
+%
+%  For option -x that marks the edges and center of paper
+%  outside the paper.
+%  This option useful when target printing system is Linotype.
+%
+
+/@tombo          
+  { initgraphics
+
+    0.1 setlinewidth
+    -6 dup
+    0 moveto -12 0 rlineto stroke
+    PaperHeight moveto -12 0 rlineto stroke
+
+    -6 dup
+    0 exch moveto 0 -12 rlineto stroke
+    PaperWidth exch moveto 0 -12 rlineto stroke
+    
+    PaperWidth 6 add dup 
+    0 moveto 12 0 rlineto stroke
+    PaperHeight moveto 12 0 rlineto stroke
+
+    PaperHeight 6 add dup
+    0 exch moveto 0 12 rlineto stroke
+    PaperWidth exch moveto 0 12 rlineto stroke 
+
+    PaperHeight 2 div dup dup dup dup
+    -6 exch moveto -12 0 rlineto stroke
+    PaperWidth 6 add exch moveto 12 0 rlineto stroke
+    -6 add dup
+      -12 exch moveto 0 12 rlineto stroke
+      PaperWidth 12 add exch moveto 0 12 rlineto stroke
+    -12 exch 2 0 360 arc stroke
+    PaperWidth 12 add exch 2 0 360 arc stroke
+
+    PaperWidth 2 div dup dup dup dup
+    -6 moveto 0 -12 rlineto stroke
+    PaperHeight 6 add moveto 0 12 rlineto stroke
+    -6 add dup
+      -12 moveto 12 0 rlineto stroke  
+      PaperHeight 12 add moveto 12 0 rlineto stroke
+    -12 2 0 360 arc stroke
+    PaperHeight 12 add 2 0 360 arc stroke
+  } bind def
+
+
+
+/@eop           % - @eop -              -- end a page
+  { showpage
+    SaveImage restore
+  } bind def
+
+/@start         % - @start -            -- start everything
+  { @a4                             % (there is not much to do)
+  } def
+
+/@end           % - @end -              -- done the whole shebang
+  /end load def
+
+/p              % x y p -               -- move to position
+  /moveto load def
+
+/r              % x r -                 -- move right
+  { 0 rmoveto
+  } bind def
+
+/s              % string s -            -- show the string
+  /show load def
+
+/ru             % dx dy ru -   -- set a rule (rectangle)
+  { /dy exch neg def    % because dy is height up from bottom
+    /dx exch def
+    /x currentpoint /y exch def def   % remember current point
+    newpath x y moveto
+    dx 0 rlineto
+    0 dy rlineto
+    dx neg 0 rlineto
+    closepath fill
+    x y moveto
+  } bind def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%     the \special command junk
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   The structure of the PostScript produced by jdvi2kps for \special is:
+%         @beginspecial
+%           - any number of @hsize, @hoffset, @hscale, etc., commands
+%         @setspecial
+%           - the users file of PostScript commands
+%         @endspecial
+
+% The @beginspecial command recognizes whether the Macintosh Laserprep
+% has been loaded or not, and redfines some Mac commands if so.
+% The @setspecial handles the users shifting, scaling, clipping commands
+
+% The following are user settable options from the \special command.
+%       d @hsize -      specify a horizontal clipping dimension
+%                       these 2 are executed before the MacDraw initializations
+/@hsize {/hs exch def /CLIP true def} bind def
+/@vsize {/vs exch def /CLIP true def} bind def
+%       d @hoffset -    specify a shift for the drwgs
+/@hoffset {/ho exch def} bind def
+/@voffset {/vo exch def} bind def
+%       s @hscale -     set scale factor
+/@hscale {/hsc exch def} bind def
+/@vscale {/vsc exch def} bind def
+
+/@setclipper
+  { hsc vsc scale
+    CLIP
+      { newpath 0 0 moveto hs 0 rlineto 0 vs rlineto hs neg 0 rlineto
+	closepath clip }
+    if
+  } bind def
+
+% this will be invoked as the result of a \special command (for the
+% inclusion of PostScript graphics).  The basic idea is to change all
+% scaling and graphics back to defaults, but to shift the origin
+% to the current position on the page.
+
+/@beginspecial          % - @beginspecial -     -- enter special mode
+  { gsave /SpecialSave save def
+
+    % set new origin
+    currentpoint translate 
+    % revert to PostScript Points
+    Resolution 72 div dup neg scale
+
+    /hs 8.5 Inch def
+    /vs 11 Inch def
+    /ho 0 def
+    /vo 0 def
+    /hsc 1 def
+    /vsc 1 def
+    /CLIP false def
+
+    % define some stuff to do nothing
+    /showpage {} def
+    /erasepage {} def
+    /copypage {} def
+    /letter {} def
+    /note {} def
+    /legal {} def
+    /ledger {} def
+    /11x17 {} def
+    /a3 {} def
+    /a4 {} def
+
+    % prevents macdraw from blowing out
+    statusdict /waittimeout known {statusdict /waittimeout 300 put} if
+
+    % neuter flushfile
+    %   make it look for % % E O F instead
+    %   doesn't work for input files...
+    /flushfile
+      {0				% push current state
+       {1 index read not {exit} if	% read a character, quit if end of file
+        (% % E O F) 2 index 2 mul get eq	% character we want?
+          {1 add}			% then bump state
+          {pop 0} ifelse		% else reset state
+        dup 5 eq {exit} if
+       } loop
+      pop pop				% get rid of file designator and state
+      } bind def
+
+    % force the default matrix to really be the current matrix
+    % after the offset and scaling
+    /initmatrix {xinitmatrix setmatrix} bind def
+    /defaultmatrix {xinitmatrix exch copy} bind def
+
+    % force initgraphics to use our initmatrix
+    /initgraphics
+      {initmatrix newpath initclip
+       1 setlinewidth 0 setlinecap 0 setlinejoin
+       [] 0 setdash 0 setgray 10 setmiterlimit} 
+       bind def
+  } bind def
+
+/@setspecial    % to setup user specified offsets, scales, sizes (for clipping)
+  { ho vo translate
+    hsc vsc scale
+    CLIP
+      { newpath 0 0 moveto hs 0 rlineto 0 vs rlineto hs neg 0
+	rlineto closepath clip }
+    if
+
+    % neuter initmatrix
+    /xinitmatrix matrix currentmatrix def
+  } bind def
+
+/@endspecial            % - @endspecial -       -- leave special mode
+  { SpecialSave restore
+    grestore
+  } bind def
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Following procedures are used to define new japanese font which has 
+%%% correct metrics.
+%%%		Added by T.Kakiuchi (kakiuchi@sy6.isl.mei.co.JP) 89/5/19
+%%%		Copyright (C) 1989 Matsushita Electric Industrial Co., Ltd.
+%%%
+% Procedure to make a new font which has new metrics.
+
+/Set-New-Metrics 		% [FNam][New-FNam][Metrics-array]
+{/Set-Metrics exch def		% [FNam][New-FNam]  Set-Metrix=[Metrix-Array]
+ /NewCompFontName exch def	% [FNam]            NewCompFontName=[New-FNam]
+ findfont 			% [FDic]
+ /OrigCompFont exch def		% OrigCompFont=[FDic]
+
+ % Create new composite font.
+ OrigCompFont dup		% [FDic][FDic]
+ length dict			% [FDic][dict]
+ /NewCompFont exch def		% [FDic]   NewCompFont=[dict]
+ {1 index			% [FDic][key][value][key]
+   /FID ne			% [FDic][key][value][T/F]
+  {NewCompFont 3 1 roll put}	% if TRUE   NewCompFont <- {key,value}
+  {pop pop}
+  ifelse
+ } forall			% 
+
+ OrigCompFont /FDepVector get	% [FDepVector]
+ dup length array 		% [FDepVector][array]
+ copy				% [array] (=[FDepVector])
+ /NewFDepVector exch def	% NewFDepVector=[arrray]
+ NewCompFont /FDepVector 
+ NewFDepVector put		% [NewCompFont] <- {/FDepVector, NewFDepVector}
+ NewCompFontName NewCompFont 
+ definefont pop			% Define [NewCompFont] as [NewCompFontName]
+
+ Set-Metrics	% [code,NewBaseFontName,Metrics-Array]
+ {dup 0 get /Code exch def	% set Code
+  dup 1 get 
+  /NewBaseFontName exch def     % set NewBaseFontName
+  2 get /Metric-Array exch def	% set Metrics-Array
+
+  % Extract base font and its index to FDepVector.
+  /Index
+     OrigCompFont 
+     /Encoding get 
+     Code get def
+
+  /OrigBaseFont NewFDepVector Index get def
+
+  % Set Metric-Dictionary
+  Metric-Array length dict
+  /Metric-Dict exch def
+  Metric-Dict begin Metric-Array {exec def} forall end
+
+  % Create new base font.
+  OrigBaseFont dup			% [OrgFont][OrgFont] 
+  length 2 add	 			% [OrgFont][1+current size]
+  dict					% [OrgFont][dict]
+  /NewBaseFont exch def			% [OrgFont]    /NewBaseFont=[dict]
+  {1 index                       	% [OrgFont][key][value][key]
+     /FID ne				% [OrgFont][key][value][T/F]
+     {NewBaseFont			% [OrgFont][key][value][NewBaseFont]
+      3 1 roll				% [OrgFont][NewBaseFont][key][value]
+      put}					% [OrgFont]
+     {pop pop}
+     ifelse
+  } forall
+  
+  NewBaseFont /Kusumi-Metrics Metric-Dict put
+
+  NewBaseFont				% [OrgFont][NewBaseFont]
+  /CDevProc			        
+  {currentfont begin			
+   userdict begin			%  
+   /char exch def
+   /vy exch def
+   /vx exch def
+   /w1y exch def
+   /w1x exch def
+   /ury exch def
+   /urx exch def
+   /lly exch def
+   /llx exch def
+   /w0y exch def
+   /w0x exch def
+
+   Kusumi-Metrics char known
+    {/New-llx Kusumi-Metrics char get def
+     /llx New-llx def}
+%     /urx urx New-llx sub def}
+   if
+
+   w0x w0y llx lly urx ury w1x w1y vx vy
+   end
+   end
+  } put
+
+  %  Regist to FDepVector
+  NewFDepVector Index NewBaseFontName NewBaseFont definefont put
+
+ } forall
+}
+bind def
+
+
+% Definition of new metrics for /Ryumin-Light-Ext-H 
+/Ryumin-Metrics
+[
+[33 /Ryumin-Light-Ext-H-33[
+{/c49 95.8346 }
+{/c50 192.007 }
+{/c5B 122.007 }
+{/c37 145.717 }
+{/c2E 73.1946 }
+{/c6D 73.5612 }
+{/c52 99.5066 }
+{/c25 106.833 }
+{/c4D 120.007 }
+{/c56 87.0066 }
+{/c68 12.792 }
+{/c29 50.563 }
+{/c2D 73.1955 }
+{/c71 162.717 }
+{/c24 103.833 }
+{/c26 106.333 }
+{/c51 192.069 }
+{/c43 153.333 }
+{/c4A 137.007 }
+{/c2A 111.833 }
+{/c55 52.5065 }
+{/c47 101.333 }
+{/c35 124.507 }
+{/c72 45.7859 }
+{/c6B 130.063 }
+{/c4E 132.007 }
+{/c59 104.569 }
+{/c23 102.007 }
+{/c42 79.8702 }
+{/c4B 137.007 }
+{/c30 106.905 }
+{/c39 35.7171 }
+{/c27 105.333 }
+{/c2B 56.3327 }
+{/c78 36.4507 }
+{/c54 52.5066 }
+{/c22 127.507 }
+{/c58 104.457 }
+{/c6A 53.3168 }
+{/c4F 131.507 }
+{/c46 101.833 }
+{/c2F 86.5319 }
+{/c6C 154.132 }
+{/c36 154.717 }
+{/c48 95.6156 }
+{/c28 101.333 }
+{/c5A 122.007 }
+{/c53 99.5065 }
+{/c33 123.507 }
+{/c70 147.823 }
+{/c69 104.742 }
+{/c3E 51.8327 }
+{/c4C 120.007 }
+{/c57 87.0065 }
+{/c2C 81.8202 }
+]]
+[36 /Ryumin-Light-Ext-H-36[
+{/c25 184.154 }
+{/c29 82.2946 }
+{/c32 65.1921 }
+{/c63 75.904 }
+{/c43 67.7415 }
+{/c67 149.68 }
+{/c6E 77.4788 }
+{/c23 76.267 }
+{/c26 241.504 }
+{/c31 105.499 }
+{/c27 97.2173 }
+{/c30 154.077 }
+{/c39 76.6301 }
+{/c2F 295.083 }
+{/c6A 273.077 }
+{/c3A 51.3752 }
+{/c65 90.1544 }
+{/c21 83.9366 }
+]]
+[37 /Ryumin-Light-Ext-H-37[
+{/c49 202.733 }
+{/c40 110.209 }
+{/c25 122.667 }
+{/c64 109.071 }
+{/c56 84.2173 }
+{/c29 108.717 }
+{/c32 61.9208 }
+{/c24 186.108 }
+{/c44 162.608 }
+{/c5F 258.609 }
+{/c26 162.596 }
+{/c63 80.217 }
+{/c75 124.717 }
+{/c43 117.717 }
+{/c31 115.108 }
+{/c6E 126.742 }
+{/c67 152.283 }
+{/c2A 134.608 }
+{/c4A 116.233 }
+{/c55 168.158 }
+{/c35 83.1336 }
+{/c23 138.773 }
+{/c47 67.1083 }
+{/c72 193.323 }
+{/c3F 192.108 }
+{/c4E 197.608 }
+{/c42 59.748 }
+{/c30 99.7335 }
+{/c27 57.7169 }
+{/c22 140.608 }
+{/c6F 163.033 }
+{/c3D 164.236 }
+{/c46 123.608 }
+{/c61 191.609 }
+{/c6A 239.121 }
+{/c36 51.2221 }
+{/c48 277.108 }
+{/c2F 187.108 }
+{/c65 49.467 }
+{/c41 97.8511 }
+{/c21 107.217 }
+{/c45 91.7747 }
+{/c3E 72.1389 }
+{/c69 178.108 }
+{/c57 89.1457 }
+]]
+] def
+
+% Definition of new metrics for /GothicBBB-Medium-Ext-H 
+/Gothic-Metrics
+[
+[33 /GothicBBB-Medium-Ext-H-33[
+{/c49 57.019 }
+{/c50 178.038 }
+{/c5B 121.007 }
+{/c37 148.717 }
+{/c2E 55.8327 }
+{/c6D 75.5065 }
+{/c52 97.5065 }
+{/c25 102.833 }
+{/c4D 120.007 }
+{/c56 93.5065 }
+{/c68 5.71719 }
+{/c29 82.0694 }
+{/c2D 55.8327 }
+{/c71 130.717 }
+{/c24 105.833 }
+{/c26 102.833 }
+{/c51 178.038 }
+{/c43 149.333 }
+{/c4A 136.007 }
+{/c2A 132.276 }
+{/c55 58.5065 }
+{/c47 104.833 }
+{/c35 67.0065 }
+{/c72 101.692 }
+{/c6B 139.032 }
+{/c4E 132.507 }
+{/c59 106.969 }
+{/c23 99.0319 }
+{/c42 76.8827 }
+{/c4B 136.007 }
+{/c30 110.507 }
+{/c39 14.7169 }
+{/c27 104.333 }
+{/c2B 62.8327 }
+{/c78 11.594 }
+{/c54 58.5065 }
+{/c22 129.507 }
+{/c58 106.969 }
+{/c6A 43.6794 }
+{/c4F 132.507 }
+{/c46 104.333 }
+{/c2F 102.507 }
+{/c6C 157.007 }
+{/c36 133.717 }
+{/c48 55.9815 }
+{/c28 104.333 }
+{/c5A 121.007 }
+{/c53 97.5065 }
+{/c33 76.5065 }
+{/c70 109.261 }
+{/c69 73.6668 }
+{/c3E -13.1673 }
+{/c4C 120.007 }
+{/c57 94.0065 }
+{/c2C 78.8203 }
+]]
+[36/GothicBBB-Medium-Ext-H-36[
+{/c25 155.217 }
+{/c29 51.6793 }
+{/c32 69.1207 }
+{/c63 52.2171 }
+{/c43 51.2171 }
+{/c67 106.129 }
+{/c6E 71.6732 }
+{/c23 58.2168 }
+{/c26 207.608 }
+{/c31 128.008 }
+{/c27 97.2168 }
+{/c30 154.608 }
+{/c39 93.6519 }
+{/c2F 256.108 }
+{/c6A 211.121 }
+{/c3A 70.6519 }
+{/c65 84.1669 }
+{/c21 86.7293 }
+]]
+[37 /GothicBBB-Medium-Ext-H-37 [
+{/c49 209.108 }
+{/c40 76.6082 }
+{/c25 104.229 }
+{/c64 96.6084 }
+{/c56 91.1082 }
+{/c29 72.2168 }
+{/c32 48.6082 }
+{/c24 148.447 }
+{/c44 117.482 }
+{/c5F 215.108 }
+{/c26 149.096 }
+{/c63 67.7172 }
+{/c75 110.167 }
+{/c43 84.5457 }
+{/c31 77.6082 }
+{/c6E 96.2172 }
+{/c67 113.717 }
+{/c2A 111.608 }
+{/c4A 75.6082 }
+{/c55 140.608 }
+{/c35 87.0957 }
+{/c23 102.766 }
+{/c47 49.6082 }
+{/c72 165.608 }
+{/c3F 144.608 }
+{/c4E 163.334 }
+{/c42 55.1082 }
+{/c30 91.1082 }
+{/c27 74.2168 }
+{/c22 82.6084 }
+{/c6F 135.608 }
+{/c3D 123.059 }
+{/c46 96.6082 }
+{/c61 188.976 }
+{/c6A 225.646 }
+{/c36 52.0956 }
+{/c48 262.608 }
+{/c2F 135.608 }
+{/c65 41.7168 }
+{/c41 97.6082 }
+{/c21 47.2169 }
+{/c45 72.1082 }
+{/c3E 83.6082 }
+{/c69 129.108 }
+{/c57 64.6707 }
+]]
+] def
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% oka 27-Feb-1989 Japanese character
+
+/JFontSetup {
+    /Ryumin-Light-Ext-H /Ryumin-Light-Ext-H-New Ryumin-Metrics Set-New-Metrics
+    /GothicBBB-Medium-Ext-H /GothicBBB-Medium-Ext-H-New Gothic-Metrics Set-New-Metrics
+    /nconv Resolution 72 div def
+    /min /Ryumin-Light-Ext-H-New findfont [nconv 0 0 nconv neg 0 0] makefont def
+    /goth /GothicBBB-Medium-Ext-H-New findfont [nconv 0 0 nconv neg 0 0] makefont def
+  } bind def
+
+/@jsf {		% font-dict scale @jsf
+    scalefont setfont
+  } bind def
+
+/jc  % char_code_top char_code_bottm c -   -- show the character (code given)
+  /show load def
+
+
+
+% oka 27-Feb-1989 Japanese character
+
+end                     % revert to previous dictionary
+

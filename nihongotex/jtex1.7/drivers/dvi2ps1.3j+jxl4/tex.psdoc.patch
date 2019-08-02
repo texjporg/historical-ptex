@@ -1,0 +1,38 @@
+*** tex.psdoc	Tue Dec 12 20:08:12 1989
+--- tex.psdoc.old	Thu Dec 14 19:39:13 1989
+***************
+*** 429,435 ****
+            % the following magic incantation establishes the current point as
+            % the users origin, and reverts back to default scalings, rotations
+      currentpoint transform initgraphics itransform translate
+!     landscape {90 rotate} if
+      @SpecialDefaults    % setup default offsets, scales, sizes
+      @MacSetUp           % fix up Mac stuff 
+    } def
+--- 429,435 ----
+            % the following magic incantation establishes the current point as
+            % the users origin, and reverts back to default scalings, rotations
+      currentpoint transform initgraphics itransform translate
+! %    landscape {90 rotate} if
+      @SpecialDefaults    % setup default offsets, scales, sizes
+      @MacSetUp           % fix up Mac stuff 
+    } def
+***************
+*** 465,472 ****
+           { /MacDrwgs true def
+             md begin                             % then redefine some stuff
+  	      /txpose{
+! %		 1 -1 scale  % make y coordinates relative to top of figure
+! 		 pxs pys neg scale	% changed by K.Kazama
+  	      } bind def
+                /cp {pop pop pm restore} bind def % ignore Mac page breaks
+             end }
+--- 465,472 ----
+           { /MacDrwgs true def
+             md begin                             % then redefine some stuff
+  	      /txpose{
+! 		 1 -1 scale  % make y coordinates relative to top of figure
+! %		 pxs pys neg scale	% changed by K.Kazama
+  	      } bind def
+                /cp {pop pop pm restore} bind def % ignore Mac page breaks
+             end }

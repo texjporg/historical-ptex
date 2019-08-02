@@ -1,0 +1,75 @@
+*** add.c.org	Tue Jan 23 08:22:55 1990
+--- add.c	Tue Jan 23 08:16:02 1990
+***************
+*** 179,185 ****
+  	register int	bw;
+  	int	rs;
+  	int	w, h, xx;
+! 	unsigned char	buf[128]; /* Must be unsigned !! 128 bytes may be enough */
+  	register unsigned char	*b=buf;
+  	register unsigned char	*f;
+  	register unsigned char	*nb;
+--- 179,185 ----
+  	register int	bw;
+  	int	rs;
+  	int	w, h, xx;
+! 	unsigned char	buf[MAXBUF]; 		/* Must be unsigned !! */
+  	register unsigned char	*b=buf;
+  	register unsigned char	*f;
+  	register unsigned char	*nb;
+***************
+*** 232,238 ****
+  	register int	bw;
+  	int	rs;
+  	int	w, h, xx;
+! 	unsigned char	buf[128]; /* Must be unsigned !! 128 bytes may be enough */
+  	register unsigned char	*b=buf;
+  	register unsigned char	*f;
+  	register unsigned char	*nb;
+--- 232,238 ----
+  	register int	bw;
+  	int	rs;
+  	int	w, h, xx;
+! 	unsigned char	buf[MAXBUF]; 		/* Must be unsigned !! */
+  	register unsigned char	*b=buf;
+  	register unsigned char	*f;
+  	register unsigned char	*nb;
+***************
+*** 375,381 ****
+  							     */
+      }
+      if ( land_buf == NULL ) {
+! 	land_buf = ( unsigned char *) malloc ( (LAND_SIZE * LAND_SIZE + 1 ) );
+      }
+      if (frame == NULL || land_buf == NULL)  {
+  	perror("dvi2nwp");
+--- 375,381 ----
+  							     */
+      }
+      if ( land_buf == NULL ) {
+! 	land_buf = ( unsigned char *) malloc ( (MAXBUF * MAXBUF + 1 ) );
+      }
+      if (frame == NULL || land_buf == NULL)  {
+  	perror("dvi2nwp");
+*** add.h.org	Tue Jan 23 08:23:07 1990
+--- add.h	Tue Jan 23 08:19:22 1990
+***************
+*** 10,16 ****
+  #define	BITS_PAR_CELL		8
+  typedef unsigned char		CELL;
+  
+! #define LAND_SIZE		128
+  
+  extern unsigned int FRAME_BIT_WIDTH;
+  extern unsigned int FRAME_BIT_HEIGHT;
+--- 10,19 ----
+  #define	BITS_PAR_CELL		8
+  typedef unsigned char		CELL;
+  
+! #define MAXBUF		255		/* Size of Line buffer */
+! 					/* it may be enough for 400 pt */
+! 					/* landscape buffer allocates */
+! 					/* MAXBUF * MAXBUF area        */
+  
+  extern unsigned int FRAME_BIT_WIDTH;
+  extern unsigned int FRAME_BIT_HEIGHT;

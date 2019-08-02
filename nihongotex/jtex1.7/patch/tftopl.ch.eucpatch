@@ -1,0 +1,160 @@
+*** tftopl.ch	Mon Nov 16 16:22:12 1987
+--- tftopl.ch.new	Tue Nov 17 13:16:25 1987
+***************
+*** 36,42
+  @x
+  @d banner=='This is TFtoPL, Version 2.5' {printed when the program starts}
+  @y
+! @d banner=='This is ASCII kanji extended TFtoPL, Version 2.5 for Berkeley UNIX'
+                                           {printed when the program starts}
+  @z
+  
+
+--- 36,42 -----
+  @x
+  @d banner=='This is TFtoPL, Version 2.5' {printed when the program starts}
+  @y
+! @d banner=='This is TFtoPL, Version 2.5j for Berkeley UNIX'
+                                           {printed when the program starts}
+  @z
+  
+***************
+*** 590,596
+  @y
+  @p
+  { declarations for external C assist routines for TeXware }
+! function xchr(c:ASCIIcode):char;
+      external;
+  function mstojis(kcode : integer) : integer;
+      external;
+
+--- 590,597 -----
+  @y
+  @p
+  { declarations for external C assist routines for TeXware }
+! {
+!  function xchr(c:ASCIIcode):char;
+      external;
+   function mstojis(kcode : integer) : integer;
+      external;
+***************
+*** 592,598
+  { declarations for external C assist routines for TeXware }
+  function xchr(c:ASCIIcode):char;
+      external;
+! function mstojis(kcode : integer) : integer;
+      external;
+  function isfbkanji(c : ASCIIcode) : boolean;
+      external;
+
+--- 593,599 -----
+  {
+   function xchr(c:ASCIIcode):char;
+      external;
+!  function mstojis(kcode : integer) : integer;
+      external;
+   function isfbkanji(c : ASCIIcode) : boolean;
+      external;
+***************
+*** 594,600
+      external;
+  function mstojis(kcode : integer) : integer;
+      external;
+! function isfbkanji(c : ASCIIcode) : boolean;
+      external;
+  @<declare kanji conversion functions@>;
+  begin initialize;@/
+
+--- 595,601 -----
+      external;
+   function mstojis(kcode : integer) : integer;
+      external;
+!  function isfbkanji(c : ASCIIcode) : boolean;
+      external;
+  }
+  @<declare kanji conversion functions@>;
+***************
+*** 596,601
+      external;
+  function isfbkanji(c : ASCIIcode) : boolean;
+      external;
+  @<declare kanji conversion functions@>;
+  begin initialize;@/
+  @z
+
+--- 597,603 -----
+      external;
+   function isfbkanji(c : ASCIIcode) : boolean;
+      external;
++ }
+  @<declare kanji conversion functions@>;
+  begin initialize;@/
+  @z
+***************
+*** 746,755
+  @<declare kanji conversion functions@>=
+  
+  procedure out_kanji(jis_code : integer); { prints a kanji character }
+- var
+-   high, low : integer;
+-   nh, nl : integer;
+-   one_byte: ASCII_code;
+  begin
+  high := jis_code div 256;
+  low := jis_code mod 256;
+
+--- 748,753 -----
+  @<declare kanji conversion functions@>=
+  
+  procedure out_kanji(jis_code : integer); { prints a kanji character }
+  begin
+    out(chr(jis_code div 256 + 128));
+    out(chr(jis_code mod 256 + 128));
+***************
+*** 751,786
+    nh, nl : integer;
+    one_byte: ASCII_code;
+  begin
+! high := jis_code div 256;
+! low := jis_code mod 256;
+! nh := ((high - 33) div 2) + 129;
+! if nh > 159 then
+!   nh := nh + 64;
+! if (high mod 2) = 1 then
+!   begin
+!   nl := low + 31;
+!   if low > 95 then
+!     incr(nl);
+!   end
+! else
+!   nl := low + 126;
+! if nh >= 0 then
+!   one_byte := nh
+! else
+!   one_byte := 256 - nh;
+! out(xchr(one_byte));
+! if nl >= 0 then
+!   one_byte := nl
+! else
+!   one_byte := 256 - nl;
+! out(xchr(one_byte));
+! {
+! print_char(nh - 256);
+! if nl >= 128 then
+!   print_char(nl - 256)
+! else
+!   print_char(nl)
+! }
+  end;
+  
+  function valid_jis_code(jis : integer) : boolean;
+
+--- 749,756 -----
+  
+  procedure out_kanji(jis_code : integer); { prints a kanji character }
+  begin
+!   out(chr(jis_code div 256 + 128));
+!   out(chr(jis_code mod 256 + 128));
+  end;
+  
+  function valid_jis_code(jis : integer) : boolean;

@@ -1,0 +1,19 @@
+#
+#	TYPE	SPEC	SUB	PATH
+# Computer Modern font
+font	pk	*	3	/usr/lib/tex/fonts/pk/%f.%mpk
+# Dainippon font
+font	pk	*	3	/usr/lib/tex/jfonts/pk/%f.%mpk
+#
+# built-in font
+#font	jstfm	*	0	/usr/lib/tex/lwjfonts/tfm/%f.tfm
+#
+#  DNP font  pk,gf,pxl
+packdict	dm
+packdict	dg
+#
+# built-in kanji
+#		FAM	PITCH	BUILT-IN KANJI FONT NAME
+#  jstfm NTT JTeX with DNP font tfm / jfm ASCII JTeX with DNP font tfm
+#bikanji		dm	fixed	Ryumin-Light-H
+#bikanji		dg	fixed	GothicBBB-Medium-H

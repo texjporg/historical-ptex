@@ -1,0 +1,82 @@
+*** texx2/DviPage2.c	Fri Oct 27 13:13:10 1989
+--- texx2/DviPage2.c.org	Fri Oct 27 08:35:31 1989
+***************
+*** 321,327 ****
+       char *cp;
+  {
+    int xc, yc, xrad, yrad, n;
+!   double start_angle, end_angle;
+    int angS, angE;
+    Bool doit = True;
+      
+--- 321,327 ----
+       char *cp;
+  {
+    int xc, yc, xrad, yrad, n;
+!   float start_angle, end_angle;
+    int angS, angE;
+    Bool doit = True;
+      
+***************
+*** 328,334 ****
+    int rx = fastFromSP(w, w -> dviPage.dviStackPointer -> h);
+    int ry = fastFromSP(w, w -> dviPage.dviStackPointer -> v);
+    
+!   if (sscanf(cp, " %d %d %d %d %lf %lf", &xc, &yc, &xrad, &yrad,
+  	     &start_angle, &end_angle) != 6) {
+      error(0,0,"illegal arc specification: %s", cp);
+      return;
+--- 328,334 ----
+    int rx = fastFromSP(w, w -> dviPage.dviStackPointer -> h);
+    int ry = fastFromSP(w, w -> dviPage.dviStackPointer -> v);
+    
+!   if (sscanf(cp, " %d %d %d %d %f %f ", &xc, &yc, &xrad, &yrad,
+  	     &start_angle, &end_angle) != 6) {
+      error(0,0,"illegal arc specification: %s", cp);
+      return;
+***************
+*** 339,355 ****
+    xrad = texPicConv(w, xrad);
+    yrad = texPicConv(w, yrad);
+    
+!   angS = - (int) ( (start_angle * 360 * 64) / TWOPI);
+!   angE = - (int) ( (end_angle   * 360 * 64) / TWOPI);
+!   angE = angE - angS;
+!   if (angE<0) {
+!     angS += angE;
+!     angE = -angE;
+!   } else
+!     angE = - (360 * 64 - angE);
+!   while (angS<0) {
+!     angS += 360 * 64;
+!   }
+    if ( w -> dviPage.haveBackingStore ) {
+      doit = XRectInRegion( w -> dviPage.updateRegion,
+  			 xc + rx - xrad, yc + ry - yrad,
+--- 339,347 ----
+    xrad = texPicConv(w, xrad);
+    yrad = texPicConv(w, yrad);
+    
+!   angS = (int) ( (start_angle * 360 * 64) / TWOPI);
+!   angE = (int) ( ((end_angle - start_angle) * 360 * 64) / TWOPI);
+!   
+    if ( w -> dviPage.haveBackingStore ) {
+      doit = XRectInRegion( w -> dviPage.updateRegion,
+  			 xc + rx - xrad, yc + ry - yrad,
+***************
+*** 359,365 ****
+    if (doit) {
+      XDrawArc(XtDisplay(w), XtWindow(w), w -> dviPage.globalGC,
+  	     xc + rx - xrad, yc + ry - yrad,
+! 	     2 * xrad, 2 * yrad, angS, angE);
+    }
+  }
+  
+--- 351,357 ----
+    if (doit) {
+      XDrawArc(XtDisplay(w), XtWindow(w), w -> dviPage.globalGC,
+  	     xc + rx - xrad, yc + ry - yrad,
+! 	     2 * xrad, 2 * yrad, -angS, -angE);
+    }
+  }
+  

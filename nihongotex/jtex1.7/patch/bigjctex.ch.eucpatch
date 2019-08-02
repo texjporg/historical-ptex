@@ -1,0 +1,128 @@
+*** bigjctex.ch	Thu Jan 23 15:27:21 1992
+--- bigjctex.ch.euc	Wed Jan 29 17:01:08 1992
+***************
+*** 1,6
+  % JapaneseTeX change file for ASCII Kanji UNIX. (Shift JIS code only)
+  %	by Ryoichi Kurasawa (ryoi-k@ascii.co.jp)
+  %	   Hisato  Hamano (hisato-h@ascii.co.jp), ASCII Corporation.
+  %	
+  % Change file for TeX in C, derived from various other change files
+  % by Tim Morgan, UC Irvine ICS Department, and many others
+
+--- 1,10 -----
+  % JapaneseTeX change file for ASCII Kanji UNIX. (Shift JIS code only)
+  %	by Ryoichi Kurasawa (ryoi-k@ascii.co.jp)
+  %	   Hisato  Hamano (hisato-h@ascii.co.jp), ASCII Corporation.
++ % Modified to EUC-Kanji UNIX.
++ %	by Yoichi Kawabata,  Canon Inc. (kawabata@canon.junet)
++ % EUC bug fix
++ %	by Takashi Kakiuchi, Matsushita Electric (kakiuchi@sy6.isl.mei.junet)
+  %	
+  % Change file for TeX in C, derived from various other change files
+  % by Tim Morgan, UC Irvine ICS Department, and many others
+***************
+*** 38,44
+  @x
+  @d banner=='This is TeX, Version 2.99' {printed when \TeX\ starts}
+  @y
+! @d banner=='This is BigTeX, C Version 2.99 - j1.7' {printed when \TeX\ starts}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+--- 42,48 -----
+  @x
+  @d banner=='This is TeX, Version 2.99' {printed when \TeX\ starts}
+  @y
+! @d banner=='This is BigTeX, C Version 2.99 - j1.7e' {printed when \TeX\ starts}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 764,770
+    (k<" ")or(k>"~")
+  @y
+  @<Character |k| cannot be printed@>=
+!   (k<" ")or(k>252)or(k=127)
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+--- 768,774 -----
+    (k<" ")or(k>"~")
+  @y
+  @<Character |k| cannot be printed@>=
+!   ((k<160) or (k>255)) and ((k<" ") or (k>"~"))	{a1 ... fe is printable}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 2145,2154
+    sf_code(k):=999;
+    end;
+  for k:=128 to 255 do cat_code(k):=invalid_char;
+! cat_code(129):=other_kchar; cat_code(130):=kana;
+! cat_code(131):=kana; cat_code(132):=kana;
+! for k:=136 to 159 do cat_code(k):=kanji;
+! for k:=224 to 234 do cat_code(k):=kanji;
+  jflag:=0;
+  {kanji_skip:=zero_glue;
+  xkanji_skip:=zero_glue;}
+
+--- 2149,2163 -----
+    sf_code(k):=999;
+    end;
+  for k:=128 to 255 do cat_code(k):=invalid_char;
+! cat_code(161):=other_kchar; {1 ku}
+! cat_code(162):=other_kchar; {2 ku}
+! cat_code(163):=kana; 	{3 ku}
+! cat_code(164):=kana;	{4 ku}
+! cat_code(165):=kana;	{5 ku}
+! cat_code(166):=kana; 	{6 ku}
+! cat_code(167):=other_kchar; {7 ku}
+! cat_code(168):=other_kchar; {8 ku}
+! for k:=176 to 244 do cat_code(k):=kanji; {16 ku ... 84 ku}
+  jflag:=0;
+  {kanji_skip:=zero_glue;
+  xkanji_skip:=zero_glue;}
+***************
+*** 3396,3404
+  
+  @ @<Print the result of command |c|@>=
+  case c of
+! jis_code: begin cur_val:=JIStoSJIS(cur_val); print_int(cur_val); end;
+! kuten_code: begin cur_val:=KUTENtoSJIS(cur_val); print_int(cur_val); end;
+! sjis_code,number_code: print_int(cur_val);
+  roman_numeral_code: print_roman_int(cur_val);
+  string_code:if cur_cs<>0 then sprint_cs(cur_cs)
+    else begin if KANJI(cx) <> 0 then print_char(Hi(cx));
+
+--- 3405,3414 -----
+  
+  @ @<Print the result of command |c|@>=
+  case c of
+! jis_code: begin cur_val:=JIStoEUC(cur_val); print_int(cur_val); end;
+! kuten_code: begin cur_val:=KUTENtoEUC(cur_val); print_int(cur_val); end;
+! sjis_code: begin cur_val:=SJIStoEUC(cur_val); print_int(cur_val); end;
+! number_code: print_int(cur_val);
+  roman_numeral_code: print_roman_int(cur_val);
+  string_code:if cur_cs<>0 then sprint_cs(cur_cs)
+    else begin if KANJI(cx) <> 0 then print_char(Hi(cx));
+***************
+*** 4324,4330
+      end else chain:=true;
+      p:=link(p);
+      KANJI(jc):=info(p); t:=tonum(jc);
+!     dvi_out(set2); KANJI(jc):=SJIStoJIS(t); jc:=tokanji(KANJI(jc));
+      dvi_out(Hi(jc)); dvi_out(Lo(jc))
+    end else begin
+      if c<qi(128) then dvi_out(qo(c))
+
+--- 4334,4340 -----
+      end else chain:=true;
+      p:=link(p);
+      KANJI(jc):=info(p); t:=tonum(jc);
+!     dvi_out(set2); KANJI(jc):=EUCtoJIS(t); jc:=tokanji(KANJI(jc));
+      dvi_out(Hi(jc)); dvi_out(Lo(jc))
+    end else begin
+      if c<qi(128) then dvi_out(qo(c))

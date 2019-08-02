@@ -1,0 +1,216 @@
+% EPSF macros by Kazuhiro Kazama and modified by Hideki ISOZAKI
+%   based on Trevor J. Darrell's psfig.tex
+\endlinechar=-1
+
+\typeout{EPSF macro package for LaTeX. version 1.0 - Released December 21, 1989}
+\newcount\@arga
+\newcount\@argb
+\newcount\@argc
+\newcount\@ctmpa
+\newcount\@ctmpb
+\newcount\@ctmpc
+\newcount\@ctmpd
+\newcount\@ctmpe
+\newdimen\@darg
+\newif\if@bbllx
+\newif\if@bblly
+\newif\if@bburx
+\newif\if@bbury
+\newif\if@height
+\newif\if@width
+\newif\ifno@bb
+\newif\ifepsfdraft
+\epsfdraftfalse
+\def\@setpsfile#1{\typeout{file is #1}
+		   \def\@psfile{#1}
+}
+\def\@setpsheight#1{
+		\@heighttrue
+		\@darg=#1
+   		\edef\@psheight{\number\@darg}
+		\typeout{Height is #1}
+}
+\def\@setpswidth#1{
+		\@widthtrue
+		\@darg=#1
+   		\edef\@pswidth{\number\@darg}
+		\typeout{Width is #1}
+}
+\def\@setparms#1=#2,{\@nameuse{@setps#1}{#2}}
+%
+% initialize
+%
+\def\ps@init@parms{
+		\@heightfalse \@widthfalse
+		\no@bbfalse
+		\def\@psbbllx{}\def\@psbblly{}
+		\def\@psbburx{}\def\@psbbury{}
+		\def\@psheight{}\def\@pswidth{}
+		\def\@psfile{}
+		\def\@sc{}
+}
+%
+% Go through the options setting things up.
+%
+\def\parse@ps@parms#1{
+	 	\@for\@epsfile:=#1\do
+		   {\expandafter\@setparms\@epsfile,}}
+%
+% Compute %%BoundingBox height and width
+%
+\newif\ifnot@eof
+\newread\ps@stream
+\def\bb@search{
+	\typeout{epsf: searching \@psfile \space  for BoundingBox}
+	\openin\ps@stream=\@psfile
+	\no@bbtrue
+	\not@eoftrue
+	\catcode`\%=12
+	\loop
+		\read\ps@stream to \line@in
+		\global\toks200=\expandafter{\line@in}\relax
+		\ifeof\ps@stream \not@eoffalse \fi
+		\@bbtest{\toks200}\relax
+		\if@bbmatch\not@eoffalse\expandafter\bb@cull\the\toks200\fi
+	\ifnot@eof \repeat
+	\catcode`\%=14
+}	
+\catcode`\%=12
+\newif\if@bbmatch
+\def\@bbtest#1{\expandafter\@a@\the#1%%BoundingBox:\@bbtest\@a@}
+\long\def\@a@#1%%BoundingBox:#2#3\@a@{\ifx\@bbtest#2\@bbmatchfalse\else\@bbmatchtrue\fi}
+\long\def\bb@cull#1 #2 #3 #4 #5 {
+	\@darg=#2 bp\edef\@psbbllx{\number\@darg}
+	\@darg=#3 bp\edef\@psbblly{\number\@darg}
+	\@darg=#4 bp\edef\@psbburx{\number\@darg}
+	\@darg=#5 bp\edef\@psbbury{\number\@darg}
+	\no@bbfalse
+}
+\catcode`\%=14
+
+\def\compute@bb{
+		\bb@search
+		\ifno@bb \typeout{FATAL ERROR: no bb supplied or found}
+			\no-bb-error
+		\fi
+		%
+		\@arga=\@psbburx
+		\advance\@arga by -\@psbbllx
+		\edef\@bbw{\number\@arga}
+		\@arga=\@psbbury
+		\advance\@arga by -\@psbblly
+		\edef\@bbh{\number\@arga}
+		%\typeout{ bbh = \@bbh, bbw = \@bbw }
+}
+%
+% \in@hundreds performs #1 * (#2 / #3) correct to the hundreds,
+%	then leaves the result in @result
+%
+\def\in@hundreds#1#2#3{\@argb=#2 \@argc=#3
+		     \@ctmpa=\@argb	% @ctmpa is first digit #2/#3
+		     \divide\@ctmpa by \@argc
+		     \@ctmpb=\@ctmpa
+		     \multiply\@ctmpb by \@argc
+		     \advance\@argb by -\@ctmpb
+		     \multiply\@argb by 10
+		     \@ctmpb=\@argb	% @ctmpb is second digit of #2/#3
+		     \divide\@ctmpb by \@argc
+		     \@ctmpc=\@ctmpb
+		     \multiply\@ctmpc by \@argc
+		     \advance\@argb by -\@ctmpc
+		     \multiply\@argb by 10
+		     \@ctmpc=\@argb	% @ctmpc is the third digit
+		     \divide\@ctmpc by \@argc
+		     \@arga=#1\@ctmpe=0
+		     \@ctmpd=\@arga
+			\multiply\@ctmpd by \@ctmpa
+		 	\advance\@ctmpe by \@ctmpd
+		     \@ctmpd=\@arga
+			\divide\@ctmpd by 10
+			\multiply\@ctmpd by \@ctmpb
+			\advance\@ctmpe by \@ctmpd
+			%
+		     \@ctmpd=\@arga
+			\divide\@ctmpd by 100
+			\multiply\@ctmpd by \@ctmpc
+			\advance\@ctmpe by \@ctmpd
+			%
+		     \edef\@result{\number\@ctmpe}
+}
+\def\compute@wfromh{
+		% computing : width = height * (bbw / bbh)
+		\in@hundreds{\@psheight}{\@bbw}{\@bbh}
+		%\typeout{ \@psheight * \@bbw / \@bbh, = \@result }
+		\edef\@pswidth{\@result}
+		\typeout{w from h: width is \@pswidth}
+}
+\def\compute@hfromw{
+		% computing : height = width * (bbh / bbw)
+		\in@hundreds{\@pswidth}{\@bbh}{\@bbw}
+		%\typeout{ \@pswidth * \@bbh / \@bbw = \@result }
+		\edef\@psheight{\@result}
+		\typeout{h from w : height is \@psheight}
+}
+\def\compute@handw{
+	\if@height 
+		\if@width
+		\else
+			\compute@wfromh
+		\fi
+	\else 
+		\if@width
+			\compute@hfromw
+		\else
+			\edef\@psheight{\@bbh}
+			\edef\@pswidth{\@bbw}
+		\fi
+	\fi
+}
+% Compute any missing values
+\def\compute@sizes{
+	\compute@bb
+	\compute@handw
+}
+%
+% \epsfile
+% usage : \epsfile{file=, height=, width=}
+%
+\def\epsfile#1{
+	\ps@init@parms
+	\parse@ps@parms{#1}
+	\compute@sizes
+	\typeout{epsf: including \@psfile \space }
+	\@arga=\@psheight
+	\divide\@arga by 65536
+	\edef\@psvsize{\number\@arga}
+	\@arga=\@pswidth
+	\divide\@arga by 65536
+	\edef\@pshsize{\number\@arga}
+	\leavevmode
+	\vbox to \@psheight true sp{
+		\hbox to \@pswidth true sp{
+		\ifepsfdraft\hss\@psfile\hss\else
+		\if@height 
+			\if@width
+				\special{epsfile=\@psfile \space 
+				hsize=\@pshsize \space
+				vsize=\@psvsize \space}
+			\else
+				\special{epsfile=\@psfile \space 
+				vsize=\@psvsize \space}
+			\fi
+		\else 
+			\if@width
+				\special{epsfile=\@psfile \space 
+				hsize=\@pshsize \space}
+			\else
+				\special{epsfile=\@psfile \space}
+			\fi
+		\fi
+		\hfil\fi
+		}
+	\vfil
+	}
+}
+
+\endlinechar=13

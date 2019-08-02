@@ -1,0 +1,104 @@
+%
+%	Copyright (c) Japan TeX Users Group, 1986 1987
+%
+\magnification=\magstephalf
+\newdimen\hpos
+\def\setpos#1#2{\leftskip=#1\parindent\hpos=#2\parindent}
+\def\xitem#1{\hangindent\hpos\noindent\rlap{#1}\hskip\hpos}
+\def\title#1{\medskip\leftskip=0pt\leftline{\bf#1}}
+\def\option#1{\medskip\setpos{1}{5}\xitem{\tt#1}}
+\rightskip=\parindent
+
+\title{NAME}
+texpr --- print out dvi-file to LBP-8
+
+\title{SYNOPSIS}
+{\tt texpr} [{\it options\/}] {\it dvi-file}
+
+\title{DESCRIPTION}
+\setpos{1}{1}\noindent
+Texpr is a program which converts the dvi file to a sequence 
+of LBP-8 commands and sends them to the printer.
+Texpr spools dvi file like lpr.
+Logical device name to which texpr outputs is {\it lp} (site dependent).
+Extension {\tt.dvi} can be omitted in the file specification.
+
+\option{-p  $n_1[,n_2[,n_3]]$}
+Print from $n_1$ page to $n_2$ page. And $n_3$ is a even-odd specifier.
+You can specify 2 or 1 or 0 for $n_3$. Each value means even page,
+odd page, both page respectively. (Default is 0.)
+Some examples are shown below.
+
+\smallskip\setpos{6}{3}
+\xitem{\tt-p 5     } from 5 page to end page\par
+\xitem{\tt-p 5,10  } 5,$\cdots$,10 page\par
+\xitem{\tt-p 5,11,1} 5,7,9,11 page\par
+\xitem{\tt-p 1,1   } 1 page only\par
+\xitem{\tt-p 5,,2  } 6,8,10,12,$\cdots$,end page\par
+
+\option{-r}
+Print in reverse order of page. (As you know, LBP-8 stacks paper
+in face up manner.)
+
+\option{-t  $[\pm]n$}
+Move top margin position $n/100$ inch down from default position.
+Move up if negative. For example,
+
+\smallskip\setpos{6}{3}
+\xitem{\tt-t 50} move top margin position 1/2 inch down\par
+
+\option{-l  $[\pm]n$}
+Move left margin position $n/100$ inch right from default position.
+Move left if negative. For example,
+
+\smallskip\setpos{6}{3}
+\xitem{\tt-l -25} move left margin position 1/4 inch left\par
+
+\smallskip\setpos{1}{5}
+\xitem{}
+(When you use manual paper feed, you had better specify {\tt-t 20 -l -10}
+to correct registration position.)
+
+\option{-d}
+Force down load. Usually texpr searchs for the most frequently used font,
+and then checks whether the same font name is written in .down\_font
+file. Texpr does font loading only if not same. But this option force
+down loading even if same. (You should use this option after printer power
+on.)
+
+\option{-m$x$}
+Use this magnification value instead of one in the dvi file.
+Following 7 formats are available.
+
+\smallskip\setpos{6}{3}
+\xitem{\tt-m0} $\times 1$ magnification\par
+\xitem{\tt-mh} $\times \sqrt{1.2}$ magnification\par
+\xitem{\tt-m1} $\times 1.2$ magnification\par
+\xitem{\tt-m2} $\times 1.2^2$ magnification\par
+\xitem{\tt\ \vdots}\par
+\xitem{\tt-m5} $\times 1.2^5$ magnification\par
+
+\option{-c  $n$}
+Specify number of copies.
+
+\option{-v}
+Verbose mode. Various messages are output to your terminal.
+
+\option{-h}
+Use paper with long side horizontal.
+(CAUTION! This option is for only AJ2 model, and rather slow.)
+
+\title{FILES}
+\setpos{1}{10}
+\xitem{\tt/usr/local/lib/dvi2lbp} d-filter\par
+\xitem{\tt/usr/lib/tex/fonts/*.*pxl} font file\par
+\xitem{\tt/usr/lib/tex/fonts/*.*pk} new format font file\par
+\xitem{\tt/usr/lib/tex/fonts/.down\_font} memo file\par
+
+\title{SEE ALSO}
+tex(1)
+\title{BUGS}
+no accounting
+
+\bye
+

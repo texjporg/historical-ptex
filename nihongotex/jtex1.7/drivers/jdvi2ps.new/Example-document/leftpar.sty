@@ -1,0 +1,21 @@
+%
+% Left paragraph stuff.
+%
+\parindent 0mm
+\parskip 2ex plus .5ex minus .5ex
+\parskip \baselinestretch\parskip
+
+%
+% List spacing; this stuff changes mode i definitions.
+%
+\itemsep	0mm	% parskip + itemsep between items.
+\topsep		0mm	% parskip + topsep at top and bottom of items.
+\partopsep	1.5ex plus .5ex minus .5ex
+			% parskip + topsep + partopsep when list starts para.
+%
+% Footnote stuff
+%
+\footnotesep	2ex
+\long\def\@makefntext#1{$^{\@thefnmark}$
+  {\def\baselinestretch{1.0}\normalsize\footnotesize #1 \par}}
+\skip\footins 3ex plus 1ex minus 1ex

@@ -1,0 +1,44 @@
+#include "../Imake.Config"
+
+     DEFINES	=-DFONTDESC=\"$(FontDesc)\"
+
+SRCS=\
+	bcopy.c  error.c  gffont.c rstfont.c split.c\
+	bzero.c  findpost.c gripes0.c scaletfm.c strsave.c\
+	conv.c  fio.c  gripes1.c scanpost.c tempfile.c\
+	dvi_draw.c font.c  magfactor.c sdecode.c tfm.c\
+	dviclass.c font_subr.c pkfont.c search.c tfmfont.c\
+	dvistate.c getopt.c pxlfont.c seek.c\
+	dvistuff.c gfclass.c rotate.c skip.c
+	
+OBJS=\
+	bcopy.o  error.o  gffont.o rstfont.o split.o \
+	bzero.o  findpost.o gripes0.o scaletfm.o strsave.o \
+	conv.o  fio.o  gripes1.o scanpost.o tempfile.o \
+	dvi_draw.o font.o  magfactor.o sdecode.o tfm.o \
+	dviclass.o font_subr.o pkfont.o search.o tfmfont.o \
+	dvistate.o getopt.o pxlfont.o seek.o \
+	dvistuff.o gfclass.o rotate.o skip.o
+
+HDRS	=\
+	conv.h  dvistate.h font.h  num.h  seek.h \
+	convstruct.h dvistuff.h gfclass.h postamble.h tfm.h\
+	dviclass.h error.h  gfcodes.h sdecode.h types.h \
+	dvicodes.h fio.h  gripes.h search.h
+
+FILES	=$(SRCS) $(HDRS) Imakefile Makefile
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(tex,$(OBJS))
+LintLibraryTarget(tex,$(SRCS))
+DependTarget()
+NormalLintTarget($(SRCS))
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/libtex/$$file; \
+	done
+
+font.o: ../Imake.Config

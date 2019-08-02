@@ -1,0 +1,1392 @@
+
+ \message{output,}
+%     ****************************************
+%     *               OUTPUT                 *
+%     ****************************************
+%
+%
+%  PAGE LAYOUT PARAMETERS 
+%
+%   \topmargin      : Extra space added to top of page.
+%   @twoside        : boolean.  T if two-sided printing
+%   \oddsidemargin  : IF @twoside = T
+%                         THEN extra space added to left of odd-numbered 
+%                              pages.
+%                         ELSE extra space added to left of all pages.
+%   \evensidemargin : IF @twoside = T
+%                         THEN extra space added to left of even-numbered 
+%                              pages.
+%   \headheight     : height of head
+%   \headsep        : separation between head and text
+%   \footheight     : height of foot
+%   \footskip       : distance separation between baseline of last 
+%                     line of text and baseline of foot.  
+%                     Note difference between \footSKIP and \headSEP.
+%   \textheight     : height of text on page, excluding head and foot
+%   \textwidth      : width of printing on page
+%   \columnsep      : IF @twocolumn = T                            
+%                       THEN width of space between columns            
+%   \columnseprule  : IF @twocolumn = T                            
+%                       THEN width of rule between columns (0 if none).
+%   \columnwidth    : IF @twocolumn = T 
+%                       THEN (\textwidth - \columnsep)/2
+%                       ELSE \textwidth
+%                     It is set by the \@maketwocolumn and \@makeonecolumn 
+%                     commands.
+%   \@textbottom    : Command executed at bottom of vbox holding text of page
+%                     (including figures).  The \raggedbottom command
+%                     simply \let's this to \vfil.
+%
+%   \@texttop       : Command executed at top of vbox holding text of page
+%                     (including figures).  Used by letter style; can also
+%                     be used to produce centered pages.  Is \let to \relax
+%                     by \raggedbottom and \flushbottom.
+%
+%   Page layout must also initialize \@colht and \@colroom to \textheight.
+%    
+%  PAGE STYLE PARAMETERS:
+%
+%   \floatsep       : Space left between floats.
+%   \textfloatsep   : Space between last top float or first bottom float
+%                     and the text.
+%   \topfigrule     : Command to place rule (or whatever) between floats
+%                     at top of page and text.  Executed in inner vertical
+%                     mode right before the \textfloatsep skip separating
+%                     the floats from the text.  Must occupy zero vertical
+%                     space.  (See \footnoterule.)
+%   \botfigrule     : Same as \topfigrule, but put after the \textfloatsep
+%                     skip separating text from the floats at bottom of page.
+%   \intextsep      : Space left on top and bottom of an in-text float.
+%   \@maxsep        : The maximum of \floatsep, \textfloatsep and \intextsep
+%   \dblfloatsep    : Space between double-column floats.
+%   \dbltextfloatsep : Space between top or bottom double-column floats
+%                      and text.
+%   \dblfigrule     : Similar to \topfigrule, but for double-column floats.
+%   \@dblmaxsep     : The maximum of \dblfloatsep and \dbltexfloatsep
+%   \@fptop         : Glue to go at top of float column -- must be 0pt + 
+%                     stretch
+%   \@fpsep         : Glue to go between floats in a float column.
+%   \@fpbot         : Glue to go at bottom of float column -- must be 0pt + 
+%                     stretch
+%   \@dblfptop, \@dblfpsep, \@dblfpbot 
+%                   : Analogous for double-column float page in two-column 
+%                     format.
+%
+%  FOOTNOTES: As in PLAIN, footnotes use \insert\footins.
+%
+%  PAGE LAYOUT SWITCHES AND MACROS
+%
+%   @twocolumn      : Boolean.  T if two columns per page.             
+%
+%  PAGE STYLE MACROS AND SWITCHES
+%
+%   \@oddhead        : IF @twoside = T
+%                           THEN macro to generate head of odd-numbered pages.
+%                           ELSE macro to generate head of all pages.
+%   \@evenhead       : IF @twoside = T
+%                           THEN macro to generate head of even-numbered pages.
+%   \@oddfoot        : IF @twoside = T
+%                           THEN macro to generate foot of odd-numbered pages.
+%                           ELSE macro to generate foot of all pages.
+%   \@evenfoot       : IF @twoside = T
+%                           THEN macro to generate foot of even-numbered pages.
+%   @specialpage    : boolean.  T if current page is to have a special format.
+%   \@specialstyle  : If its value is  foo then
+%                      IF @specialpage = T
+%                        THEN the command \ps@foo is executed to temporarily 
+%                             reset the page style parameters before composing 
+%                             the current page.  This command should execute 
+%                             only \def's and \edef's, making only local 
+%                             definitions.
+%
+%
+%  FLOAT PLACEMENT PARAMETERS
+%
+% The following parameters are set by the macro \@floatplacement, which is 
+% defined by the \floatstyle command.  When \@floatplacement is called, 
+% \@colht is the height of the page or column being built.  I.e.:
+%         * For single-column page it equals \textheight.
+%         * For double-column page it equals \textheight - height
+%           of double-column floats on page.  
+% Note that some are set globally and some locally:
+%    \@topnum  :=G Maximum number of floats allowed on the top of a column.
+%    \@toproom :=G Maximum amount of top of column devoted to floats--
+%                  excluding \textfloatsep separation below the floats and 
+%                  \floatsep separation between them.  For two-column
+%                  output, should be computed as a function of \@colht.
+%    \@botnum, \@botroom      
+%                : Analogous to above.
+%    \@colnum  :=G Maximum number of floats allowed in a column, including
+%                  in-text floats.
+%    \@textmin :=L Minimum amount of text (excluding footnotes) that must
+%                  appear on a text page.  %% 27 Sep 85 : made local to
+%                                          %% \@addtocurcol and \@addtonextcol
+%    \@fpmin   :=L Minimum height of floats in a float column.
+%
+% The macro \@dblfloatplacement sets the following parameters.  This macro
+% is also defined by the \floatstyle command.
+%    \@dbltopnum  :=G Maximum number of double-column floats allowed at the
+%                     top of a two-column page.
+%    \@dbltoproom :=G Maximum height of double-column floats allowed at
+%                     top of two-column page.
+%    \@fpmin      :=L Minimum height of floats in a float column.
+% It should also perform the following local assignments where necessary 
+% -- i.e., where the new value differs from the old one:
+%      \@fptop       :=L \@dblfptop
+%      \@fpsep       :=L \@dblfpsep
+%      \@fpbot       :=L \@dblfpbot
+%
+%  OUTPUT ROUTINE VARIABLES
+%
+%  \@colht : The total height of the current column.  In single column
+%            style, it equals \textheight.  In two-column style, it is
+%            \textheight minus the height of the double-column floats
+%            on the current page.  MUST BE INITIALIZED TO \textheight.
+%
+%  \@colroom : The height available in the current column for text and
+%              footnotes.  It equals \@colht minus the height of all
+%              floats committed to the top and bottom of the current 
+%              column.
+%
+%  \footins : Footnote insertion number.
+%
+%  \@maxdepth : Saved value of TeX's \maxdepth.  Must be set
+%               when any routine sets \maxdepth.
+%
+%            CALLING THE OUTPUT ROUTINE
+%            --------------------------
+%
+% The output routine is called either by TeX's normal page-breaking
+% mechanism, or by a macro putting a penalty < or = -10000 in the output
+% list.  In the latter case, the penalty indicates why the output
+% routine was called, using the following code.
+% 
+%   penalty   reason
+%   -------   ------
+%   -10000    \pagebreak 
+%             \newpage 
+%   -10001    \clearpage (called with \penalty -10000 \vbox{} \penalty -10001
+%   -10002    float insertion, called from horizontal mode
+%   -10003    float insertion, called from vertical mode. 
+%   -10004    float insertion.  
+%
+% Note: A float or marginpar puts the following sequence in the output
+%       list:  (i) a penalty of -10004, 
+%             (ii) a null \vbox
+%            (iii) a penalty of -10002 or -10003.
+%       This solves two special problems:
+%         1. If the float comes right after a \newpage or \clearpage,
+%            then the first penalty is ignored, but the second one
+%            invokes the output routine.
+%         2. If there is a split footnote on the page, the second 'page'
+%            puts out the rest of the footnote.
+%
+%             THE OUTPUT ROUTINE
+%             ------------------
+%
+% FUNCTIONS USED IN THE OUTPUT ROUTINE:
+%
+% \@outputpage : Produces an output page with the contents of box 
+%              \@outputbox as the text part.  Also sets 
+%              \@colht :=G \textheight.   The page style is determined
+%              as follows.  
+%                IF  @thispagestyle = true
+%                  THEN  use \thispagestyle style
+%                  ELSE  use ordinary page style.
+%
+% \@tryfcolumn\FLIST : Tries to form a float column composed of floats from 
+%              \FLIST with with the following parameters:
+%                \@colht : height of box
+%                \@fpmin : minimum height of floats in the box
+%                \@fpsep : interfloat space 
+%                \@fptop : glue at top of box
+%                \@fpbot : glue at bottom of box.
+%              If it succeeds, then it does the following:
+%                * \@outputbox :=L the composed float box.
+%                * @fcolmade   :=L true 
+%                * \FLIST      :=G \FLIST - floats put in box
+%                * \@freelist  :=G \@freelist + floats put in box
+%              If it fails, then:
+%                * @fcolmade :=L false
+%           NOTE: BIT MUST BE A SINGLE TOKEN!
+%
+% \@makefcolumn \FLIST : Same as \@tryfcolumn except that it
+%             fails to make a float column only if \FLIST is empty.
+%             Otherwise, it makes a float column containing at least
+%             the first box in \FLIST, disregarding \@fpmin.
+%
+% \@startcolumn :
+%       Calls \@tryfcolumn\@deferlist{8}.  If \@tryfcolumn returns with 
+%       @fcolmade = false, then:
+%                * Globally sets \@toplist and \@botlist to floats
+%                  from \@deferlist to go at top and bottom of column,
+%                  deleting them from \@deferlist.  It does 
+%                  this using \@colht as the total height, the page 
+%                  style parameters \@floatsep and \@textfloatsep, and 
+%                  the float placement parameters \@topnum, \@toproom, 
+%                  \@botnum, \@botroom, \@colnum and \textfraction.
+%                * Globally sets \@colroom to \@colht minus the height
+%                  of the added floats.
+%
+% \@startdblcolumn :
+%      Calls \@tryfcolumn\@dbldeferlist{8}.  If \@tryfcolumn returns
+%      with @fcolmade = false, then:
+%               * Globally sets \@dbltoplist to floats from \@dbldeferlist
+%                 to go at top and bottom of column, deleting them from
+%                 \@dbldeferlist.  It does this using \textheight as the
+%                 total height, and the parameters \@dblfloatsep, etc.
+%               * Globally sets \@colht to \textheight minus the height
+%                 of the added floats.
+%
+% \@combinefloats : Combines the text from box 
+%              \@outputbox with the floats from \@toplist and \@botlist, 
+%              putting the new box in \@outputbox.  It uses \floatsep and 
+%              \textfloatsep for the appropriate separations.  It puts the 
+%              elements of \TOPLIST and \BOTLIST onto \@freelist, and makes
+%              those lists null.
+%
+% \@makecol : Makes the contents of \box255 plus the accumulated
+%              footnotes, plus the floats in \@toplist and \@botlist,
+%              into a single column of height \@colht, which it puts
+%              into box \@outputbox.  It puts boxes in \@midlist back
+%              onto \@freelist and restores \maxdepth.
+%
+% \@opcol : Outputs a column whose text is in box \@outputbox
+%              If @twocolumn = false, then it calls \@outputpage,
+%              sets \@colht :=G \textheight, and calls \@floatplacement.
+%
+%              If @twocolumn = true, then:
+%                  If @firstcolumn = true, then it puts box \@outputbox
+%                  into \@leftcolumn and sets @firstcolumn :=G false.
+%
+%                  If @firstcolumn = false, then it puts out the current 
+%                  two-column page, any possible two-column float pages, 
+%                  and determines \@dbltoplist for the next page.
+%
+% \@opcol ==
+%  BEGIN
+%   \@mparbottom :=G 0pt
+%   if @twocolumn = true
+%     then %% \@outputdblcol ==
+%          if @firstcolumn = true
+%            then @firstcolumn :=G false
+%                 \@leftcolumn :=G \@outputbox
+%            else @firstcolumn :=G true
+%                 \@outputbox  := \vbox{
+%                                   \hbox to \textwidth{
+%                                     \hbox to\columnwidth{\box\@leftcolumn 
+%                                                          \hss}
+%                                     \hfil \vrule width \columnseprule \hfil
+%                                     \hbox to\columnwidth{\box\@outputbox}
+%                                                           \hss}             }
+%                 \@combinedblfloats
+%                 \@outputpage
+%                 \begingroup
+%                    \@dblfloatplacement
+%                    \@startdblcolumn
+%                    while @fcolmade = true
+%                      do  \@outputpage
+%                          \@startdblcolumn  od
+%                 \endgroup
+%          fi       
+%     else 
+%       \@outputpage
+%       \@colht :=G \textheight
+%   fi
+%  END
+%
+%  \@makecol ==
+%    BEGIN
+%     ifvoid \insert\footins
+%        then  \@outputbox := \box255
+%        else  \@outputbox := \vbox {\unvbox255
+%                                    \vskip \skip\footins
+%                                    \footnoterule
+%                                    \unvbox\@footinsert
+%                                   }
+%    fi
+%    \@freelist :=G \@freelist * \@midlist
+%    \@midlist  :=G empty
+%    \@combinefloats
+%    \@outputbox := \vbox to \@colht{\boxmaxdepth := \maxdepth
+%                                     \@texttop
+%                                     \unvbox\@outputbox
+%                                     \@textbottom}
+%    \maxdepth :=G \@maxdepth
+%    END
+%
+% \@outputpage == 
+%   BEGIN
+%     \begingroup          %%% added 11 Jun 85 to keep special page
+%                          %%%  declarations local to this output page
+%     \catcode`\  := 10       %%make sure space is really a space
+%     if @specialpage = T
+%       then @specialpage :=G F
+%            execute \@ps@[eval(\@specialstyle)]  fi
+%     if \@twoside = T 
+%       then if \count0 odd
+%                    \@thehead       ==L \@oddhead
+%                    \@thefoot       ==L \@oddfoot
+%                    \@themargin     ==L \oddsidemargin
+%               else \@oddhead       ==L \@evenhead
+%                    \@oddfoot       ==L \@evenfoot
+%                    \@themargin     ==L \evensidemargin  fi fi
+%     \shipout\vbox
+%       {\normalsize          % set fonts size for head and foot
+%        \baselineskip :=L \lineskip :=L 0pt   
+%        \vskip \topmargin
+%        \moveright\@themargin\vbox
+%              { \box\@tempboxa := \vbox to \headheight{\vfil 
+%                                                   \hbox to \textwidth
+%                                                   {\@thehead}}
+%                \dp\@tempboxa := 0pt   % Don't skip space for descenders in
+%                \box\@tempboxa         % running head.
+%                \vskip \headsep 
+%                \box\@outputbox
+%                \baselineskip\footskip
+%                \hbox to \textwidth{\@thefoot}
+%               } 
+%       }
+%     \@colht :=G \textheight
+%     \endgroup                %% added 11 Jun 85
+%     \stepcounter{page}     
+%     \firstmark ==L \botmark   %% So marks work properly on float 
+%                               %% pages. (14 Jun 85)
+%   END
+%
+% \@startcolumn ==
+%  BEGIN
+%    \@colroom :=G \@colht
+%    if \@deferlist is empty
+%      then @fcolmade := false
+%      else \@tryfcolumn\@deferlist       %% else clause == \@xstartcol
+%           if @fcolmade = false
+%             then \begingroup
+%                    \@tempb     :=L \@deferlist
+%                    \@deferlist :=G empty
+%                    \@elt \BOX  ==  BEGIN \@currbox == \BOX      % use \gdef
+%                                          \@addtonextcol 
+%                                    END  == \@scolelt 
+%                    \@tempb
+%                  \endgroup
+%    fi    fi
+%  END
+%
+% \@startdblcolumn ==
+%  BEGIN
+%    \@colht :=G \textheight
+%      \@tryfcolumn\@dbldeferlist      %% else clause == \@xstartcol
+%      if @fcolmade = false
+%        then \begingroup
+%               \@tempb        :=L \@dbldeferlist
+%               \@dbldeferlist :=G empty
+%               \@elt \BOX     ==  BEGIN \@currbox == \BOX      % use \gdef
+%                                        \@addtodblcol 
+%                                  END  == \@sdblcolelt
+%               \@tempb        
+%             \endgroup     
+%    fi    fi 
+%  END
+%
+% \output ==
+%  BEGIN
+%   case of \outputpenalty
+%      > -10001  -> \@makecol
+%                   \@opcol
+%                   \@floatplacement
+%                   \@startcolumn
+%                   while  @fcolmade = true
+%                      do \@opcol
+%                         \@startcolumn
+%                      od
+%
+%  %%% \@specialoutput ==
+%
+%      -10001   ->  %% \@doclearpage ==
+%                      if there are no footnote insertions
+%                        then unbox the \writes at the head of \box255
+%                               and throw away the rest
+%                             \@deferlist :=G \@toplist * \@botlist 
+%                                                * \@deferlist
+%                             \@toplist :=G \@botlist :=G empty
+%                             \@colroom :=G \@colht
+%                             if \@currlist not empty
+%                               then  LaTeX error: float(s) lost
+%                                     \@currlist :=G empty
+%                             fi
+%                             \@makefcolumn\@deferlist
+%                             while  @fcolmade = true
+%                                  do \@opcol
+%                                     \@makefcolumn\@deferlist
+%                                  od
+%                             if @twocolumn
+%                               then 
+%                                 if @firstcolumn = true
+%                                   then \@dbldeferlist :=G \@dbltoplist *
+%                                                           \@dbldeferlist
+%                                        \@dbltoplist   :=G empty
+%                                        \@colht :=G \textheight
+%                                        \begingroup
+%                                           \@dblfloatplacement
+%                                           \@makefcolumn\@dbldeferlist
+%                                           while  @fcolmade = true
+%                                             do \@outputpage
+%                                                \@makefcolumn\@dbldeferlist
+%                                             od
+%                                        \endgroup
+%                                   else  \vbox{} \clearpage
+%                             fi fi
+%                        else \box255 := \vbox{\box255\vfil}
+%                             \@makecol
+%                             \@opcol
+%                             \clearpage
+%                      fi
+%    < -10001     ->  
+%              if \outputpenalty < -10003
+%                then if \outputpenalty <-20000  %% true only at end
+%                        then \deadcycles := 0    
+%                     fi          
+%                     box \@holdpg :=G box255
+%                else throw away box 255
+%                     \@pagedp :=L natural depth of box \@holdpg
+%                     \@pageht :=L natural ht of box \@holdpg
+%                     \unvbox box \@holdpg  %% put text back
+%                     if there are footnote insertions
+%                       then advance \@pageht and \@pagedp and
+%                            reinsert footnotes                fi
+%                     if \@currlist nonempty
+%                        then \@currbox  :=L head of \@currlist 
+%                             \@currlist :=G tail of \@currlist 
+%                             if \count\@currbox > 0
+%                               then \@addtocurcol   %% this is a float
+%                               else \@addmarginpar  %% this is a marginal note
+%                             fi
+%                        else  THIS SHOULDN'T HAPPEN
+%                     fi
+%                     if \outputpenalty < 0     %% TO PERMIT PAGE BREAK 
+%                       then \penalty 0      fi %% IF \@addtocurcol DIDN'T
+%                                               %% INSERT A PENALTY
+%              fi 
+%   end case
+%  \vsize :=G if \outputpenalty > -10004 then \@colroom  %%normal case
+%                                        else \maxdimen  %%processing float
+%             fi
+%  END
+%
+% \@combinefloats ==
+%  BEGIN
+%    if \@toplist nonempty
+%      then %%\@cfla ==
+%           \@elt\BOX == BEGIN  \@tempbox := \vbox{\unvbox\@tempbox
+%                                                  \box\BOX
+%                                                  \vskip \floatsep}
+%                         END  ==  \@comflelt
+%            \@tempbox := null
+%            \@toplist
+%            \@outputbox := \vbox{\unvbox\@tempbox 
+%                                 \vskip - \floatsep 
+%                                 \topfigrule
+%                                 \vskip \textfloatsep 
+%                                 \unvbox\@outputbox                }
+%            \@elt == \relax
+%            \@freelist :=G \@freelist * \@toplist
+%            \@toplist  :=G null
+%    fi
+%    if \@botlist nonempty
+%      then  %%\@cflb ==
+%            \@elt == \@comflelt
+%            \@tempbox   := null
+%            \@botlist
+%            \@outputbox := \vbox{ \unvbox\@outputbox
+%                                  \vskip \textfloatsep
+%                                  \botfigrule
+%                                  \unvbox\@tempbox 
+%                                  \vskip  - \floatsep   }
+%            \@elt == \relax
+%            \@freelist :=G \@freelist * \@botlist
+%            \@botlist  :=G null
+%    fi
+%  END
+%
+% \@combinedblfloats ==
+%  BEGIN
+%    if \@dbltoplist nonempty
+%      then \@elt == \@comdblflelt
+%            \@tempbox := null
+%            \@dbltoplist
+%            \@outputbox := \vbox to \textheight
+%                              {\boxmaxdepth :=L \maxdepth
+%                               \unvbox\@tempbox 
+%                               \vskip - \dblfloatsep 
+%                               \dblfigrule
+%                               \vskip \dbltextfloatsep 
+%                               \box\@outputbox                         }
+%            \@elt == \relax
+%            \@freelist :=G \@freelist * \@dbltoplist
+%            \@dbltoplist  :=G null
+%    fi
+%  END
+%
+%
+%            USER COMMANDS THAT CALL OR AFFECT THE OUTPUT ROUTINE
+%            ----------------------------------------------------
+%
+% \newpage == BEGIN \par\vfil\penalty -10000 END
+%
+% \clearpage == BEGIN \newpage 
+%                     \write -1{}    % Part of hack to make sure no
+%                     \vbox{}        % \write's get lost.
+%                     \penalty -10001
+%               END
+%
+% \cleardoublepage == BEGIN \clearpage
+%                           if @twoside = true and c@page is even
+%                             then \hbox{} \newpage fi
+%                     END
+%
+% \twocolumn == 
+%  BEGIN
+%    \clearpage
+%    \columnwidth :=G .5(\textwidth - \columnsep)
+%    \hsize       :=G \columnwidth
+%    @twoside     :=G true                  
+%    @firstcolumn :=G true
+%    \@dblfloatplacement
+%  END
+%
+% \onecolumn == 
+%  BEGIN
+%    \clearpage
+%    \columnwidth :=G \textwidth 
+%    \hsize       :=G \columnwidth
+%    @twoside     :=G false
+%    \@floatplacement
+%  END
+%
+%
+% \topnewpage{BOX} : starts a new page and puts BOX in a parbox of width 
+%     \textwidth across the top.  Useful for full-width titles for
+%     double-column pages.  
+%     SURPRISE: The stretch from \@dbltextfloatsep will be inserted
+%     between the BOX and the top of the two columns.
+%
+% \topnewpage{BOX} ==
+%  BEGIN
+%   \clearpage
+%   Take \@currbox from \@freelist
+%   \box\@currbox :=G \parbox{BOX \par
+%                             \vskip - \@dbltextfloatsep}
+%   \count\@currbox :=G 2
+%   \@dbltopnum     :=G 1
+%   \@dbltoproom    :=G maxdimension
+%   \@addtodblcol
+%   \vsize          :=G \@colht
+%   \@colroom       :=G \@colht
+%  END
+
+
+%            FLOAT-HANDLING MECHANISMS
+%            -------------------------
+% 
+% The float environment obtains an insertion number B from the
+% \@freelist (see below for a description of list manipulation), puts 
+% the float into box B and sets \count B to a FLOAT SPECIFIER.  For
+% a normal (not double-column) float, it then causes a page break 
+% in one of the following two ways:
+%   - In outer hmode: \vadjust{\penalty -10002} 
+%   - In vmode :      \penalty -10003.
+% For a double-column float, it puts B onto the \@dbldeferlist.
+% The float specifier has two components:
+%    * A PLACEMENT SPECIFICATION, describing where the float may
+%      be placed.
+%    * A TYPE, which is a power of two--e.g., figures might be 
+%      type 1 floats, tables type 2 floats, programs type 4 floats, etc.
+% The float specifier is encoded as follows, where bit 0 is the least
+% significant bit.
+%
+%  Bit    Meaning 
+%  ---    -------
+%   0     1 iff the float may go where it appears in the text.
+%   1     1 iff the float may go on the top of a page. 
+%   2     1 iff the float may go on the bottom of a page.
+%   3     1 iff the float may go on a float page.
+%   4     always 1
+%   5     1 iff a type 1 float
+%   6     1 iff a type 2 float
+%   etc.
+%
+%  A negative float specifier is used to indicate a marginal note. 
+%
+%     MACROS AND DATA STRUCTURES FOR PROCESSING FLOATS
+%     ------------------------------------------------
+%
+%  A FLOAT LIST consisting of the floats in boxes \boxa ... \boxN has the form:
+%         \@elt \boxa ... \@elt \boxN
+%  where  \boxI is defined by
+%         \newinsert\boxI 
+%  Normally, \@elt is \let to \relax.  A test can be performed on the entire 
+%  float list by locally \def'ing \@elt appropriately and executing
+%  the list.  This is a lot more efficient than looping through the list.
+%  
+%  The following macros are used for manipulating float lists.
+%
+%  \@next \CS \LIST {NONEMPTY}{EMPTY} ==  %% NOTE: ASSUME \@elt = \relax
+%    BEGIN  assume that \LIST == \@elt \B1 ... \@elt \Bn
+%           if n = 0
+%             then  EMPTY
+%             else  \CS    :=L \B1
+%                   \LIST  :=G \@elt \B2 ... \@elt \Bn
+%                   NONEMPTY
+%           fi
+%    END
+%  
+%
+%  \@bitor\NUM\LIST : Globally sets switch @test to the disjunction for all I
+%        of bit  log2 \NUM of the float specifiers of all the floats in
+%        \LIST.  I.e., @test is set to true iff there is at least one
+%        float in \LIST having bit  log2 \NUM  of its float specifier
+%        equal to 1.
+%
+%  Note: log2 [(\count I)/32] is the bit number corresponding to the
+%  type of float I.  To see if there is any float in \LIST having
+%  the same type as float I, you run \@bitor with \NUM = [(\count I)/32] * 32.
+%
+% \@bitor\NUM\LIST ==
+%   BEGIN
+%      @test :=G false
+%      { \@elt \CTR ==  if \count\CTR / \NUM is odd 
+%                        then  @test := true       fi
+%        \LIST
+%      }
+%   END
+%
+%
+% \@cons\LIST\NUM : Globally sets \LIST := \LIST * \@elt \NUM
+%
+% \@cons\LIST\NUM ==
+%   BEGIN {  \@elt == \relax
+%            \LIST :=G \LIST \@elt \NUM
+%         }
+%
+%  BOX LISTS FOR FLOAT-PLACEMENT ALGORITHMS
+%
+%    \@freelist     : List of empty boxes for placing new floats.
+%    \@toplist      : List of floats to go at top of current column.
+%    \@midlist      : List of floats in middle of current column.
+%    \@botlist      : List of floats to go at bottom of current column.
+%    \@deferlist    : List of floats to go after current column.
+%    \@dbltoplist   : List of double-col. floats to go at top of current page.
+%    \@dbldeferlist : List of double-column floats to go on subsequent pages.
+%
+%  FLOAT-PLACEMENT ALGORITHMS
+%
+% \@tryfcolumn \FLIST ==
+%  BEGIN
+%   @fcolmade    :=G false
+%   \@trylist    :=G \FLIST
+%   \@failedlist :=G empty
+%   \begingroup
+%    \@elt == \@xtryfc
+%    \@trylist
+%   \endgroup
+%   if @fcolmade = true
+%     then  \@vtryfc \FLIST
+%   fi      
+%  END
+%
+%  \@vtryfc ==
+%    BEGIN
+%      \@outputbox :=G \vbox{}
+%      \@elt\BOX == BEGIN
+%                     \@outputbox :=L \vbox{ \unvbox \@outputbox
+%                                            \vskip \@fpsep
+%                                            \box\BOX            }
+%                   END  == \@wtryfc 
+%      \@flsucceed
+%      \@outputbox :=G \vbox to \@colht{ \vskip \@fptop
+%                                        \vskip -\@fpsep 
+%                                        \unvbox \@outputbox
+%                                        \vskip \@fpbot      }
+%      \@elt      ==  \relax
+%      \@freelist :=G \@freelist * \@flsucceed
+%      \FLIST     :=G \@failedlist * \@flfail
+%   END
+%
+% \@xtryfc \BOX ==
+%  BEGIN
+%    remove first element from \@trylist    
+%    \@currtype := (\count\BOX / 32) * 32
+%    \@bitor \@currtype \@failedlist    % @test := true if type on list
+%    \@testfp \BOX                      % @test := true if no p-option
+%    if ht of \BOX > \@colht
+%      then @test :=G true  
+%    fi
+%    if @test = true
+%      then add \BOX to \@failedlist
+%      else \@ytryfc \BOX
+%    fi
+%  END
+%
+% \@ytryfc ==
+%  BEGIN
+%   \begingroup
+%     \@flsucceed :=G \@elt\BOX     
+%     \@flfail    :=G empty
+%     \@tempdima  := \ht\BOX
+%     \@elt == \@ztryfc
+%     \@trylist
+%     if \@tempdima > \@fpmin
+%       then @fcolmade :=G true
+%       else add \BOX to \@failedlist
+%     fi
+%   \endgroup
+%   if @fcolmade = true  then  \@elt == \@gobble fi
+%  END
+%
+% \@ztryfc \BOX ==
+%  BEGIN
+%   \@tempcnta := (\count\BOX / 32) * 32
+%   \@bitor \@tempcnta {\@failedlist \@flfail}  % @test := true if on a list
+%   \@testfp \BOX                               % @test := true if not p-option
+%   \@tempdimb := \@tempdima + ht of \BOX + \@fpsep
+%   if \@tempdimb > \@colht
+%     then @test :=G true
+%   fi
+%   if @test = true
+%     then add \BOX to \@flfail
+%     else add \BOX to \@flsucceed
+%          \@tempdima := \@tempdimb
+%   fi
+%  END
+%
+% \@testfp \BOX == BEGIN if bit 3 of \count\BOX = 0 
+%                          then @test :=G true      fi
+%                  END
+%   
+% \@makefcolumn \FLIST ==
+%  BEGIN
+%   \begingroup
+%     \@fpmin =:L 0
+%     \@testfp == \@gobble
+%     \@tryfcolumn \FLIST
+%   \endgroup
+%  END
+%
+%  \@addtobot : Tries to put insert \@currbox on \@botlist.  Called only when:
+%                  * \ht BOX + \@maxsep < \@colroom
+%                  * type of \@currbox not on \@deferlist
+%                  * \@colnum > 0
+%                  * @insert = false
+%               If it succeeds, then:
+%                  * sets @insert true 
+%                  * decrements \@botroom by \ht BOX
+%                  * decrements \@botnum and \@colnum by 1
+%                  * decrements \@colroom by \ht BOX + either \floatsep 
+%                    or \textfloatsep, as appropriate.
+%                  * sets \maxdepth to 0pt
+%                    
+%  \@addtotoporbot : Tries to put insert \@currbox on \@toplist or \@botlist.
+%                    Called only under same conditions as \@addtobot.
+%                    If it succeeds, then:
+%                       * sets @insert true 
+%                       * decrements either \@toproom or \@botroom by \ht BOX
+%                       * decrements \@colnum and either \@topnum or 
+%                         \@botnum by 1
+%                       * decrements \@colroom by \ht BOX + either \floatsep 
+%                         or \textfloatsep, as appropriate.
+%                      
+% \@addtocurcol : Tries to add \@currbox to current column, setting @insert
+%                 true if it succeeds, false otherwise.  It will add
+%                 \@currbox to top only if bit 0 of \count \@currbox is 0, and 
+%                 to the bottom only if bit 0 = 0 or an earlier float of
+%                 the same type is put on the bottom.
+%                 If the float is put in the text, then \penalty 0 is put
+%                 right after the float, before the following \vskip, and
+%                 \outputpenalty :=L 0.
+%
+% \@addtonextcol : Tries to add \@currbox to the next column, setting @insert
+%                 true if it succeeds, false otherwise.  
+%
+% \@addtodblcol : Tries to add \@currbox to the next double-column page,
+%                 adding it to \@dbltoplist if it succeeds and \@dbldeferlist
+%                 if it fails.
+%
+%  \@addtobot ==
+%    BEGIN
+%      if bit 2 of \count \@currbox = 1
+%        then  if \@botnum > 0 
+%                 then if \@botroom > \ht \@currbox
+%                        then \@botnum   :=G \botnum - 1
+%                             \@colnum   :=G \@colnum - 1
+%                             \@tempdima  :=L - \ht\@currbox -
+%                                            if \@botlist empty
+%                                                then \textfloatsep
+%                                                else \floatsep      
+%                                            fi
+%                             \@botroom  :=G \@botroom + \@tempdima
+%                             \@colroom  :=G \@colroom + \@tempdima
+%                              add \@currbox to \@botlist
+%                              \maxdepth :=G 0pt
+%                              @insert :=L true
+%      fi      fi       fi
+%    END
+%
+%  \@addtotoporbot ==
+%    BEGIN
+%      if bit 1 of \count \@currbox = 1
+%        then if \@topnum > 0 
+%               then if \@toproom > \ht \@currbox 
+%                       then if \@currtype not on \@midlist or \@botlist
+%                               then \@topnum    :=G \topnum - 1
+%                                    \@colnum    :=G \@colnum - 1
+%                                    \@tempdima  :=L - \ht\@currbox -
+%                                                   if \@toplist empty
+%                                                       then \textfloatsep
+%                                                       else \floatsep      
+%                                                   fi
+%                                    \@toproom   :=G \@toproom + \@tempdima
+%                                    \@colroom   :=G \@colroom + \@tempdima
+%                                    add \@currbox to \@toplist
+%                                    @insert :=L true
+%      fi     fi      fi      fi     
+%      if @insert = false then \@addtobot fi
+%    END
+%
+% \@addtocurcol ==
+%  BEGIN
+%    @insert :=L false
+%    \@textmin := \textfraction\@colht         %% added 27 Sep 85
+%    if \@colroom > \ht \@currbox + max(\@pageht+\@pagedp, \@textmin)
+%                           + \@maxsep
+%       then if \@colnum > 0 
+%               then \@currtype := type of \@currbox
+%                    if \@currtype not on \@deferlist
+%                      then if \@currtype on \@botlist
+%                             then \@addtobot
+%                             else if bit0 of \count \@currbox = 1
+%                                    then  decrement \@colnum 
+%                                          put \@currbox on \@midlist
+%                                          add \@currbox + space 
+%                                            + a \penalty 0 to text
+%                                          \outputpenalty :=L 0
+%                                          @insert := true
+%                                    else  \@addtotoporbot
+%    fi      fi      fi     fi     fi
+%    if @insert = false 
+%      then add \@currbox to \@deferlist
+%    fi
+%  END
+%
+% \@addtonextcol ==
+%  BEGIN
+%    @insert :=L false
+%    \@textmin := \textfraction\@colht         %% added 27 Sep 85
+%    if \@colroom > \ht \@currbox + \@textmin + \@maxsep
+%       then if \@colnum > 0 
+%               \@currtype := type of \@currbox
+%               then if \@currtype not on \@deferlist
+%                      then \@addtotoporbot
+%    fi      fi      fi     
+%    if @insert = false 
+%      then add \@currbox to \@deferlist
+%    fi
+%  END
+%
+%  \@addtodblcol ==
+%    BEGIN
+%      @insert :=L false
+%      if bit 1 of \count \@currbox = 1
+%        then  if \@dbltopnum > 0 
+%                 then if \@dbltoproom > \ht \@currbox
+%                        then if type of \@currbox not on \@dbldeferlist
+%                               then \@dbltopnum   :=G \@dbltopnum - 1
+%                                    \@tempdima := -\ht\@currbox -
+%                                                  if \@dbltoplist empty
+%                                                     then \dbltextfloatsep
+%                                                     else \dblfloatsep      
+%                                                  fi
+%                                    \@dbltoproom  :=G \@dbltoproom+\@tempdima
+%                                    \@colht       :=G \@colht+\@tempdima
+%                                    add \@currbox to \@dbltoplist
+%                                     @insert :=L true
+%      fi      fi       fi    fi
+%      if @insert = false then add \@currbox to \@dbldeferlist
+%    END
+%
+%  \@addmarginpar ==
+%   BEGIN
+%     if \@currlist nonempty
+%       then remove \@marbox from \@currlist  %% NOTE: \@currbox = left box
+%            add \@marbox and \@currbox to \@freelist
+%       else LaTeX error: ?  %% shouldn't happen
+%     fi
+%     \@tempcnta := 1     %% 1 = right, -1 = left
+%     if @twocolumn = true
+%       then if @firstcolumn = true
+%              then \@tempcnta := -1
+%            fi
+%       else if @mparswitch = true
+%              then if count0 odd
+%                     else \@tempcnta := -1
+%                   fi
+%            fi
+%            if @reversemargin = true
+%               then \@tempcnta := -\@tempcnta
+%            fi
+%     fi
+%     if \@tempcnta < 0 then \box\@marbox :=G \box\@currbox fi
+%     \@tempdima   :=L maximum(\@mparbottom - \@pageht + ht of \@marbox, 0)
+%     if \@tempdima > 0 then LaTeX warning: 'marginpar moved' fi
+%     \@mparbottom :=G \@pageht + \@tempdima + depth of \@marbox 
+%                          + \marginparpush
+%     \@tempdima   :=L \@tempdima - ht of \@marbox
+%     height of \@marbox :=G depth of \@marbox :=G 0
+%     \vskip -\@pagedp
+%     \vskip \@tempdima
+%     \nointerlineskip
+%     \hbox{ if @tempcnta > 0 then \hskip \columnwidth
+%                                 \hskip \marginparsep
+%                            else \hskip -\marginparsep
+%                                 \hskip -\marginparwidth
+%            fi
+%            \box\@marbox
+%            \hss
+%          }
+%     \vskip -\@tempdima
+%     \nointerlineskip
+%     \hbox{\vrule height 0 width 0 depth \@pagedp}
+%   END      
+
+
+\maxdeadcycles = 100 % floats and \marginpar's add a lot of dead cycles
+
+\let\@elt\relax
+
+\def\@next#1#2#3#4{\ifx#2\@empty #4\else 
+   \expandafter\@xnext #2\@@#1#2#3\fi}
+
+\def\@xnext \@elt #1#2\@@#3#4{\def#3{#1}\gdef#4{#2}}
+
+\newif\if@test
+
+\def\@bitor#1#2{\global\@testfalse {\let\@elt\@xbitor
+   \@tempcnta #1\relax #2}}
+
+\def\@xbitor #1{\@tempcntb \count#1\divide\@tempcntb\@tempcnta
+   \ifodd\@tempcntb \global\@testtrue\fi}
+
+% DEFINITION OF FLOAT BOXES:
+\newinsert\bx@A
+\newinsert\bx@B
+\newinsert\bx@C
+\newinsert\bx@D
+\newinsert\bx@E
+\newinsert\bx@F
+\newinsert\bx@G
+\newinsert\bx@H
+\newinsert\bx@I
+\newinsert\bx@J
+\newinsert\bx@K
+\newinsert\bx@L
+\newinsert\bx@M
+\newinsert\bx@N
+\newinsert\bx@O
+\newinsert\bx@P
+\newinsert\bx@Q
+\newinsert\bx@R
+
+
+
+\gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D\@elt\bx@E
+               \@elt\bx@F\@elt\bx@G\@elt\bx@H\@elt\bx@I\@elt\bx@J
+                \@elt\bx@K\@elt\bx@L\@elt\bx@M\@elt\bx@N
+                \@elt\bx@O\@elt\bx@P\@elt\bx@Q\@elt\bx@R}
+
+\gdef\@toplist{}
+\gdef\@botlist{}
+\gdef\@midlist{}
+\gdef\@currlist{}
+\gdef\@deferlist{}
+\gdef\@dbltoplist{}
+\gdef\@dbldeferlist{}
+
+% PAGE LAYOUT PARAMETERS
+\newdimen\topmargin
+\newdimen\oddsidemargin
+\newdimen\evensidemargin
+\let\@themargin=\oddsidemargin
+\newdimen\headheight
+\newdimen\headsep
+\newdimen\footheight
+\newdimen\footskip
+\newdimen\textheight
+\newdimen\textwidth
+\newdimen\columnwidth
+\newdimen\columnsep
+\newdimen\columnseprule
+\newdimen\@maxdepth    \@maxdepth = \maxdepth
+\newdimen\marginparwidth
+\newdimen\marginparsep
+\newdimen\marginparpush
+
+% PAGE STYLE PARAMETERS
+\newskip\floatsep
+\newskip\textfloatsep
+\newskip\intextsep
+\newdimen\@maxsep
+\newskip\dblfloatsep
+\newskip\dbltextfloatsep
+\newdimen\@dblmaxsep
+\newskip\@fptop
+\newskip\@fpsep
+\newskip\@fpbot
+\newskip\@dblfptop
+\newskip\@dblfpsep
+\newskip\@dblfpbot
+\let\topfigrule=\relax
+\let\botfigrule=\relax
+\let\dblfigrule=\relax
+
+% INTERNAL REGISTERS
+
+\newcount\@topnum
+\newdimen\@toproom
+\newcount\@dbltopnum
+\newdimen\@dbltoproom
+\newcount\@botnum
+\newdimen\@botroom
+\newcount\@colnum
+\newdimen\@textmin
+\newdimen\@fpmin
+\newdimen\@colht
+\newdimen\@colroom
+\newdimen\@pageht
+\newdimen\@pagedp
+\newdimen\@mparbottom \@mparbottom\z@
+\newcount\@currtype
+\newbox\@outputbox
+\newbox\@leftcolumn
+\newbox\@holdpg
+
+\newif\if@insert
+\newif\if@fcolmade
+\newif\if@specialpage \@specialpagefalse
+\newif\if@twoside     \@twosidefalse
+\newif\if@firstcolumn \@firstcolumntrue
+\newif\if@twocolumn   \@twocolumnfalse
+\newif\if@reversemargin \@reversemarginfalse
+\newif\if@mparswitch  \@mparswitchfalse
+
+\def\@thehead{\@oddhead} % initialization
+\def\@thefoot{\@oddfoot}
+
+\def\newpage{\par\vfil\penalty -\@M}
+
+\def\clearpage{\newpage \write\m@ne{}\vbox{}\penalty -\@Mi}
+
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+    \hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+
+\def\twocolumn{\clearpage \global\columnwidth\textwidth
+   \global\advance\columnwidth -\columnsep \global\divide\columnwidth\tw@
+   \global\hsize\columnwidth \global\linewidth\columnwidth
+   \global\@twocolumntrue \global\@firstcolumntrue
+   \@dblfloatplacement\@ifnextchar[{\@topnewpage}{}}
+
+\def\onecolumn{\clearpage\global\columnwidth\textwidth 
+     \global\hsize\columnwidth \global\linewidth\columnwidth
+     \global\@twocolumnfalse \@floatplacement}
+
+\long\def\@topnewpage[#1]{\@next\@currbox\@freelist{}{}
+    \global\setbox\@currbox\vbox{\hsize\textwidth \@parboxrestore
+     #1\par\vskip -\dbltextfloatsep}\global\count\@currbox\tw@
+    \global\@dbltopnum\@ne \global\@dbltoproom\maxdimen\@addtodblcol
+    \global\vsize\@colht \global\@colroom\@colht}
+
+\output{\ifnum\outputpenalty <-\@M\@specialoutput\else
+  \@makecol\@opcol\@floatplacement\@startcolumn
+  \@whilesw\if@fcolmade \fi{\@opcol\@startcolumn}\fi
+  \global\vsize\ifnum\outputpenalty >-\@Miv \@colroom
+                  \else \maxdimen\fi}
+
+\def\@specialoutput{\ifnum\outputpenalty > -\@Mii
+    \@doclearpage
+  \else
+    \ifnum \outputpenalty <-\@Miii
+       \ifnum\outputpenalty<-\@MM \deadcycles\z@\fi
+       \global\setbox\@holdpg\vbox{\unvbox\@cclv}
+    \else \setbox\@tempboxa\box\@cclv
+        \@pagedp\dp\@holdpg \@pageht\ht\@holdpg
+        \unvbox\@holdpg
+        \ifvoid\footins\else\advance\@pageht\ht\footins
+          \advance\@pageht\skip\footins \advance\@pagedp\dp\footins
+          \insert\footins{\unvbox\footins}\fi
+        \@next\@currbox\@currlist{\ifnum\count\@currbox >\z@
+            \@addtocurcol\else\@addmarginpar\fi}\@latexbug
+    \ifnum \outputpenalty <\z@ \penalty \z@ \fi
+  \fi\fi}
+
+\def\@doclearpage{\ifvoid\footins
+        \setbox\@tempboxa\vsplit\@cclv to\z@ \unvbox\@tempboxa
+        \setbox\@tempboxa\box\@cclv
+        \xdef\@deferlist{\@toplist\@botlist
+            \@deferlist}\gdef\@toplist{}\gdef\@botlist{}\global\@colroom\@colht
+             \ifx\@currlist
+              \@empty\else\@latexerr{Float(s) 
+                 lost}\@ehb\gdef\@currlist{}\fi
+       \@makefcolumn\@deferlist
+        \@whilesw\if@fcolmade \fi{\@opcol
+                                  \@makefcolumn\@deferlist}\if@twocolumn
+           \if@firstcolumn 
+             \xdef\@dbldeferlist{\@dbltoplist
+                 \@dbldeferlist}\gdef\@dbltoplist{}\global\@colht\textheight 
+              \begingroup \@dblfloatplacement \@makefcolumn\@dbldeferlist
+               \@whilesw\if@fcolmade \fi{\@outputpage
+                                         \@makefcolumn\@dbldeferlist}\endgroup
+           \else \vbox{}\clearpage
+        \fi\fi
+     \else\setbox\@cclv\vbox{\box\@cclv\vfil}\@makecol\@opcol
+      \clearpage
+     \fi}
+
+\def\@opcol{\global\@mparbottom\z@\if@twocolumn\@outputdblcol\else
+    \@outputpage \global\@colht\textheight \fi}
+
+\def\@outputdblcol{\if@firstcolumn \global\@firstcolumnfalse
+    \global\setbox\@leftcolumn\box\@outputbox
+  \else \global\@firstcolumntrue
+    \setbox\@outputbox\vbox{\hbox to\textwidth{\hbox to\columnwidth
+      {\box\@leftcolumn \hss}\hfil \vrule width\columnseprule\hfil
+       \hbox to\columnwidth{\box\@outputbox \hss}}}\@combinedblfloats
+       \@outputpage \begingroup \@dblfloatplacement \@startdblcolumn
+       \@whilesw\if@fcolmade \fi{\@outputpage\@startdblcolumn}\endgroup
+    \fi}
+
+\def\@makecol{\ifvoid\footins \setbox\@outputbox\box\@cclv
+   \else\setbox\@outputbox
+     \vbox{\unvbox\@cclv\vskip\skip\footins\footnoterule\unvbox\footins}\fi
+     \xdef\@freelist{\@freelist\@midlist}\gdef\@midlist{}\@combinefloats
+     \setbox\@outputbox\vbox to\@colht{\boxmaxdepth\maxdepth
+        \@texttop\unvbox\@outputbox \@textbottom}\global\maxdepth\@maxdepth}
+
+\let\@texttop=\relax
+\let\@textbottom=\relax
+
+\def\@outputpage{\begingroup\catcode`\ =10 \if@specialpage 
+     \global\@specialpagefalse\@nameuse{ps@\@specialstyle}\fi
+     \if@twoside 
+       \ifodd\count\z@ \let\@thehead\@oddhead \let\@thefoot\@oddfoot
+            \let\@themargin\oddsidemargin
+          \else \let\@thehead\@evenhead
+          \let\@thefoot\@evenfoot \let\@themargin\evensidemargin
+     \fi\fi
+     \shipout
+     \vbox{\normalsize \baselineskip\z@ \lineskip\z@
+           \vskip \topmargin \moveright\@themargin
+           \vbox{\setbox\@tempboxa
+                   \vbox to\headheight{\vfil \hbox to\textwidth{\@thehead}}
+                 \dp\@tempboxa\z@
+                 \box\@tempboxa
+                 \vskip \headsep
+                 \box\@outputbox
+                 \baselineskip\footskip
+                 \hbox to\textwidth{\@thefoot}}}\global\@colht\textheight
+           \endgroup\stepcounter{page}\let\firstmark\botmark}
+
+
+\def\@combinefloats{\ifx\@toplist\@empty\else\@cfla\fi
+    \ifx\@botlist\@empty\else\@cflb\fi}
+
+\def\@cfla{\let\@elt\@comflelt \setbox\@tempboxa\vbox{}\@toplist
+    \setbox\@outputbox\vbox{\unvbox\@tempboxa\vskip-\floatsep
+    \topfigrule\vskip\textfloatsep \unvbox\@outputbox}\let\@elt\relax
+    \xdef\@freelist{\@freelist\@toplist}\gdef\@toplist{}}
+
+\def\@cflb{\let\@elt\@comflelt \setbox\@tempboxa\vbox{}\@botlist
+    \setbox\@outputbox\vbox{\unvbox\@outputbox \vskip\textfloatsep 
+    \botfigrule\unvbox\@tempboxa \vskip-\floatsep}\let\@elt\relax
+    \xdef\@freelist{\@freelist\@botlist}\gdef\@botlist{}}
+
+\def\@comflelt#1{\setbox\@tempboxa
+      \vbox{\unvbox\@tempboxa\box #1\vskip\floatsep}}
+
+\def\@combinedblfloats{\ifx\@dbltoplist\@empty\else
+    \let\@elt\@comdblflelt \setbox\@tempboxa\vbox{}\@dbltoplist
+    \setbox\@outputbox\vbox to\textheight
+      {\boxmaxdepth\maxdepth
+       \unvbox\@tempboxa\vskip-\dblfloatsep
+       \dblfigrule\vskip\dbltextfloatsep \box\@outputbox}\let\@elt\relax
+    \xdef\@freelist{\@freelist\@dbltoplist}\gdef\@dbltoplist{}\fi}
+
+
+\def\@comdblflelt#1{\setbox\@tempboxa
+      \vbox{\unvbox\@tempboxa\box #1\vskip\dblfloatsep}}
+
+
+\def\@startcolumn{\global\@colroom\@colht
+    \ifx\@deferlist\@empty\global\@fcolmadefalse\else\@xstartcol\fi}
+
+\def\@xstartcol{\@tryfcolumn\@deferlist \if@fcolmade\else
+   \begingroup\edef\@tempb{\@deferlist}\gdef\@deferlist{}\let\@elt\@scolelt
+   \@tempb\endgroup\fi}
+
+\def\@scolelt#1{\def\@currbox{#1}\@addtonextcol}
+
+\def\@startdblcolumn{\global\@colht\textheight
+   \@tryfcolumn\@dbldeferlist \if@fcolmade\else
+     \begingroup
+       \edef\@tempb{\@dbldeferlist}\gdef\@dbldeferlist{}\let\@elt\@sdblcolelt
+       \@tempb\endgroup\fi}
+
+\def\@sdblcolelt#1{\def\@currbox{#1}\@addtodblcol}
+
+\def\@tryfcolumn #1{\global\@fcolmadefalse \xdef\@trylist{#1}\xdef\@failedlist
+   {}\begingroup \let\@elt\@xtryfc \@trylist \endgroup
+    \if@fcolmade \@vtryfc #1\fi}
+
+\def\@vtryfc #1{\global\setbox\@outputbox\vbox{}\let\@elt\@wtryfc
+       \@flsucceed \global\setbox\@outputbox\vbox to\@colht{\vskip \@fptop
+       \vskip -\@fpsep \unvbox \@outputbox \vskip \@fpbot}\let\@elt\relax
+       \xdef #1{\@failedlist\@flfail}\xdef\@freelist{\@freelist\@flsucceed}}
+
+\def\@wtryfc #1{\global\setbox\@outputbox\vbox{\unvbox\@outputbox
+    \vskip\@fpsep\box #1}}
+
+
+\def\@xtryfc #1{\@next\@tempa\@trylist{}{}\@currtype
+  \count #1\divide\@currtype\@xxxii \multiply\@currtype\@xxxii
+  \@bitor \@currtype \@failedlist \@testfp #1\ifdim 
+    \ht #1>\@colht \global\@testtrue\fi
+    \if@test \@cons\@failedlist #1\else \@ytryfc #1\fi}
+
+\def\@ytryfc #1{\begingroup \gdef\@flsucceed{\@elt #1}\gdef\@flfail
+  {}\@tempdima\ht #1\let\@elt\@ztryfc \@trylist \ifdim \@tempdima >\@fpmin 
+     \global\@fcolmadetrue \else \@cons\@failedlist #1\fi
+  \endgroup \if@fcolmade \let\@elt\@gobble \fi}
+
+\def\@ztryfc #1{\@tempcnta\count #1\divide\@tempcnta\@xxxii 
+    \multiply\@tempcnta\@xxxii \@bitor \@tempcnta {\@failedlist 
+    \@flfail}\@testfp #1\@tempdimb\@tempdima \advance\@tempdimb\ht #1\advance
+    \@tempdimb\@fpsep \ifdim \@tempdimb >\@colht \global\@testtrue\fi
+    \if@test \@cons\@flfail #1\else \@cons\@flsucceed #1\@tempdima\@tempdimb
+    \fi}
+
+\def\@testfp #1{\@tempcnta\count #1\divide\@tempcnta 8\relax 
+   \ifodd\@tempcnta \else \global\@testtrue\fi}
+
+\def\@makefcolumn #1{\begingroup  \@fpmin\z@ \let\@testfp\@gobble
+   \@tryfcolumn #1\endgroup}
+
+\def\@addtobot{\@tempcnta\count\@currbox\divide\@tempcnta4 \ifodd\@tempcnta
+   \ifnum \@botnum >\z@ \ifdim \@botroom >\ht\@currbox
+    \global\advance\@botnum\m@ne 
+    \global\advance\@colnum\m@ne 
+    \@tempdima -\ht\@currbox
+    \advance\@tempdima -\ifx\@botlist\@empty \textfloatsep
+       \else\floatsep\fi
+    \global\advance\@botroom \@tempdima
+    \global\advance\@colroom \@tempdima
+    \@cons\@botlist\@currbox \global\maxdepth\z@
+    \@inserttrue\fi\fi\fi}
+
+\def\@addtotoporbot{\@tempcnta\count\@currbox \divide\@tempcnta\tw@
+   \ifodd\@tempcnta \ifnum \@topnum >\z@ \ifdim\@toproom >\ht\@currbox
+     \@bitor\@currtype{\@midlist\@botlist}\if@test\else
+        \global\advance\@topnum\m@ne 
+        \global\advance\@colnum\m@ne 
+        \@tempdima-\ht\@currbox
+        \advance\@tempdima 
+           -\ifx\@toplist\@empty \textfloatsep \else\floatsep\fi
+        \global\advance\@toproom \@tempdima
+        \global\advance\@colroom \@tempdima
+        \@cons\@toplist\@currbox
+        \@inserttrue
+\fi\fi\fi\fi
+\if@insert\else\@addtobot \fi}
+
+\def\@addtonextcol{\@insertfalse \@textmin \textfraction\@colht
+   \@tempdima\ht\@currbox
+   \advance\@tempdima\@textmin\advance\@tempdima\@maxsep
+   \ifdim\@colroom >\@tempdima 
+     \ifnum\@colnum >\z@
+        \@currtype\count\@currbox \divide\@currtype\@xxxii
+        \multiply\@currtype\@xxxii
+        \@bitor\@currtype\@deferlist
+        \if@test\else
+          \@addtotoporbot
+    \fi\fi\fi
+    \if@insert\else \@cons\@deferlist\@currbox\fi}
+
+\def\@addtodblcol{\@insertfalse
+   \@tempcnta\count\@currbox \divide\@tempcnta\tw@
+   \ifodd\@tempcnta
+      \ifnum\@dbltopnum >\z@
+         \ifdim\@dbltoproom >\ht\@currbox
+           \@currtype\count\@currbox \divide\@currtype\@xxxii
+               \multiply\@currtype\@xxxii
+           \@bitor\@currtype\@dbldeferlist
+           \if@test\else
+              \global\advance\@dbltopnum\m@ne
+              \@tempdima -\ht\@currbox
+              \advance\@tempdima -\ifx\@dbltoplist\@empty
+                 \dbltextfloatsep\else\dblfloatsep\fi
+              \global\advance\@dbltoproom \@tempdima
+              \global\advance\@colht \@tempdima
+              \@cons\@dbltoplist\@currbox     
+              \@inserttrue
+   \fi\fi\fi\fi
+   \if@insert\else \@cons\@dbldeferlist\@currbox \fi}
+
+\def\@addtocurcol{\@insertfalse \@textmin \textfraction\@colht
+   \@tempdima\@pageht \advance\@tempdima\@pagedp
+   \ifdim \@textmin > \@tempdima \@tempdima\@textmin \fi
+       \advance\@tempdima\ht\@currbox \advance\@tempdima\@maxsep
+   \ifdim\@colroom >\@tempdima
+      \ifnum\@colnum >\z@
+         \@currtype\count\@currbox \divide\@currtype\@xxxii
+                \multiply\@currtype\@xxxii
+         \@bitor\@currtype\@deferlist
+         \if@test\else
+            \@bitor\@currtype\@botlist
+            \if@test \@addtobot \else 
+               \ifodd\count\@currbox
+                 \global\advance\@colnum\m@ne
+                 \@cons\@midlist\@currbox
+                 \vskip\intextsep \box\@currbox 
+                 \penalty\z@ \vskip\intextsep
+                 \ifnum\outputpenalty <-\@Mii \vskip -\parskip\fi
+                 \outputpenalty\z@ 
+                 \@inserttrue
+               \else \@addtotoporbot
+   \fi\fi\fi\fi\fi
+   \if@insert\else\@cons\@deferlist\@currbox\fi}
+
+\def\@addmarginpar{\@next\@marbox\@currlist{\@cons\@freelist\@marbox
+    \@cons\@freelist\@currbox}\@latexbug\@tempcnta\@ne
+    \if@twocolumn 
+        \if@firstcolumn \@tempcnta\m@ne \fi
+    \else 
+      \if@mparswitch
+         \ifodd\c@page \else\@tempcnta\m@ne \fi
+      \fi
+      \if@reversemargin \@tempcnta -\@tempcnta \fi
+    \fi
+    \ifnum\@tempcnta <\z@  \global\setbox\@marbox\box\@currbox \fi
+    \@tempdima\@mparbottom \advance\@tempdima -\@pageht 
+       \advance\@tempdima\ht\@marbox \ifdim\@tempdima >\z@
+       \@warning{Marginpar on page \thepage\space moved}\else\@tempdima\z@ \fi
+    \global\@mparbottom\@pageht \global\advance\@mparbottom\@tempdima
+       \global\advance\@mparbottom\dp\@marbox
+       \global\advance\@mparbottom\marginparpush
+    \advance\@tempdima -\ht\@marbox
+    \global\ht\@marbox\z@ \global\dp\@marbox\z@ 
+    \vskip -\@pagedp \vskip\@tempdima\nointerlineskip 
+    \hbox to\columnwidth
+      {\ifnum \@tempcnta >\z@
+          \hskip\columnwidth \hskip\marginparsep
+        \else \hskip -\marginparsep \hskip -\marginparwidth \fi
+       \box\@marbox \hss}
+    \vskip -\@tempdima
+    \nointerlineskip
+    \hbox{\vrule \@height\z@ \@width\z@ \@depth\@pagedp}}
+

@@ -1,0 +1,108 @@
+% This file can be loaded after PLAIN.TEX.
+% It gives some help messages for people who try to call macros
+% by their old names.
+% (But it takes space in TeX's memory.)
+
+\def\chcode{\message{Oops, you're trying to use me with an old TeX file!}
+  \message{Please buy The TeXbook and convert to the new improved format.}
+  \message{Meanwhile, say "TEX78" to run the grundgy old version...}
+  \end}
+
+\def\newname#1#2{\toks0{#2}%
+  \def\warning{In TeX82, please call this operation \the\toks0}%
+  \errmessage{\warning}\gdef#1{#2}#2}
+
+\mathcode`\"="8000 {\catcode`"=\active \gdef"{\newname{''}}}
+
+\def\@{\newname\@@}
+\def\section{\newname\section\S}
+\def\lb{\newname\lb\bgroup} \def\rb{\newname\rb\egroup}
+\def\linebreak{\newname\linebreak\break}
+\def\pagebreak{\newname\pagebreak{\vadjust{\break}}}
+\def\dright{\newname\dright{]\!]}}
+\def\dleft{\newname\dleft{[\![}}
+\def\relvv{\newname\relvv\parallel}
+\def\rightvv{\newname\rightvv{\right\|}}
+\def\leftvv{\newname\leftvv{\left\|}}
+\def\relv{\newname\relv\mid}
+\def\rightv{\newname\rightv{\right|}}
+\def\leftv{\newname\leftv{\left|}}
+\def\Zscr{\newname\Zscr{{\cal Z}}}
+\def\Yscr{\newname\Yscr{{\cal Y}}}
+\def\Xscr{\newname\Xscr{{\cal X}}}
+\def\Wscr{\newname\Wscr{{\cal W}}}
+\def\Vscr{\newname\Vscr{{\cal V}}}
+\def\Uscr{\newname\Uscr{{\cal U}}}
+\def\Tscr{\newname\Tscr{{\cal T}}}
+\def\Sscr{\newname\Sscr{{\cal S}}}
+\def\Rscr{\newname\Rscr{{\cal R}}}
+\def\Qscr{\newname\Qscr{{\cal Q}}}
+\def\Pscr{\newname\Pscr{{\cal P}}}
+\def\Oscr{\newname\Oscr{{\cal O}}}
+\def\Nscr{\newname\Nscr{{\cal N}}}
+\def\Mscr{\newname\Mscr{{\cal M}}}
+\def\Lscr{\newname\Lscr{{\cal L}}}
+\def\Kscr{\newname\Kscr{{\cal K}}}
+\def\Jscr{\newname\Jscr{{\cal J}}}
+\def\Iscr{\newname\Iscr{{\cal I}}}
+\def\Hscr{\newname\Hscr{{\cal H}}}
+\def\Gscr{\newname\Gscr{{\cal G}}}
+\def\Fscr{\newname\Fscr{{\cal F}}}
+\def\Escr{\newname\Escr{{\cal E}}}
+\def\Dscr{\newname\Dscr{{\cal D}}}
+\def\Cscr{\newname\Cscr{{\cal C}}}
+\def\Bscr{\newname\Bscr{{\cal B}}}
+\def\Ascr{\newname\Ascr{{\cal A}}}
+\def\imag{\newname\imag\Im}
+\def\real{\newname\real\Re}
+\def\grgr{\newname\grgr\gg}
+\def\lsls{\newname\lsls\ll}
+\def\rslash{\newname\rslash\setminus}
+\def\iit{\newname\iit\imath}
+\def\jit{\newname\jit\jmath}
+\def\lscr{\newname\lscr\ell}
+\def\^^]{\newname\^^]{\nonscript\,}}
+\def\<{\newname\<{\mskip-\medmuskip}}
+\def\?{\newname\?{\mskip-\thickmuskip}}
+\def\^^\{\newname\^^\{\nonscript\mskip-\thinmuskip}}
+\def\comb{\newname\comb\atopwithdelims}
+\def\sterling{\newname\sterling{{\it\$}}}
+\def\eqv{\newname\eqv\equiv} \def\neqv{\newname\neqv{\not\equiv}}
+\def\leftset{\newname\leftset{\{\,}}
+\def\rightset{\newname\rightset{\,\}}}
+\def\modop{\newname\modop\bmod}
+\def\mod{\newname\mod\pmod}
+\def\ldotss{\newname\ldotss{\ldots{}}}
+\def\cdotss{\newname\cdotss{\cdots{}}}
+\def\ldotsm{\newname\ldotsm\ldots}
+\def\overarrow{\newname\overarrow\overrightarrow}
+\def\cpile#1{\newname{\cpile##1}{\vcenter{\halign{\hfill$## $\hfill\cr#1}}}}
+\def\lpile#1{\newname{\lpile##1}{\vcenter{\halign{$## $\hfill\cr#1}}}}
+\def\rpile#1{\newname{\rpile##1}{\vcenter{\halign{\hfill$## $\cr#1}}}}
+\def\twoline#1#2#3{\newname{\twoline##1##2##3}{\vbox{
+    \hbox to\displaywidth{$\quad\displaystyle{#1}$\hfill}
+    \vskip#2\hbox to\displaywidth{\hfill$\displaystyle{#3}\quad$}}}}
+\def\chop to#1pt#2{\newname{\chop to##1pt##2}
+  {{\setbox\zz\hbox{$\displaystyle{#2}$}\dp\zz=#1pt\box\zz}}}
+\def\spose{\newname\spose\rlap}
+\def\biglp{\newname\biglp{\bigl(}}
+\def\bigglp{\newname\bigglp{\biggl(}}
+\def\biggglp{\newname\biggglp{\Biggl(}}
+\def\bigrp{\newname\bigrp{\bigr)}}
+\def\biggrp{\newname\biggrp{\biggr)}}
+\def\bigggrp{\newname\bigggrp{\Biggr)}}
+\def\ljustline{\newname\ljustline\leftline}
+\def\rjustline{\newname\rjustline\rightline}
+\def\ctrline{\newname\ctrline\centerline}
+\def\topspace{\newname\topspace\vglue}
+\def\magnify#1{\newname{\magnify##1}{\magnification=#1}}
+\def\meet{\newname\meet\bigwedge}
+\def\join{\newname\join\bigvee}
+\def\union{\newname\union\bigcup}
+\def\inter{\newname\inter\bigcap}
+\def\munion{\newname\munion\biguplus}
+\def\odotprod{\newname\odotprod\bigodot}
+\def\osum{\newname\osum\bigoplus}
+\def\oprod{\newname\oprod\bigotimes}
+\def\squnion{\newname\squnion\bigsqcup}
+\def\odiv{\newname\odiv\oslash}

@@ -1,0 +1,40 @@
+% tombow.sty
+% \pagewidth & \pageheight
+
+\newbox\@RH\newbox\@LH\newbox\@RB\newbox\@LB
+\newdimen\pagewidth \newdimen\pageheight \newdimen\@pph \newdimen\@ppw
+\setbox\@RH\hbox to0pt{\vrule height.3in\vrule width.3in height.4pt\hss}
+\setbox\@LH\hbox to0pt{\hss\vrule width.3in height.4pt\vrule height.3in}
+\setbox\@RB\hbox to0pt{\vrule depth.3in\vrule width.3in depth.4pt\hss}
+\setbox\@LB\hbox to0pt{\hss\vrule width.3in depth.4pt\vrule depth.3in}
+\def\@outputpage{\begingroup\catcode`\ =10 \if@specialpage 
+     \global\@specialpagefalse\@nameuse{ps@\@specialstyle}\fi
+     \if@twoside 
+       \ifodd\count\z@ \let\@thehead\@oddhead \let\@thefoot\@oddfoot
+            \let\@themargin\oddsidemargin
+          \else \let\@thehead\@evenhead
+          \let\@thefoot\@evenfoot \let\@themargin\evensidemargin
+     \fi\fi \advance\@themargin1in \@pph\topmargin\advance\@pph 1in
+     \@ppw\pagewidth \advance\@ppw 6mm
+     \shipout
+     \vbox{\normalsize \baselineskip\z@ \lineskip\z@
+	   \hbox to\@ppw{\copy\@LH\kern3mm\copy\@RH\hfill
+		\copy\@LH\kern3mm\copy\@RH} \kern3mm
+	   \vbox to0pt{\hbox to\@ppw{\copy\@LB\hfill\copy\@RB}\vss}
+           \vbox to\pageheight{\vskip \@pph
+	   \hbox to\@ppw{\hfil\hbox to\pagewidth{\kern\@themargin \vbox{
+		 \setbox\@tempboxa \vbox to\headheight{
+		 	\vfil \hbox to\textwidth{\@thehead}}
+                 \dp\@tempboxa\z@
+                 \box\@tempboxa
+                 \vskip \headsep
+                 \box\@outputbox
+                 \baselineskip\footskip
+                 \hbox to\textwidth{\@thefoot}
+		 }\hfil}\hfil}\vfil}
+	   \vbox to0pt{\vss\hbox to\@ppw{\copy\@LH\hfill\copy\@RH}} \kern3mm
+	   \hbox to\@ppw{\copy\@LB\kern3mm\copy\@RB\hfill
+		\copy\@LB\kern3mm\copy\@RB}
+	   }\global\@colht\textheight
+           \endgroup\stepcounter{page}\let\firstmark\botmark}
+

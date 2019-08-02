@@ -1,0 +1,49 @@
+% jdvi2kps/README
+% jdvi2kps V2.1
+%			日本語化 Copyright (C) 1989 松下電器産業（株）
+
+このプログラムはアスキー版日本語 TeX の dvi ファイルを漢字 PostScript
+に変換するフィルターです。
+
+英文フォントは TeX に付属の（デフォールトでは） 300 dpi 用のものを
+用います。（-d オプションで解像度が指定されればその値のフォントが用いられ
+ます。プリンタの解像度と一致していれば速くてきれいな出力が得られます。）
+漢字フォントはプリンタの Ryumin-Light-Ext-H と GothicBBB-Medium-Ext-H
+のメトリック情報をアスキー版 tfm に合うように変更したものを用いています。
+
+特に、version 2.1では以下の点が改良されています。
+1)富士通FM-LBP211PSや、Linotypeの写植機などに搭載されている、新しい
+  バージョンのPostScriptインタープリタにも対応しており、これらのプリンタ
+  でもメトリックを修正している文字がずれることがなくなりました。
+2)pstex を用いて、PostScript で書かれた絵を容易に取り込むことができる
+  ようになりました。具体的な方法に関しては、pstex のマニュアルを
+  参照して下さい。なお、従来のversionでの取り込み方法もサポートしています。
+
+src/Makefile の先頭の数行をご使用の環境に合わせてエディットして下さい。
+	HDRDIR :  jtex.ps をおいておくディレクトリ。
+	PSPATH :  PostScript ファイルのデフォールトサーチパス。
+	BINDIR :  jdvi2kps をインストールするディレクトリ。
+
+インストール方法は，以下のとうりです。
+
+	% make all
+	% make install
+
+改良事項
+	・pk,gf,pxlフォーマットのフォント対応
+	・英文字のフォント定義を１ページごとに行なうように変更
+	  従来の全頁有効なフォント登録方法も可能
+	  （従来の全頁フォント登録方法に変更する場合
+	    MakefileのCFLAGSに-DBLOBAL_FONTを追加してコンパイル
+	    ヘッダファイル(jtex.ps)のbop0 -> bop1,bop1 -> bop0に
+	    変更しインストールをおこなう。）
+	・PostScriptデータの容易な組み込み
+	  （使用方法については, pstex/Example-document/pstex.texのドキュメント
+	    を参照して下さい。）
+
+
+				宮部 義幸, 垣内 隆志，楠見 雄規
+				松下電器産業株式会社 コンピュータ事業部
+				JUNET: miyabe@sws.cpd.mei.co.jp
+				       kakiuchi@sws.cpd.mei.co.jp
+                                       kusumi@sws.cpd.mei.co.jp

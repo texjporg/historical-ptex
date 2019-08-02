@@ -1,0 +1,972 @@
+% Master File: Install.tex
+% Document Type: LaTeX
+\documentstyle[fullpage,12pt]{article}
+\input{psfig.tex}
+\input{tree.tex}
+\input{macros.tex}
+\title{SeeTeX Installation Guide}
+\author{
+Dirk Grunwald \\
+Dept. of Computer Science\\
+University of Colorado\\
+{\tt grunwald@foobar.colorado.edu}\\
+\and
+Chris Torek\\
+Department of Computer Science\\
+University of Maryland\\
+College Park, MD 20742\\
+{\tt chris@mimsy.umd.edu}\\
+\thanks{To be fair, Chris didn't write this slop, except for the sections
+on the {\tt fontdesc} file; I include his name here because of that section
+and because he wrote the 'mctex' library on which SeeTeX stuff is based,
+not to mention some of the tools herein}
+}
+%%
+\date{1990}
+\begin{document}
+\maketitle
+
+%\begin{abstract}
+%This documents the installation of the {\seetex} package, including
+%{\xtex}, {\dviselect}, {\texx}, {\texsun}, {\texb},
+%{\iptex} and {\mftobdf}.
+%\end{abstract}
+%
+{\footnotesize \tableofcontents} 
+%\newpage
+
+\section{Introduction}
+
+{\seetex} is a package of output drivers for {\TeX}, and includes the
+following programs:
+
+\begin{center}
+\begin{tabular}{|l|p{5in}|}
+\hline
+Program & Purpose \\
+\hline
+{\xtex} & 
+	 Fast {\X} windows based {\TeX} previewer
+	(formerly called {\texx2}). \\
+{\mftobdf}&
+	 Program to convert {\MetaFont} generated fonts to
+	the {\BDF} format; this is used by {\xtex}. \\
+{\texx}&
+	 Antiquated raw {\X} windows based {\TeX} previewer. \\
+{\texsun}&
+	 SunView based {\TeX} previewer. \\
+{\texb}&
+	 A {\TeX} previewer for the AT\&T 3B1,
+	contributed by Andy Fyfe at CalTech.
+\\
+{\dviselect}&
+	 Utility to extract individual pages from a {\dvi} file.
+	This is just Torek's {\dviselect}. \\
+{\iptex}&
+	Output driver for Imagen printers; this is a very different 
+	and enhanced version of Torek's {\iptex}. \\
+\hline
+\end{tabular}
+\end{center}
+
+All of these programs depend on a library of routines, called {\libtex},
+that was originally written by Chris Torek at the Univ. of Maryland.
+{\seetex} is distributed in two ways.
+The first, usually called
+something like {\verb|SeeTeX-2.15.3.tar.Z|} is the full {\seetex} distribution.
+The second, usually called \verb|xtex-2.15.3.tar.Z| is
+the partial {\xtex} distribution that updates the version of {\xtex} in the
+full {\seetex} distribution. Because the full {\seetex} distribution
+changes infrequently, snagging only the {\xtex} distribution allows
+you to update {\xtex} without having to grab the full {\seetex} tar.
+In this installation guide, I will assume you have unpacked full 
+{\seetex} distribution and have the directory structure shown in
+Figure~\ref{figure:directory} in the following document.  Only
+directories and important files are included in
+Figure~\ref{figure:directory}.
+
+
+\begin{figure}[t]
+
+\centerline{%
+\small
+\tt
+\tree{SeeTeX}
+  \leaf{Imakefile}
+  \leaf{Imake.Config}
+  \leaf{Makefile.raw}
+  \leaf{fontdesc-example}
+  \subtree{Doc}
+    \endsubtree
+  \subtree{Dviselect}
+     \leaf{Imakefile}
+     \leaf{Makefile.raw}
+    \endsubtree
+  \subtree{Iptex}
+     \leaf{Imakefile}
+    \endsubtree
+  \subtree{Texsun}
+     \leaf{Imakefile}
+     \leaf{Makefile.raw}
+    \endsubtree
+  \subtree{Texx}
+     \leaf{Imakefile}
+    \endsubtree
+  \subtree{Xtex}
+     \leaf{Imakefile}
+     \leaf{Xtex.ad}
+    \endsubtree
+  \subtree{libtex}
+     \leaf{Imakefile}
+     \leaf{Makefile.raw}
+    \endsubtree
+\endtree
+}
+
+\caption{{\seetex} Directory Structure}  
+\label{figure:directory}
+\end{figure}
+
+\SubSection{intro:steps}{How Not To Read This Manual}
+
+{\seetex} is configured to use the {\imake} installation configuration
+system distributed with {\X}. If you do not use {\imake}, you can
+only install {\libtex}, {\texsun} and {\dviselect} using the
+handcrafted makefiles labeled {\tt Makefile.raw}. A portion of the
+following comments related to configuration and installation will be
+useful; the majority will not. If you run {\X} and do not use
+{\imake}, contact your vendor or system supportoid to get {\imake}
+installed.
+
+If you already understand {\TeX} fonts and the {\fontdesc} file,
+you can skip \S\ref{section:tex fonts} and \S\ref{section:fontdesc},
+resp.
+If you are installing {\texsun} and {\dviselect} using the raw
+makefiles (i.e., not using {\imake}), skip to
+\S\ref{section:raw makefiles}.
+If you are using {\imake}, and are installed everything
+but {\xtex}, you only need to read \S\ref{section:all but xtex}.
+If you're also installing {\xtex} and {\mftobdf}, you need to
+read \S\ref{section:xtex}.
+
+
+\Section{tex fonts}{A Little Explanation of {\TeX} Fonts}
+
+When printing {\TeX} documents, you use {\em bitmap} fonts that can be
+stored in the {\PK}, {\GF} and {\PXL} formats.
+The bitmaps are {\em designed} for a specific size, e.g., {\tt cmr10} is
+a 10 point Computer Modern Roman font. This font can be {\em rendered}
+at different {\em resolutions} and {\em magnifications}.
+For example, on a laser printer, you might render the {\tt cmr10} font
+at 300dpi (dots per inch).
+For a computer display, you might render {\tt cmr10} at e.g., 85dpi
+rather than 300dpi.
+Magnifications are expressed as the percentage magnification multiplied
+by 1000 and then truncated,
+so the normal magnification is $1000$ (i.e. magnify by 1.0).
+
+For the {\GF} and {\PK} formats, a {\em file suffix} is attached to
+each font file encoding the resolution and magnification. A similar,
+although completely different suffix is appended to the antiquated
+{\PXL} format.  If you still use {\PXL}, flog your local system
+supportoid and convert those fonts to {\GF} or {\PK} -- you'll save
+oodles of disk space.
+But lets say you render {\tt cmr10} for a 300dpi print at
+magnifications of 500, 1000, 1098, 1200, 1440, 1728, 2074 and 2489.
+These numbers are ``magic'' for {\TeX} and {\LaTeX}, because they
+magnify the 10pt font by $1220$ at each step.
+This renders our nominal 10pt font to 5pts, 10pts, 11pts, 12pts, 14pts,
+17pt, 20pt and 24pt. See the {\TeX}book for more details.
+In general, a 10pt font rendered to look like a 5pt font doesn't look
+as good as a font designed to be a 5pt font.
+
+For each of these magnifications, we'll get a file with a suffix
+that's approximately
+$$
+	\mbox{suffix} = \mbox{resolution} \times
+		\frac{\mbox{magnification}}{1000}
+$$
+and ends in either {\PK} or {\GF}. So, for our buddy {\tt cmr10}
+rendered at 300dpi and stored in {\PK} format, we'd have the following files:
+\verb|cmr10.150|,
+\verb|cmr10.300|,
+\verb|cmr10.327|,
+\verb|cmr10.432|,
+\verb|cmr10.518|,
+\verb|cmr10.622|,
+\verb|cmr10.747|.
+%
+Whether you have all these files or not is up to you, your {\TeX}
+administrator and your disk.  Only programs that print {\TeX} documents
+need these bitmap fonts; {\TeX} itself uses something called {\TFM}
+files that record the width and height of each
+glyph in a font. This is enough information for {\TeX} to layout your
+document. There is only {\em one} {\TFM} file for each font, e.g.  for
+{\tt cmr10}. You do not need different {\TFM} files for each
+magnification or resolution of that font, because the {\TFM} distances
+are encoded in units of $10^{-7}$ meters. Magnifications of the font
+simply scale those dimensions.  Different resolutions affect only the
+bitmap fonts, and not the absolute dimensions recorded in the {\TFM}
+file; the 'x' in a 10pt font is always 10pt wide, or $10 \times
+\frac{254}{7227}$ cm wide, no matter what the actual {\em resolution}
+of the printing device. You are now a {\TeX} font wizard.
+
+\Section{fontdesc}{Configuring and Installing \protect{\fontdesc}}
+
+When you edit \verb|SeeTeX/Imakefile|, you will be asked to
+select a destination for the {\fontdesc} file. Pick one now,
+and copy \verb|SeeTeX/fontdesc-example| to
+that destination and edit the file.
+
+{\bf Note: \em The remainder of this section is taken from the
+\mctex\ library documentation on the fontdesc file.}
+
+The font description file provides a sequence of directories to
+search for fonts.
+A short fontdesc is shown in Table~\ref{table:fontdesc}
+(although you should probably start with the longer one
+in {\tt misc/fontdesc}).
+Normally, all fonts are stored in a directory hierarchy.
+The top-level directory contains the {\tt .tfm} files for all fonts
+and a subdirectory for each font
+containing all the magsteps for that font.
+The fontdesc file also determines which font storage formats are used.
+The library is capable of reading all three standard \TeX\ font formats
+(\pk, \gf, and \pxl).
+The \pk\ format is the best of the three.
+\gf\ files are the slowest to read,
+and take an intermediate amount of disk space.
+\pk\ files are the smallest,
+and intermediate in speed.
+\pxl\ files are the fastest to read,
+but consume about six times as much storage
+as \pk\ fonts.
+For a reasonable set of fonts,
+this makes the difference between 10 megabytes
+and 60 megabytes:
+the space difference is great, and
+the speed difference is only marginal.
+In addition,
+\pxl\ formats are now considered obsolete
+and support for them may be dropped in the future
+without warning.
+%
+\begin{table*}
+\small
+\setbox0=\vbox{\tt\catcode`\%=12 \catcode`\#=12 \obeyspaces
+\hbox{#       TYPE    SPEC    SLOP    PATH}
+\hbox{font    pk      *       2       %f.%mpk}
+\hbox{}
+\hbox{fontenv pk      *       2       TEXFONTS        %f.%mpk}
+\hbox{}
+\hbox{font    pk      *       2       /usr/local/lib/tex/fonts/%f/%f.%mpk}
+\hbox{font    gf      *       2       /usr/local/lib/tex/fonts/%f/%f.%mgf}
+\hbox{}
+\hbox{font    box     *       0       %f.tfm}
+\hbox{font    box     *       0       /usr/local/lib/tex/fonts/%f.tfm}
+}
+%\tracingonline1
+%\showboxbreadth=999 \showboxdepth=1
+%\showbox0
+\centerline{\box0}
+\caption{A Sample {\tt fontdesc}}
+\label{table:fontdesc}
+\end{table*}
+%
+
+In addition to the three standard font formats,
+the library supports several `special' font formats.
+They all work by reading a \tfm\ (\TeX\ font metrics) file.
+The {\tt tfm} font format
+(also known as {\tt invis})
+carries only width information.
+It is intended to be used for printer-resident fonts,
+such as those that can be used by the \ps\ driver.
+Since it has no rasters,
+it prints out as blank space,
+and so it can also be used
+in its {\tt invis} guise
+in place of S{\small LI}\TeX\ `invisible' fonts,
+to save disk space.
+Printouts that use the invisible font format
+may have placement errors
+(of up to {\em maxdrift\/} pixels;
+see \S\ref{sec:drift}, p.~\pageref{sec:drift}),
+so using a real font is preferable.
+The {\tt blank} font format also prints out as blank space,
+but carries with it a warning that the desired font magnification
+was not found.
+The {\tt box} format prints out as little rectangular boxes,
+rather like those in Chapter~11 of {\em The \TeX book},
+showing where \TeX\ thinks each character went.
+Like blank fonts, it carries a warning.
+The blank and box formats
+are intended as `last resorts';
+they exist
+only so that a \dvi\ file that uses fonts in unavailable magnifications
+can still be printed (with the offending glyphs missing).
+If neither box nor blank fonts appear in the font description file,
+such files cannot be printed at all.
+
+\tfm\ fonts will always match at any size.
+They must therefore appear late in the fontdesc file,
+to keep them from `taking over' other fonts
+whenever that is not desired.
+Of course, when it {\em is\/} desired,
+such as for built-in \ps\ fonts,
+it should appear before other fonts so that it will indeed `take over'.
+If nothing else,
+this will improve performance
+(since the conversion programs
+will not have to hunt for nonexistent font files).
+
+There are two kinds of font definition lines,
+beginning with the words {\tt font} and {\tt fontenv}.
+(Lines that start with any other word are ignored;
+all other words are reserved for future expansion.)
+The {\tt fontenv} form differs only slightly from that of {\tt font},
+and its use will be described in a moment.
+For a {\tt font},
+there should be four more words following the word {\tt font}.
+They are interpreted as follows:
+\begin{description}
+\item[type]
+This is one of the seven font types
+({\tt blank}, {\tt box}, {\tt gf},
+{\tt invis}, {\tt pk}, {\tt pxl}, {\tt tfm}).
+
+\item[spec]
+This is a {\em print engine specifier}.
+\TeX\ fonts come in several varieties.
+The major kinds are `write black' and `write white'.
+Each \dvi\ driver has a print engine specifier
+(some have several);
+only if the program's specifier matches that in the font description
+will that font be used.
+Thus, if you have both a Canon-based (write-black) printer
+and a Ricoh-based (write-white) printer,
+you can put the write-black and write-white fonts
+in different subdirectories
+and make sure that each driver
+gets only the kind of fonts it uses.
+An asterisk `{\tt *}' in the font description file
+will match any print engine specifier;
+this will suffice for many installations.
+
+\item[slop]
+The slop factor is used to make up for
+the sins of finite-precision arithmetic.
+Fonts come in various magnifications,
+normally denoted as {\em magsteps}.
+Each magstep corresponds to a power of 1.2.
+For instance, \verb|\magstep4| is $1.2^4$, or $2.0736$.
+These numbers are rounded to the nearest $.001$,
+so that this becomes $2.074$.
+Font files are named according to this magnification
+multiplied by the number of dots per inch for that font.\footnote
+{For \pxl\ files, the number is then multiplied by 5,
+for reason which are neither good nor worth explaining.}
+For instance, the \gf\ file for Computer Modern Roman, ten point, at
+\verb|\magstep4| on a 300 dpi printer,
+when both the \dvi\ file and user magnifications are 1000,
+is called \verb|cmr10.622gf|.
+The $622$ comes from the formula
+$300 \cdot 2.074 \cdot 1000/1000 \cdot 1000/1000 = 622.2$.
+In the course of all this arithmetic,
+the computer has a tendency to get the last digit wrong.
+The slop factor is used to correct for this.
+The font library will look for magnifications
+of up to $\pm\hbox{\rm slop}$ away from the number it computed.
+Thus, a slop of 1 will allow an off-by-one error to slip by.
+A slop of 0 requires an exact match.
+Since fake fonts---blank, box, and invis---have no inherent magnification,
+they should be given no slop;
+others should have as little slop as possible
+(the more there is, the slower things get).
+
+\item[path]
+The library builds the path based on a {\em format\/} specifier.
+Characters other than the percent sign `{\tt \%}' are copied literally.
+The percent sign introduces a {\em conversion},
+similar to those in the C library `printf' routines.
+A single percent sign can be obtained by doubling it, {\tt \%\%}.
+The other conversions are as follows (the examples in
+parentheses are for a font like \verb|cmr10 scaled \magstep4|
+on a 300 dpi printer):
+{\tt \%f}, which gets the name of the font ({\tt cmr10});
+{\tt \%m}, which gets the magnification ({\tt 622});
+and {\tt \%b}, which gets the {\em base name\/} of the font,
+like {\tt \%f}, but omitting any numeric suffix ({\tt cmr}).
+These three suffice to express most font organisations.
+More formats may be added, if necessary, by changing {\tt lib/font.c}
+(see the routine {\tt pave()}\footnote
+{So named because it takes an abstract path (with percent escapes)
+and makes it concrete, `paving it over' (as it were).
+Well, I have been told never to explain a pun\ldots.}).
+\end{description}
+
+A {\tt fontenv} is almost exactly the same as a {\tt font},
+except that the fifth word is the name of an environment variable
+rather than an actual path format,
+and that a sixth word (the {\em name part\/}) is required.
+If the named variable is present in the environment
+when the fontdesc file is being read,
+it is split up like any other \Unix\ path
+(i.e., at colons)
+and each sub-pathname has the name part appended.
+Each result is used as if it were the path portion
+of a regular {\tt font}.
+For instance, given the example fontdesc above,
+if {\tt \$TEXFONTS} were set to {\tt /here:/there},
+the line
+\begin{quote}
+\begin{verbatim}
+fontenv pk      *       2       TEXFONTS        %f.%mpk
+\end{verbatim}
+\end{quote}
+would make \mctex\ programs act as if the pair of lines
+\begin{quote}
+\begin{verbatim}
+font    pk      *       2       /here/%f.%mpk
+font    pk      *       2       /there/%f.%mpk
+\end{verbatim}
+\end{quote}
+were included instead.
+Typically,
+the name part of each {\tt fontenv} will simply be {\tt\%f.\%m\it type}.
+All \tfm-based fonts, however,
+must have {\tt\%f.tfm} appended instead,
+so that, e.g., a {\tt fontenv invis} for {\tt iamsss8} looks for 
+{\tt iamsss8.tfm} rather than {\tt iamsss8.0invis}.
+
+The startup time of \mctex\ drivers
+is heavily influenced by the amount of directory searching done.
+A long fontdesc file,
+or a fontdesc file that uses long environment paths,
+can slow these programs severely.
+A {\tt fontenv} whose variable is not present in the environment
+is ignored,
+at essentially zero cost in speed,
+so one way to reduce startup time
+is to use a different environment variable for each kind of font.
+For instance,
+by looking for \pk\ fonts in {\tt\$PKFONTS}
+and for \gf\ fonts in {\tt\$GFFONTS},
+users with only \gf\ fonts can avoid one of the searches entirely.
+In all cases,
+the total amount of searching
+can also be reduced by using a minimal `slop' value.
+
+Searching stops as soon as a usable font is found,
+so putting likely candidates first is also a good idea.
+User directories tend to be less likely places to find font files,
+so moving the main system directory to the first line will help.
+Unfortunately,
+this also makes it hard
+for users to override the standard font files---they
+will have to use different names for the fonts,
+or set {\tt\$TEXFONTDESC} to name a different fontdesc file.\footnote
+{The natural consequence of the latter is that,
+some years later,
+the fonts will be moved to some other directory,
+and the system fontdesc updated,
+and then several irate users will complain that the software is broken,
+having forgotten that they copied and altered
+the---now out of date---fontdesc file.
+The administrator will demonstrate that the software works;
+but the users will insist it does not.
+After several hours of probing about,
+someone will finally recall this footnote,
+and the mystery will at last be explained.
+In another few years, the cycle will then repeat.}
+A reasonable compromise can be had
+by using a {\tt fontenv} line
+to refer to an unlikely environment variable name.
+Those users who {\it want\/} to override the standard font files
+can then set this variable,
+and everyone else will enjoy faster font lookups.
+
+\Section{all but xtex}{Configuring \&
+	Installing Basic {\seetex} Programs Using {\imake}}
+
+To install the basic programs and libraries, you need to edit
+\verb|SeeTeX/Imakefile| and install the font description
+file, {\fontdesc}. \S\ref{section:fontdesc} describes the latter.
+
+Edit the file \verb|SeeTeX/Imake.Config|. This file contains
+configuration parameters you need to tweak.
+Look for the following lines:
+
+\begin{verbatim}
+FontDesc=/usr/local/lib/tex82/fontdesc
+IprBin=/usr/local/bin
+\end{verbatim}
+
+The \verb|FontDesc| variable names the location of a file, called
+{\fontdesc}, that describes the location of {\TeX} fonts
+on your machine. This file is usually in your
+standard {\TeX} library location; edit \verb|FontDesc| to point to your
+local library. If you are only going to use {\xtex} (and not {\mftobdf})
+you do not need to worry about \verb|FontDesc|.
+
+The \verb|IprBin| program indicates where the \verb|ipr| program lives;
+this is an interface to Imagen printers. If you will not be using {\iptex},
+ignore this line; otherwise, change \verb|IprBin| to point to the \verb|ipr|
+binary.
+
+Look in \verb|SeeTeX/Imakefile| for the line: 
+\begin{verbatim}
+SUBDIRS = libtex Xtex Mftobdf Dviselect Texx Iptex Fonts Texsun  
+\end{verbatim}
+Remove the names of any programs from the \verb|SUBDIRS| line that you
+do not wish to build. You must include \verb|libtex|, because it is
+used by all programs. {\texsun} still depends on SunView, and is not
+(yet) compatible with the more recent OpenLook X-windows interface.
+
+Once you have changed \verb|Imakefile|, execute the following commands:
+
+\begin{verbatim}
+[SeeTeX/] xmkmf
+[SeeTeX/] make Makefile
+[SeeTeX/] make Makefiles
+\end{verbatim}
+
+Throughout this document,
+the command prompt, e.g., \verb|[SeeTeX/]|,
+indicates the directory within which the
+command should be executed.  The variable \verb|TOP| should point to
+your {\X} library directory; this is usually installed in
+\verb|/usr/local/{\X}|, but may be installed in different places. If
+get error messages from \verb|imake|, ask your local {\X} guru where the
+configuration directory lives.
+
+If you're not installing {\xtex}, you should be able to run
+\begin{verbatim}
+[SeeTeX/] make
+\end{verbatim}
+at this point, or alternatively,
+\begin{verbatim}
+[SeeTeX/] make install
+[SeeTeX/] make install.man
+\end{verbatim}
+if you're confident that everything is correctly configured.
+This will build the library ({\libtex}) and each selected program.
+
+\Section{x fonts}{A Little Explanation of {\X} Fonts}
+
+{\xtex} opens another can of worms, because it uses
+{\X} fonts that are created from {\TeX} fonts via {\mftobdf}.
+First, we must digress to talk about {\X} fonts.
+{\X} is a {\em network window system}; {\em clients} send messages to
+{\em servers} across a network, causing the server to draw things on
+the display.
+{\xtex} is a {\em client}.
+The {\em server} runs on your workstation, PC or terminal.
+
+\begin{figure}
+\centerline{\psfig{figure=Xfonts.ps}}
+\caption{Schematic Usage of Fonts in {\X} windows}  
+\label{figure:schematic}
+\end{figure}
+
+
+{\xtex} displays {\TeX} output by telling the server to display
+specific fonts within a window. Those fonts correspond to {\TeX}
+fonts, but they, like all {\X} fonts, must live on the server.
+Figure~\ref{figure:schematic} shows a schematic representation
+of the information needed and provided by each program.
+{\xtex} uses information from the {\TFM} file as well as the {\X} font
+to adjust the placement of individual letters on the display to
+match the proper {\TeX} output within a single pixel of your display.
+If your server does not have the fonts that {\xtex} asks for, it will
+use a {\em default font} in their stead. This will look messy, but
+you'll still be able to preview your document.
+{\mftobdf} converts existing {\em bitmap} fonts to {\BDF} files,
+which can then be installed on your {\X} window system ``font system''.
+For workstations, this is usually your normal filesystem or a shared
+filesystem.
+
+\SubSection{installing x fonts}{Installing {\X} Fonts}
+
+Typically, fonts are pre-installed in one of several directories
+that are listed in the server {\em font path}.
+Each directory in the font path normally contains a file,
+usually called {\tt fonts.dir},%
+%%
+\footnote{All of this ``usually'' and ``normal'' stuff is there for a reason.
+For example, Ultrix UWS2.0 on a VAXstation I previously used didn't use a
+{\tt fonts.dir} file, and scanned all the files in each directory every time
+it started X. Very slow, to be sure}%
+%%
+that maps between {\em font names} and {\em file names}.
+For example, the font named {\tt cmr10.85} might live
+in the any of the files {\tt cmr10.85.bdf}, {\tt cmr10.85.snf}
+or {\tt cmr10.85.snf.Z}. The {\tt fonts.dir} file tells the
+{\X} server where to find the font with the given name.
+
+{\X} fonts are distributed in {\BDF} files, or {\em Bitmap Distribution
+Format} files; however, individual servers convert these portable
+{\BDF} files to {\em server normal format},
+or {\SNF} files.
+Most servers can read:
+\begin{enumerate}
+\item raw {\BDF} files (e.g., {\tt cmr10.85.bdf})
+\item compressed {\BDF} files (e.g., {\tt cmr10.85.bdf.Z})
+\item raw {\SNF} files (e.g., {\tt cmr10.85.snf})
+\item compressed {\SNF} files (e.g., {\tt cmr10.85.snf.Z})
+\end{enumerate}
+The {\SNF} files are {\em architecture specific}; in other words, you
+may not be able to use the same set of {\SNF} files on all of your
+systems. I've found that {\SNF} files can be shared between
+Sun-3 and Sun-4, but not e.g., the Sun-i386.
+
+Certain {\X} servers, e.g., DEC {\X} servers,
+use the {\PCF} format rather than {\SNF}; these
+servers can read files like
+{\tt cmr10.85.pcf} or
+{\tt cmr10.85.pcf.Z}.
+Unlike {\SNF} files, {\PCF} files are {\em architecture independent};
+a single set of {\PCF} files suffice for all servers that can read
+the {\PCF} format. Sadly, this appears to be limited to the DEC {\X}
+servers.%
+%%
+\footnote{I had made a brief stab at having the X server load {\PK} file
+directly. It's mostly complete,
+and if you're interesting in finishing that work, send me mail.}%
+%%
+
+Let's assume you've been given a {\BDF} file describing
+a {\TeX} font, and that  file is called {\tt cmr10.85.bdf}.
+To install this new font for {\X}, follow these steps:
+
+\begin{enumerate}
+  
+\item First, convert the {\BDF} file to either a {\SNF} file
+	(stock MIT {\X} windows) or a {\PCF} file (DEC).
+%
+\begin{description}
+\item[{\SNF} file]: use the {\tt bdftosnf} program that should come with
+	your {\X} windows system. For example, if you have the file
+	{\tt cmr10.85.bdf}
+	execute
+\begin{verbatim}
+    bdftosnf cmr10.85.bdf > cmr10.85.snf
+\end{verbatim}
+
+\item[{\PCF} file]: use the {\tt dxfc} program that should come with
+	your {\X} windows system. For example, if you have the file
+	{\tt cmr10.85.bdf}
+	execute
+\begin{verbatim}
+    dxfc cmr10.85.bdf > cmr10.85.pcf
+\end{verbatim}
+
+\end{description}
+
+\item Second, decide if you want to compress the {\SNF}/{\PCF} file.
+For fast workstations, like SPARC or DEC/RISC systems, you should probably
+compress the output file using {\tt compress}; you save a lot of disk space
+and won't notice the time spent uncompressing the file.
+
+\item	Now, pick a directory in which you want to install the font
+	and copy the font to that directory.
+	You can either use a directory already on the {\X} font path,
+	or you can make a new directory and add that your font path.
+
+	If you make a new directory, you must add it to your font path using
+	the {\tt xset} program, e.g. if you added the directory
+	/usr/lib/X11/fonts/tex, you should say:
+\begin{verbatim}
+[unix] xset +fp /usr/lib/X11/fonts/tex
+\end{verbatim}
+	{\em every time you start your {\X} server}. You can optionally
+	change your {\X} startup scripts to always include this font path.
+
+	\begin{quotation}\noindent
+	 {\tt N.B.} The stock DEC {\X} does not include include {\tt xset},
+	but you can put the {\PCF} files in either
+\verb|/usr/lib/X11/fonts/local/75dpi| if you use a 19 inch monitor
+or 
+\verb|/usr/lib/X11/fonts/local/100dpi| if you use a smaller monitor.
+These directories are in your default font path.
+	\end{quotation}
+
+\item	You must rebuild the {\tt fonts.dir} file in the directory
+	where you placed that font. Go to the directory and execute
+	either {\tt mkfontdir} (stock MIT {\X} windows) or
+	{\tt dxmkfontdir} (DEC {\X} windows).
+
+	This will take a while, because each file in the directory
+	is examined to see if it's a font, and the font name is
+	added to the {\tt fonts.dir} file.
+
+\item	Now, tell your server that the font directories have changed,
+	and that it should rescan the {\tt fonts.dir} files. Do this
+	using \verb|xset fp rehash|.
+
+\item	Lastly, check that the font was properly installed. The
+	{\tt xlsfonts} program lists all the fonts your server knows
+	about. So, for our sample font, called {\tt cmr10.85},
+	execute \verb/xlsfonts | grep cmr10.85/ and see if it's
+	listed. You can also execute \verb|xfd -fn cmr10.85| to
+	see the font.
+\end{enumerate}
+
+If you have a bevy of {\BDF} files to convert, you may want to use the
+shell scripts {\tt BDFZtoSNFZ} or {\tt BDFZtoPCFZ} to quickly convert
+compressed {\BDF} files to either compressed {\SNF} or {\PCF} files.
+These shell scripts are distributed with {\xtex} in the
+\verb|SeeTeX/Fonts| directory.
+
+
+Currently, host \verb|foobar.colorado.edu| provides a large set of
+{\BDF} files for 85dpi fonts, rendered at various magnifications.
+You can {\tt FTP} those files or generate your own {\BDF} files using
+{\mftobdf}; see \S\ref{section:mftobdf}.
+
+\Section{xtex}{Installing {\xtex}}
+
+Given all of this, the installation of {\xtex} is fairly simple.
+
+The first thing you must do is decide what sizes of fonts you're going
+to be using. As delivered, {\xtex} defaults to 85dpi fonts. The two
+options are either screen resolution
+fonts (e.g., the 85dpi fonts) generated by {\MetaFont}
+specificly for {\xtex}, or 100dpi fonts ``shrunken'' from existing
+printer fonts, usually 300dpi or 400dpi.
+
+The advantage of the screen resolution fonts is that they're easier
+to read. The disadvantage is that you may need to use {\MetaFont} to
+build the fonts at those sizes.
+
+The advantage of shrunken printer fonts is that it's easy to build
+them, because you probably already have them. The disadvantage is that
+they look kind of crappy and are harder to read.
+
+\begin{enumerate}
+\item
+	Edit file \verb|SeeTeX/Xtex/Xtex.ad|, the application defaults file,
+	and check the line that looks like:
+\begin{verbatim}
+*.tfmPath: .:/usr/local/lib/tex82/fonts:/usr/local/lib/tex/fonts:
+/usr/lib/tex82/fonts:/usr/lib/tex/fonts:/usr/local/lib/tex/tfm:
+/usr/local/Tex/lib/tex/tfm
+\end{verbatim}
+	This describes the path that {\xtex} will use to locate {\TFM} files.
+	If your default {\TFM} location is not in that path, add it.
+	An alternative is to set the {\tt TEXFONTS} environment variable
+	to a list similar to this. This environment variable is also used by
+	{\TeX}.
+
+\item	If you want to use something other than the default 85dpi fonts,
+	edit \verb|SeeTeX/Xtex/Xtex.ad| and comment in the following lines,
+	and remove the lines that follow them.
+\begin{verbatim}
+#	*.mag:333
+#	*.smallMag:333
+#	*.largeMag:500
+#	*.dpiHoriz:300
+#	*.dpiVert:300
+\end{verbatim}
+
+\item	You may also want to look through the rest of
+	\verb|SeeTeX/Xtex/Xtex.ad| and edit things to your liking.
+	Users can override the defaults using their own resource files.
+
+\item	Edit \verb|SeeTeX/Imake.Config|.
+\begin{enumerate}
+
+\item If your system provides Adobe Display Postscript,
+	include the line 
+\begin{verbatim}
+	#define DISPLAY_POSTSCRIPT
+\end{verbatim}
+	otherwise, include the line
+\begin{verbatim}
+	#undef DISPLAY_POSTSCRIPT
+\end{verbatim}
+	If you have Display Postscript, but are not using the DEC
+	version thereof, you may need to fiddle with the Imakefile.
+
+\item	{\xtex} uses several {\em popup windows} to ask you things;
+	by default, \goodbreak
+	these are {\tt overrideShellWidetClass} windows. \goodbreak
+	Some people prefer {\tt transientShellWidgetClass} windows,
+	because they can be moved
+	around by the user. Select whichever one you prefer.
+\end{enumerate}
+\end{enumerate}
+
+Now, return to the top level of the directory tree and execute:
+
+\begin{verbatim}
+[SeeTeX/] make Makefiles
+[SeeTeX/] make install
+\end{verbatim}
+
+Note: you cannot ``test drive'' {\xtex}. It depends very heavily on the
+application defaults file, {\tt Xtex.ad} being installed in the proper place,
+typically {\tt /usr/lib/X11/app-defaults/Xtex}. If this file is not installed,
+or if an older version is installed, you will get diagnostic messages
+and xtex will refuse to run.
+
+\Section{mftobdf}{Installing and Using {\mftobdf}}
+
+Installing {\mftobdf} is relatively stock, and it probably built just
+fine if you followed the steps in \S\ref{section:all but xtex}.
+The hard part is using it to build {\BDF} files.
+First, read \S\ref{section:tex fonts} and \S\ref{section:x fonts}
+and \S\ref{section:installing x fonts}.
+Second, determine if you're going to use screen-resolution fonts
+or shrunken fonts (see \S\ref{section:xtex}).
+
+\SubSection{screen fonts}{Using Screen Resolution Fonts}
+
+There are two ways to get screen resolution fonts,
+the easy way, the really hard way and the hard way.
+Let's assume that you're going to generate fonts at XYZdpi, where
+XYZ might be 118, 85 or whatever.
+
+\SubSubSection{easy way}{The Easy Way}
+
+Decide that you want to use 85dpi fonts, and FTP to 
+\verb|foobar.colorado.edu|. Hunt around until you find a directory
+\verb|Bdf-85dpi|. Go there, and grab all the fonts. Install them
+(see \S\ref{section:installing x fonts}), and use them for a few
+weeks. Now, go to your font directory, and do
+\begin{verbatim}
+[unix] ls -lu | head -100  > KEEP-THESE  
+\end{verbatim}
+and then remove all the fonts not listed in the \verb|KEEP_THESE| file.
+Then, rebuild the \verb|fonts.dirs| file.
+This gives you the top 100 fonts commonly used at your site.
+If you are missing some fonts, just FTP to foobar again, or read the
+next item.
+
+\SubSubSection{hard way}{The Hard Way}
+
+Lets assume that you have a slew of {\GF} or {\PK} fonts.
+Perhaps you picked up 118dpi fonts from a {\TeX} library somewhere.
+You need to convert those fonts to {\BDF} files.
+The easiest way to do this is to go to the directory holding those fonts
+and say:
+\begin{verbatim}
+[unix] mftobdf -dpi XYZ *gf *pk  
+\end{verbatim}
+and sit back. If you specify hundreds of fonts, {\mftobdf} may barf,
+because there's a memory leak that I can't find and don't care about.
+You can also specify, e.g,
+\begin{verbatim}
+[unix] mftobdf -dpi XYZ -mag 1098 cmr10
+\end{verbatim}
+to convert a single font. At 85dpi, this would be equivilent to saying
+\begin{verbatim}
+[unix] mftobdf -dpi 85 cmr10.93pk
+\end{verbatim}
+
+Note that you must {\em always} specify the dots per inch you're
+using.  After you've generated the {\BDF} files, you can discard the
+{\PK} or {\GF} files, if you like. {\xtex} does not use those directly.
+
+\SubSubSection{really hard way}{The Really Hard Way}
+
+What if you can't find a set of fonts
+at your desired resolution on the network?
+You need to build the font fonts using {\MetaFont},
+and then convert them to {\BDF} format.
+
+\begin{enumerate}
+\item Find a {\MetaFont} wizard. All you need to know is there your
+	configuration files are, and if they can show you how to build
+	a font, all the better.
+
+\item Make certain that you have a \verb|modedef| that looks something like:
+\begin{verbatim}
+mode_def sun =                  % bitgraph and sun screens (true size)
+ proofing:=0;                   % no, we're not making proofs
+ fontmaking:=1;                 % yes, we are making a font
+ tracingtitles:=0;              % no, don't show titles in the log
+ pixels_per_inch:=85;          % try it to see if it will do
+ blacker:=.35;                  % make pens a bit blacker (Karl Berry's value)
+ fillin:=.1;                    % and compensate for diagonal fillin
+ o_correction:=.3;              % but don't overshoot much
+ enddef;
+\end{verbatim}
+%
+This is the \verb|modedef| I used to generate my 85dpi fonts.
+Change the \verb|pixels_per_inch| parameter to XYZ. You may want to fiddle
+with the other parameters as well. It's all shots in the dark.
+
+\item Build a version of {\MetaFont} that understands this modedef, 
+	i.e. use {\tt inimf} to build a new {\tt plain.base} file.
+
+\item Build a sample font using, e.g.
+
+\begin{verbatim}
+[unix] mf '\mode:=sun; mag:= 1098/1000; \batchmode; \input cmr10'
+\end{verbatim}
+%
+This should give you a file, \verb|cmr10.ABCgf|, where the suffix
+should be $1098 * \frac{XYZ}{1000}$. If it's not, it's probably because
+the \verb|modedef| isn't being recognized; check that you're using the
+right \verb|plain.base| file. 
+
+\item
+Obviously, the hard part is generating all the needed {\GF} files.
+The directory \verb|SeeTeX/Fonts| contains some utilities
+that makes all this easier. See the file \verb|SeeTeX/Fonts/README|.
+
+One thing to remember is that you probably want fonts at a {\em normal}
+size and a {\em large} size. E.g., if you're looking at your document
+at 85dpi and normal magnification of 1000, you might want to ``blow things up''
+to e.g., 1440 magnification (the default in {\xtex})
+to see details a little better. Thus, not only do you
+want to generate e.g., {\tt cmr10} at 1000, you also want to generate it
+at 1440.
+Happily, the numbers that {\TeX} and {\LaTeX} use (1000, 1220, 1440, etc)
+scale by $1.2$, and you typically don't need to generate a another complete
+set at the larger magnification, because you'll already have most of them.
+\end{enumerate}
+
+Now, following the directions in \S\ref{section:hard way} to convert
+these to {\BDF} files.
+
+\SubSection{shrunken fonts}{Using Shrunken Fonts}
+
+Converting your exsiting fonts is relatively easy. Go to the directory
+containing your {\PK} or {\GF} fonts.
+Font shrinking, or scaling, is specified similar to
+magnifications; however, the only valid scalings are $1000/N$ where
+$N$ is an integer.  Thus, $500$ and $333$ are most common. For 300dpi
+fonts, these would give you roughly 150dpi and 100dpi versions of your
+printer fonts. In {\xtex}, $500$ is normally used for the ``large''
+magnification and $333$ is used for small magnification.
+
+So, you generate the fonts at scaling XYZ from fonts that were
+originally ABCdpi, say:
+%%
+\begin{verbatim}
+[unix] mftobdf -dpi ABC -mag 1000 -scaled XYZ *pk *gf  
+\end{verbatim}
+%%
+
+The {\tt -scaled} keyword is the important thing here. After you've
+gotten a passle of {\BDF} files from all of this, convert them to your
+local server format and install them according to the directions in
+\S\ref{section:installing x fonts}.
+
+\Section{raw makefiles}{If you do not use {\imake}}
+
+If you don't use {\imake}, the only programs you can easily install
+are those that have a file titled {\tt Makefile.raw}.
+Edit \verb|SeeTeX/Makefile.raw|; there are several declerations you
+shoudl change to reflect your local environment. The only unusual one
+is {\tt FONTDESC}; see \S\ref{section:fontdesc} if you don't understand
+this entry.
+
+After than, simply say {\tt make} and you should build {\texsun} and
+{\dviselect}. These programs do not depend on other files and can be
+installed anywhere you like.
+
+\end{document}
+

@@ -1,0 +1,95 @@
+%\input mask
+\voffset=-1.55cm \hoffset=6cm \hsize=11cm \vsize=34.5cm
+\newdimen\ypos \newif\ifnoend \newcount\lpos \newbox\labelbox
+\newdimen\lhight \newdimen\lwidth \newdimen\ssize
+\lhight=3.2cm \lwidth=\hsize \ssize=3.45cm
+\font\bk=mcbk10
+\font\bkl=mcbk11
+\font\bkll=mcbk12
+\font\bklll=mcbk14
+\font\bkllll=mcbk16
+%\font\bbook=mcbk14
+%\font\logo=mflogo18
+\font\tfont=cmbx10 scaled\magstep2
+\font\jtfont=goth10 scaled\magstep2
+\font\l=cmr10 scaled\magstep2
+\font\ll=cmr10 scaled\magstep3
+\font\lll=cmr10 scaled\magstep4
+\font\llll=cmr10 scaled\magstep5
+\font\b=cmbx10
+\font\L=cmbx10 scaled\magstep2
+\font\LL=cmbx10 scaled\magstep3
+\font\LLL=cmbx10 scaled\magstep4
+\font\LLLL=cmbx10 scaled\magstep5
+\font\i=cmmi10
+\font\il=cmmi10 scaled\magstep2
+\font\ill=cmmi10 scaled\magstep3
+\font\illl=cmmi10 scaled\magstep4
+\font\illll=cmmi10 scaled\magstep5
+\font\s=cmr8
+\font\ss=cmr7
+\font\is=cmmi8
+\font\iss=cmmi7
+\font\S=cmbx8
+\font\SS=cmbx7
+\font\dh=cmdunh10
+\font\dhl=cmdunh10 scaled\magstep2
+\font\dhll=cmdunh10 scaled\magstep3
+\font\dfont=cmsl8
+\font\sc=cmcsc10
+\def\t{\hbox to 1cm{\hfil}}
+\endlinechar=-1
+\nopagenumbers
+\def\endsy{END}
+\def\nodate{\global\let\today\relax}
+\def\putlab#1#2{
+%	\pattstr#1
+}
+\def\LaTeX{{\rm L\kern-.36em\raise.3ex\hbox{\sc a}\kern-.15em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\def\today{\ifcase\month\or January\or February\or March\or April\or May\or June\or July\or August\or September\or October\or November\or December\fi\ \number\day, \number\year}
+\lpos=0
+\immediate\write16{}
+\setbox\labelbox=\vbox to \ssize{\vfill}
+\def\ob{\obeyspaces}\def\c#1{\hfil{#1}\hfil}
+\loop
+	\let\la=\empty \let\lb=\empty \let\lc=\empty
+	\let\ld=\empty \let\le=\empty
+	\message{Title\number\lpos: }
+	\read-1 to \title
+	\ifx\title\endsy \lpos=10
+	\else{
+		\ifx\title\empty
+		\else
+		\message{Comment1: }\read-1 to \la
+		\ifx\la\empty
+			\else
+			\message{Comment2: }\read-1 to \lb
+			\ifx\lb\empty
+				\else
+				\message{Comment3: }\read-1 to \lc
+				\ifx\lc\empty
+					\else
+					\message{Comment4: }\read-1 to \ld
+					\ifx\ld\empty
+					    \else
+					    \message{Comment5: }\read-1 to \le
+		\fi \fi \fi \fi
+		\setbox\labelbox=\vbox to \ssize{
+			\hbox to \lwidth{\ob\hfil\jtfont\tfont\title\hfil\dfont\today}
+			\ifx\la\empty
+				\else\hbox to\lwidth{\ob\hskip1.5cm\la\hfil}\fi
+			\ifx\lb\empty
+				\else\hbox to\lwidth{\ob\hskip1.5cm\lb\hfil}\fi
+			\ifx\lc\empty
+				\else\hbox to\lwidth{\ob\hskip1.5cm\lc\hfil}\fi
+			\ifx\ld\empty
+				\else\hbox to\lwidth{\ob\hskip1.5cm\ld\hfil}\fi
+			\ifx\le\empty
+				\else\hbox to\lwidth{\ob\hskip1.5cm\le\hfil}\fi
+			\vfil}
+		\fi\copy\labelbox
+	}\fi\advance\lpos by 1
+	\ifnum\lpos<7
+\repeat 
+\bye

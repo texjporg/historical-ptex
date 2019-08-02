@@ -1,0 +1,125 @@
+.TH TEXX2 1
+.SH NAME
+texx2 \- view DVI files on your X-11 display
+.SH SYNOPSIS
+.B texx2
+.SH DESCRIPTION
+.I Texx2
+allows you to preview a DVI file produced by
+.I TeX82, LaTeX,
+etc., under the X-11 windowing system.
+.SH OPTIONS
+.TP
+.B \-mag
+Set the default mag for windows. Default is 500.
+Can be set by ``mag'' in resource database.
+.TP
+.B \-smallMag
+Set the default mag for the ``small'' button. Default is 333.
+Can be set by ``smallMag'' in resource database.
+.TP
+.B \-largeMag
+Set the default mag for the ``large'' button. Default is 500.
+Can be set by ``largeMag'' in resource database.
+.TP
+.B \-print
+Set the default printing program for files.
+Default is ``lpr -d''
+Can be set by ``print'' in resource database.
+.TP
+.B \-autoSize
+Automatically resize the window.
+Default is ``True''
+Can be set by ``autoSize'' in resource database.
+.TP
+.B \-dpi
+Set the default resolution of the fonts, which are further
+scaled by
+.B -mag
+flag.
+Default is ``300''
+Can be set by ``dpi'' in resource database.
+.PP
+.I Texx2
+can display your document at a variety of sizes, but you must
+have X-11 fonts corresponding to the fonts in your .dvi file.
+For example, if your file calls for font ``cmr10'' scaled 1000
+at 300dpi, and you've set the magnification level to 500,
+.I texx2
+will look for the font ``cmr10.150''.
+The suffix is compute by
+.I
+(dpi * scaled * mag ) / ( 1000 * 1000 ).
+You can generate these fonts using ``mftobdf''.
+For example, you would execute ``mftobdf -scaled 1000 -mag 500 cmr10''.
+This looks for the font ``cmr10.300'' (the default resolution is 300);
+this would then be shrunk by 50% to produce ``cmr10.150.bdf'',
+the output file.
+.I mftobdf
+can only magnify things by 500, 333, 250, 200, ..., 1000/integer.
+You could also generate this font by using
+.I Metafont
+to build a font ``cmr10.150'' and then saying ``mftobdf -scaled 500 cmr10''
+.PP
+There are many buttons.
+``Quit'' quits.
+``Open'' opens the file in the file name box.
+``Copy'' copies the file and then opens this copy;
+this lets you process a new version of the file while looking at the old one.
+``Cd'' changes the current directory.
+``Close'' closes the current file if there is one.
+.PP
+Once you open a file, you can select other functions.
+``Page'' puts up a new page display.
+``Print all'' uses the print program specified by
+.B -print
+to print your document.
+``Print Marked''
+prints only marked pages, ``Print Unmarked'' prints unmarked pages.
+.PP
+Within a page, you can move around (forewards and backwards),
+mark the current page for printing
+or duplicate the page (e.g., to view it at a larger size).
+You can also create tied pages;
+in these, pressing foreward or backward in the master window
+(the one in which you poked `tied') causes the tied page
+to go foreward or backward. Movement in the tied page
+doesn't affect the master.
+Tied pages can also have tied pages.
+.PP
+The ``large'' and ``small'' buttons allow you to select two
+common sizes for magnification. You can also use the mag
+button for other general sizes.
+.PP
+Options to the right of the text widget require extra input;
+that's what the text widget is for.
+You specify a page number in the text widget
+and then either hit ``Goto'' to go to that page number.
+You specify a general mag by entering a mag number (e.g., 333, 500 or 1000)
+and hit ``Mag'' to set the magnification.
+.PP
+If you change the mag,
+the page will resize itself if
+.B autoSize
+is set.
+.PP
+.SH HINTS
+Set your backing store in your resources file, e.g. 
+.B Texx2*backingStore: whenMapped
+and scolling will be MUCH faster.
+.SH BUGS
+Although
+.I texx2
+understands most
+.I tpic
+graphical commands, it is unable to display shading,
+because Dirk was too lazy to finish it.
+All other graphics commands are supported, however.
+.SH AUTHOR
+Dirk Grunwald, at the University of Illinois wrote
+.I TeXx2
+based using a DVI-library written by Chris Torek at UMD.
+Tim Morgan, at the University of Calif, Irvine,
+wrote the enhanced
+.I tpic
+support, and Dirk beat on it heavily.

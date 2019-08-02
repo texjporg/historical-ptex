@@ -1,0 +1,525 @@
+% NOTE 1, NOTE 2, ... REFER TO NOTES IN THE FILE AMSPPT.DOC
+
+\catcode`\@=11
+
+%  PARAMETERS DIFFERENT THAN IN PLAIN
+
+\normallineskiplimit=1pt
+\parindent 10pt
+\hsize 26pc
+\vsize 42pc
+
+
+% EXTRA FONTS NEEDED
+
+
+\font\eightrm=amr8
+\font\sixrm=amr6
+\font\eighti=ammi8 \skewchar\eighti='177
+\font\sixi=ammi6 \skewchar\sixi='177
+\font\eightsy=amsy8 \skewchar\eightsy='60
+\font\sixsy=amsy6 \skewchar\sixsy='60
+\font\eightbf=ambx8
+\font\sixbf=ambx6
+\font\eightsl=amsl8
+\font\eightit=amti8
+\font\tensmc=amcsc10
+
+% TWO DIFFERENT POINT SIZES
+
+\def\tenpoint{\def\pointsize@AmS{t}\normalbaselineskip=12pt            % NOTE 1
+ \abovedisplayskip 12pt plus 3pt minus 9pt
+ \belowdisplayskip 12pt plus 3pt minus 9pt
+ \abovedisplayshortskip 0pt plus 3pt
+ \belowdisplayshortskip 7pt plus 3pt minus 4pt
+ \def\rm{\fam0\tenrm}%
+ \def\it{\fam\itfam\tenit}%
+ \def\sl{\fam\slfam\tensl}%
+ \def\bf{\fam\bffam\tenbf}%
+ \def\smc{\tensmc}%
+ \def\mit{\fam 1}%
+ \def\cal{\fam 2}%
+ \textfont0=\tenrm   \scriptfont0=\sevenrm   \scriptscriptfont0=\fiverm
+ \textfont1=\teni    \scriptfont1=\seveni    \scriptscriptfont1=\fivei
+ \textfont2=\tensy   \scriptfont2=\sevensy   \scriptscriptfont2=\fivesy
+ \textfont3=\tenex   \scriptfont3=\tenex     \scriptscriptfont3=\tenex
+ \textfont\itfam=\tenit
+ \textfont\slfam=\tensl
+ \textfont\bffam=\tenbf \scriptfont\bffam=\sevenbf
+   \scriptscriptfont\bffam=\fivebf
+\normalbaselines\rm}
+
+\def\eightpoint{\def\pointsize@AmS{8}\normalbaselineskip=10pt
+ \abovedisplayskip 10pt plus 2.4pt minus 7.2pt
+ \belowdisplayskip 10pt plus 2.4pt minus 7.2pt
+ \abovedisplayshortskip 0pt plus 2.4pt
+ \belowdisplayshortskip 5.6pt plus 2.4pt minus 3.2pt
+ \def\rm{\fam0\eightrm}%
+ \def\it{\fam\itfam\eightit}%
+ \def\sl{\fam\slfam\eightsl}%
+ \def\bf{\fam\bffam\eightbf}%
+ \def\mit{\fam 1}%
+ \def\cal{\fam 2}%
+ \textfont0=\eightrm   \scriptfont0=\sixrm   \scriptscriptfont0=\fiverm
+ \textfont1=\eighti    \scriptfont1=\sixi    \scriptscriptfont1=\fivei
+ \textfont2=\eightsy   \scriptfont2=\sixsy   \scriptscriptfont2=\fivesy
+ \textfont3=\tenex   \scriptfont3=\tenex     \scriptscriptfont3=\tenex
+ \textfont\itfam=\eightit
+ \textfont\slfam=\eightsl
+ \textfont\bffam=\eightbf \scriptfont\bffam=\sixbf
+   \scriptscriptfont\bffam=\fivebf
+\normalbaselines\rm}
+
+%  GENERAL FOOTNOTES                                                   % NOTE 2
+
+\newcount\footmarkcount@AmS
+\footmarkcount@AmS=0
+\newcount\foottextcount@AmS
+\foottextcount@AmS=0
+
+\def\footnotemark{\unskip\futurelet\tok@AmS\footnotemark@AmS}
+\def\footnotemark@AmS{\ifx [\tok@AmS \def\next@AmS{\footnotemark@@AmS}\else
+   \def\next@AmS{\footnotemark@@@AmS}\fi\next@AmS}
+\def\footnotemark@@AmS[#1]{{#1}}
+\def\footnotemark@@@AmS{\global\advance\footmarkcount@AmS by 1
+ \xdef\thefootmarkcount@AmS{\the\footmarkcount@AmS}$^{\thefootmarkcount@AmS}$}
+
+\def\makefootnote@AmS#1#2{\insert\footins{\interlinepenalty100
+   \eightpoint
+  \splittopskip=6.8pt
+  \splitmaxdepth=2.8pt
+   \floatingpenalty=20000
+   \leftskip = 0pt  \rightskip = 0pt
+    \noindent {#1}\footstrut{\ignorespaces#2\unskip}\topsmash{\strut}}}
+
+\def\footnotetext{\futurelet\tok@AmS\footnotetext@}
+\def\footnotetext@{\ifx [\tok@AmS \def\next@AmS{\footnotetext@@AmS}\else
+  \def\next@AmS{\footnotetext@@@AmS}\fi\next@AmS}
+\def\footnotetext@@AmS[#1]#2{\makefootnote@AmS{#1}{#2}}
+\def\footnotetext@@@AmS#1{\global\advance\foottextcount@AmS by 1
+  \xdef\thefoottextcount@AmS{\the\foottextcount@AmS}%
+\makefootnote@AmS{$^{\thefoottextcount@AmS}$}{#1}}
+
+\def\footnote{\unskip\futurelet\tok@AmS\footnote@AmS}
+\def\footnote@AmS{\ifx [\tok@AmS \def\next@AmS{\footnote@@AmS}\else
+   \def\next@AmS{\footnote@@@AmS}\fi\next@AmS}
+\def\footnote@@AmS[#1]#2{{\edef\sf{\the\spacefactor}%
+  {#1}\makefootnote@AmS{#1}{#2}\spacefactor=\sf}}
+\def\footnote@@@AmS#1{\ifnum\footmarkcount@AmS=\foottextcount@AmS\else
+ \errmessage{AmS-TeX warning: last footnote marker was \the\footmarkcount@AmS,
+   last footnote was
+   \the\foottextcount@AmS}\footmarkcount@AmS=\foottextcount@AmS\fi
+   {\edef\sf{\the\spacefactor}\footnotemark@@@AmS\footnotetext@@@AmS{#1}%
+    \spacefactor=\sf}}
+
+\def\adjustfootnotemark#1{\advance\footmarkcount@AmS by #1}           % NOTE 3
+\def\adjustfootnote#1{\advance\foottextcount@AmS by #1}
+
+
+%  TOP MATTER
+
+\def\topmatter@AmS{F}                                                 % NOTE 4
+\def\topmatter{\def\topmatter@AmS{T}}
+
+\def\filhss@AmS{plus 1000pt}                                          % NOTE 5
+\def\overlong{\def\filhss@AmS{plus 1000pt minus1000pt}}
+
+\newbox\titlebox@AmS
+
+\setbox\titlebox@AmS=\vbox{}                                          % NOTE 6
+
+\def\title#1\endtitle{{\let\\=\cr                                     % NOTE 7
+  \global\setbox\titlebox@AmS=\vbox{\tabskip0pt\filhss@AmS
+  \halign to \hsize
+    {\tenpoint\bf\hfil\ignorespaces##\unskip\hfil\cr#1\cr}}}\def     % NOTE 7.1
+     \filhss@AmSs{plus 1000pt}}
+
+
+
+\def\isauthor@AmS{F}                                                % NOTE 8
+\newbox\authorbox@AmS
+
+\def\author#1\endauthor{\gdef\isauthor@AmS{T}{\let\\=\cr
+ \global\setbox\authorbox@AmS=\vbox{\tabskip0pt
+ \filhss@AmS\halign to \hsize
+   {\tenpoint\smc\hfil\ignorespaces##\unskip\hfil\cr#1\cr}}}\def
+      \filhss@AmS{plus 1000pt}}
+
+
+
+%  FOR UPPERCASING TITLE AND AUTHOR
+
+\def\uctext@AmS#1{\uppercase@AmS#1\gdef                           % NOTE 9
+       \uppercase@@AmS{}${\hskip-2\mathsurround}$}
+\def\uppercase@AmS#1$#2${\gdef\uppercase@@AmS{\uppercase@AmS}\uppercase
+    {#1}${#2}$\uppercase@@AmS}
+
+
+
+\newcount\Notes@AmS                                             % NOTE 10
+
+
+\def\sfootnote@AmS{\unskip\futurelet\tok@AmS\sfootnote@@AmS}
+\def\sfootnote@@AmS{\ifx [\tok@AmS \def\next@AmS{\sfootnote@@@AmS}\else
+    \def\next@AmS{\sfootnote@@@@AmS}\fi\next@AmS}
+\def\sfootnote@@@AmS[#1]#2{\global\toks@{#2}\advance\Notes@AmS by 1
+  \expandafter\xdef\csname Note\romannumeral\Notes@AmS @AmS\endcsname
+   {\the\toks@}}
+\def\sfootnote@@@@AmS#1{\global\toks@{#1}\global\advance\Notes@AmS by 1
+  \expandafter\xdef\csname Note\romannumeral\Notes@AmS @AmS\endcsname
+  {\the\toks@}}
+
+\def\Sfootnote@AmS{\unskip\futurelet\tok@AmS\Sfootnote@@AmS}
+\def\Sfootnote@@AmS{\ifx [\tok@AmS \def\next@AmS{\Sfootnote@@@AmS}\else
+    \def\next@AmS{\Sfootnote@@@@AmS}\fi\next@AmS}
+\def\Sfootnote@@@AmS[#1]#2{{#1}\advance\Notes@AmS by 1
+  {\edef\sf{\the\spacefactor}\makefootnote@AmS{#1}{\csname
+     Note\romannumeral\Notes@AmS @AmS\endcsname}\spacefactor=\sf}}
+\def\Sfootnote@@@@AmS#1{\ifnum\footmarkcount@AmS=\foottextcount@AmS\else
+ \errmessage{AmS-TeX warning: last footnote marker was \the\footmarkcount@AmS,
+  last footnote was
+   \the\foottextcount@AmS}\footmarkcount@AmS=\foottextcount@AmS\fi
+ {\edef\sf{\the\spacefactor}\footnotemark@@@AmS \global\advance\Notes@AmS by 1
+    \footnotetext@@@AmS{\csname
+      Note\romannumeral\Notes@AmS @AmS\endcsname}\spacefactor=\sf}}
+
+
+
+\def\TITLE#1\endTITLE                                           % NOTE 11
+{{\Notes@AmS=0 \let\\=\cr\let\footnote=\sfootnote@AmS
+   \setbox0=\vbox{\tabskip\centering
+  \halign to \hsize{\tenpoint\bf\ignorespaces##\unskip\cr#1\cr}}
+ \Notes@AmS=0   \let\footnote=\Sfootnote@AmS
+   \global\setbox\titlebox@AmS=\vbox{\tabskip0pt\filhss@AmS
+\halign to \hsize{\tenpoint\bf\hfil
+ \uctext@AmS{\ignorespaces##\unskip}\hfil\cr
+          #1\cr}}}\def\filhss@AmS{plus 1000pt}}
+
+
+
+\def\AUTHOR#1\endAUTHOR{\gdef\isauthor@AmS{T}{\Notes@AmS=0 \let\\=\cr
+   \let\footnote=\sfootnote@AmS
+ \setbox0 =\vbox{\tabskip\centering\halign to \hsize{\tenpoint\smc
+   \ignorespaces##\unskip\cr#1\cr}}\Notes@AmS=0
+   \let\footnote=\Sfootnote@AmS
+  \global\setbox\authorbox@AmS=\vbox{\tabskip0pt\filhss@AmS\halign
+  to \hsize{\tenpoint\smc\hfil\uppercase{\ignorespaces
+     ##\unskip}\hfil\cr#1\cr}}}\def\filhss@AmS{plus 1000pt}}
+
+
+
+% OTHER STUFF BEFORE \endtopmatter
+
+\newcount\language@AmS                                            % NOTE 12
+\language@AmS=0
+\def\german{\language@AmS=1}
+
+\def\abstractword@AmS{\ifcase \language@AmS ABSTRACT\or ZUSAMMENFASSUNG\fi}
+\def\logoword@AmS{\ifcase \language@AmS Typeset by \fi}
+\def\subjclassword@AmS{\ifcase \language@AmS
+     1980 Mathematics subject classifications \fi}
+\def\keywordsword@AmS{\ifcase \language@AmS  Keywords and phrases\fi}
+\def\Referenceword@AmS{\ifcase \language@AmS References\fi}
+
+
+\def\isaffil@AmS{F}
+\newbox\affilbox@AmS
+\def\affil{\gdef\isaffil@AmS{T}\bgroup\let\\=\cr
+   \global\setbox\affilbox@AmS
+     =\vbox\bgroup\tabskip0pt\filhss@AmS
+ \halign to \hsize\bgroup\tenpoint\hfil\ignorespaces##\unskip\hfil\cr}
+
+\def\endaffil{\cr\egroup\egroup\egroup\def\filhss@AmS{plus 1000pt}}
+
+\newcount\addresscount@AmS                                         % NOTE 13
+\addresscount@AmS=0
+
+\def\address#1{\global\advance\addresscount@AmS by 1
+  \expandafter\gdef\csname address\romannumeral\addresscount@AmS\endcsname
+   {\noindent\eightpoint\ignorespaces#1\par}}
+
+\def\isdate@AmS{F}                                                 % NOTE 14
+\def\date#1{\gdef\isdate@AmS{T}\gdef\date@AmS{\tenpoint\ignorespaces#1\unskip}}
+
+\def\isthanks@AmS{F}
+\def\thanks#1{\gdef\isthanks@AmS{T}\gdef\thanks@AmS{\eightpoint\ignorespaces
+       #1\unskip}}
+
+\def\keywords@AmS{}                                                % NOTE 15
+\def\keywords#1{\def\keywords@AmS{\noindent \eightpoint \it
+\keywordsword@AmS .\enspace \rm\ignorespaces#1\par}}
+
+\def\subjclass@AmS{}
+\def\subjclass#1{\def\subjclass@AmS{\noindent \eightpoint\it
+\subjclassword@AmS
+(Amer.\ Math.\ Soc.)\/\rm: \ignorespaces#1\par}}
+
+\def\isabstract@AmS{F}
+\long\def\abstract#1{\gdef\isabstract@AmS{T}\long\gdef\abstract@AmS
+   {\eightpoint \abstractword@AmS\period\ignorespaces #1\par}}        % NOTE 16
+
+
+% ALLOW FOR SPECIAL THINGS BEFORE PARTS OF THE TOPMATTER              % NOTE 17
+
+\def\pretitle{}
+\def\preauthor{}
+\def\preaffil{}
+\def\predate{}
+\def\preabstract{}
+\def\prepaper{}
+
+
+% \endtopmatter PUTS ALL THE PRELIMINARY STUFF ON THE FIRST PAGE IN PLACE
+
+\def\endtopmatter{\if F\topmatter@AmS \errmessage{AmS-TeX warning: You
+    forgot the \string\topmatter, but I forgive you.}\fi
+\hrule height 0pt \vskip -\topskip                                   % NOTE 18
+   \pretitle
+   \vskip 24pt plus 12pt minus 12pt
+   \unvbox\titlebox@AmS                                              % NOTE 19
+   \preauthor
+   \if T\isauthor@AmS \vskip 12pt plus 6pt minus 3pt
+       \unvbox\authorbox@AmS \else\fi
+    \preaffil
+   \if T\isaffil@AmS \vskip 10pt plus 5pt minus 2pt
+       \unvbox\affilbox@AmS\else\fi
+  \predate
+   \if T\isdate@AmS \vskip 6pt plus 2pt minus 1pt
+  \hbox to \hsize{\hfil\date@AmS\hfil}\else\fi
+    \preabstract
+\if T\isthanks@AmS
+  \makefootnote@AmS{}{\thanks@AmS}\else\fi
+   \if T\isabstract@AmS \vskip 15pt plus 12pt minus 12pt
+ {\leftskip=16pt\rightskip=16pt
+  \noindent \abstract@AmS}\else\fi
+   \prepaper
+     \vskip 18pt plus 12pt minus 6pt \tenpoint}
+
+
+% \enddocument PUTS ALL THE PRELIMINARY STUFF THAT APPEARS AT THE END IN PLACE
+
+\newcount\addresnum@AmS                                               % NOTE 20
+\def\enddocument{\penalty10000 \sfcode`\.3000\vskip 12pt minus 6pt  % NOTE 20.1
+\keywords@AmS                                                         % NOTE 21
+\subjclass@AmS
+\addresnum@AmS=0
+  \loop\ifnum\addresnum@AmS<\addresscount@AmS\advance\addresnum@AmS by 1
+  \csname address\romannumeral\addresnum@AmS\endcsname\repeat
+\vfill\supereject\end}
+
+
+
+% HEADINGS AND SUBHEADINGS
+
+\newbox\headingbox@AmS
+\outer\def\heading{\medbreak\bgroup\let\\=\cr
+\global\setbox\headingbox@AmS=\vbox\bgroup\tabskip0pt\filhss@AmS      % NOTE 22
+   \halign to \hsize\bgroup\tenpoint\smc\hfil\ignorespaces
+            ##\unskip\hfil\cr}
+
+\def\endheading{\cr\egroup\egroup\egroup\unvbox\headingbox@AmS
+    \penalty10000 \def\filhss@AmS{plus 1000pt}\medskip}
+
+\def\subheading#1{\smallbreak\noindent{\tenpoint\bf\ignorespaces
+   #1\unskip.\enspace}\ignorespaces}
+
+
+%  PROCLAIM AND DEMO, ETC.
+
+
+\outer\def\proclaim#1{\xdef\curfont@AmS{\the\font}\medbreak        % NOTE 23
+  \noindent\smc\ignorespaces#1\unskip.\enspace\sl\ignorespaces}
+
+\outer\def\proclaimnp#1{\xdef\curfont@AmS{\the\font}\medbreak      % NOTE 24
+  \noindent\smc\ignorespaces#1\enspace\sl\ignorespaces}
+
+\def\finishproclaim{\par\curfont@AmS\ifdim\lastskip<\medskipamount % NOTE 25
+ \removelastskip \penalty 55\medskip\fi}
+
+\let\endproclaim=\finishproclaim
+\let\finishproclaimnp=\finishproclaim
+\let\endproclaimnp=\finishproclaim
+
+\outer\def\demo#1{\par\ifdim\lastskip<\smallskipamount
+  \removelastskip\smallskip\fi\noindent{\smc\ignorespaces#1\unskip:}\enspace
+     \ignorespaces}
+
+\outer\def\demonp#1{\ifdim\lastskip<\smallskipamount
+  \removelastskip\smallskip\fi\noindent{\smc#1}\enspace\ignorespaces}
+
+\def\finishdemo{\par\smallskip}
+
+\let\enddemo=\finishdemo
+\let\finishdemonp=\finishdemo
+\let\enddemonp=\finishdemo
+
+\def\novspacechange{\penalty10000 \vskip-100pt                        % NOTE 26
+          \penalty10000 \vskip100pt}
+
+\def\qed{\hbox{\hskip 1pt \vrule width4pt height 6pt depth 1.5pt \hskip 1pt}}
+
+\newif\ifrunin@AmS                                                    % NOTE 27
+\runin@AmSfalse
+\def\runin{\runin@AmStrue}
+\def\conditions{\def\\##1:{\par\noindent                              % NOTE 28
+   \hbox to 1.5\parindent{\hss\rm\ignorespaces##1\unskip}%
+      \hskip .5\parindent \hangafter1\hangindent2\parindent\ignorespaces}%
+    \def\firstcon@AmS##1:{\ifrunin@AmS
+     {\rm\ignorespaces##1\unskip}\ \ignorespaces
+  \else\par\ifdim\lastskip<\smallskipamount\removelastskip\penalty55
+     \smallskip\fi
+     \\##1:\fi}\firstcon@AmS}
+\def\endconditions{\par\smallbreak\runin@AmSfalse}                    % NOTE 29
+
+% STUFF FOR BIBLIOGRAPHY
+
+\def\refto#1{\in@AmS,{#1}\if T\cresult@AmS\refto@AmS#1\end@AmS\else   % NOTE 30
+    [{\bf#1}]\fi}
+\def\refto@AmS#1,#2\end@AmS{[{\bf#1},#2]}
+
+\def\Refs{\bigbreak\hbox to \hsize{\hfil\tenpoint
+    \smc \Referenceword@AmS\hfil}\penalty 10000
+      \bigskip\eightpoint\sfcode`.=1000 }                             % NOTE 31
+
+\newbox\nobox@AmS        \newbox\keybox@AmS        \newbox\bybox@AmS  % NOTE 32
+\newbox\bysamebox@AmS    \newbox\paperbox@AmS      \newbox\paperinfobox@AmS
+\newbox\jourbox@AmS      \newbox\volbox@AmS        \newbox\issuebox@AmS
+\newbox\yrbox@AmS        \newbox\pagesbox@AmS      \newbox\bookbox@AmS
+\newbox\bookinfobox@AmS  \newbox\publbox@AmS       \newbox\publaddrbox@AmS
+\newbox\finalinfobox@AmS
+
+
+
+\def\refset@AmS#1{\expandafter\gdef\csname is\expandafter\eat@AmS     % NOTE 33
+  \string#1@AmS\endcsname{F}\expandafter
+  \setbox\csname \expandafter\eat@AmS\string#1box@AmS\endcsname=\null}
+
+\def\ref@AmS{\refset@AmS\no \refset@AmS\key \refset@AmS\by            % NOTE 34
+\gdef\isbysame@AmS{F}%                                              % NOTE 35.1
+ \refset@AmS\paper
+  \refset@AmS\paperinfo \refset@AmS\jour \refset@AmS\vol
+  \refset@AmS\issue \refset@AmS\yr
+  \gdef\istoappear@AmS{F}%                                          % NOTE 35.2
+  \refset@AmS\pages
+  \gdef\ispage@AmS{F}%                                              % NOTE 35.3
+  \refset@AmS\book
+  \gdef\isinbook@AmS{F}%                                            % NOTE 35.4
+  \refset@AmS\bookinfo \refset@AmS\publ
+  \refset@AmS\publaddr \refset@AmS\finalinfo \bgroup
+     \ignorespaces}                                                   % NOTE 36
+
+\def\ref{\noindent\hangindent 20pt \hangafter 1 \def\refi@AmS{T}%     % NOTE 37
+  \def\refl@AmS{F}\def\\{\egroup\endref@AmS\gdef\refi@AmS{F}\ref@AmS}\ref@AmS}
+
+\def\refdef@AmS#1#2{\def#1{\egroup\expandafter                        % NOTE 38
+  \gdef\csname is\expandafter\eat@AmS
+  \string#1@AmS\endcsname{T}\expandafter\setbox
+   \csname \expandafter\eat@AmS\string#1box@AmS\endcsname=\hbox\bgroup#2}}
+
+\refdef@AmS\no{} \refdef@AmS\key{} \refdef@AmS\by{}
+\def\bysame{\egroup\gdef\isbysame@AmS{T}\bgroup}                    % NOTE 39.1
+\refdef@AmS\paper\it
+\refdef@AmS\paperinfo{} \refdef@AmS\jour{} \refdef@AmS\vol\bf
+\refdef@AmS\issue{} \refdef@AmS\yr{}
+\def\toappear{\egroup\gdef\istoappear@AmS{T}\bgroup}                % NOTE 39.2
+\refdef@AmS\pages{}
+\def\page{\egroup\gdef\ispage@AmS{T}\setbox
+                 \pagesbox@AmS=\hbox\bgroup}                        % NOTE 39.3
+\refdef@AmS\book{}
+\def\inbook{\egroup\gdef\isinbook@AmS{T}\setbox
+                               \bookbox@AmS=\hbox\bgroup}           % NOTE 39.4
+\refdef@AmS\bookinfo{} \refdef@AmS\publ{}
+\refdef@AmS\publaddr{}
+\refdef@AmS\finalinfo{}
+
+
+\def\setpunct@AmS{\def\prepunct@AmS{, }}                              % NOTE 40
+\def\ppunbox@AmS#1{\prepunct@AmS\unhbox#1\unskip}                     % NOTE 41
+
+\def\endref@AmS{\def\prepunct@AmS{}%                                  % NOTE 42
+\if T\refi@AmS                                                      % NOTE 43.1
+  \if F\isno@AmS\hbox to 10pt{}\else                                % NOTE 43.2
+     \hbox to 20pt{\hss\unhbox\nobox@AmS\unskip. }\fi               % NOTE 43.3
+  \if T\iskey@AmS \unhbox\keybox@AmS\unskip\ \fi                    % NOTE 43.4
+  \if T\isby@AmS  \hbox{\unhcopy\bybox@AmS\unskip}\setpunct@AmS     % NOTE 43.5
+         \setbox\bysamebox@AmS=\hbox{\unhcopy\bybox@AmS\unskip}\fi  % NOTE 43.6
+  \if T\isbysame@AmS                                                % NOTE 43.7
+   \hbox to \wd\bysamebox@AmS{\leaders\hrule\hfill}\setpunct@AmS\fi
+ \fi                                                                % NOTE 43.8
+  \if T\ispaper@AmS\ppunbox@AmS\paperbox@AmS\setpunct@AmS\fi          % NOTE 44
+  \if T\ispaperinfo@AmS\ppunbox@AmS\paperinfobox@AmS\setpunct@AmS\fi  % NOTE 45
+  \if T\isjour@AmS\ppunbox@AmS\jourbox@AmS\setpunct@AmS               % NOTE 46
+     \if T\isvol@AmS \ \unhbox\volbox@AmS\unskip\setpunct@AmS\fi    % NOTE 46.1
+     \if T\isissue@AmS \ \unhbox\issuebox@AmS\unskip\setpunct@AmS\fi% NOTE 46.2
+     \if T\isyr@AmS \ (\unhbox\yrbox@AmS\unskip)\setpunct@AmS\fi    % NOTE 46.3
+     \if T\istoappear@AmS \ (to appear)\setpunct@AmS\fi             % NOTE 46.4
+     \if T\ispages@AmS \ppunbox@AmS\pagesbox@AmS\setpunct@AmS\fi    % NOTE 46.5
+     \if T\ispage@AmS                                               % NOTE 46.6
+           \prepunct@AmS p.\ \unhbox\pagesbox@AmS\unskip\setpunct@AmS\fi
+     \fi                                                            % NOTE 46.7
+  \if T\isbook@AmS \prepunct@AmS                                      % NOTE 47
+                     ``\unhbox\bookbox@AmS\unskip''\setpunct@AmS\fi
+  \if T\isinbook@AmS \prepunct@AmS                                    % NOTE 48
+    \unskip\ in ``\unhbox\bookbox@AmS\unskip''\setpunct@AmS
+       \gdef\isbook@AmS{T}\fi
+  \if T\isbookinfo@AmS \ppunbox@AmS\bookinfobox@AmS\setpunct@AmS\fi   % NOTE 49
+  \if T\ispubl@AmS \ppunbox@AmS\publbox@AmS\setpunct@AmS\fi           % NOTE 50
+  \if T\ispubladdr@AmS \ppunbox@AmS\publaddrbox@AmS\setpunct@AmS\fi   % NOTE 51
+ \if T\isbook@AmS                                                     % NOTE 52
+  \if T\isyr@AmS \prepunct@AmS \unhbox\yrbox@AmS\unskip             % NOTE 52.1
+              \setpunct@AmS\fi
+  \if T\istoappear@AmS \ (to appear)\setpunct@AmS\fi                % NOTE 52.2
+  \if T\ispages@AmS                                                 % NOTE 52.3
+    \prepunct@AmS pp.\ \unhbox\pagesbox@AmS\unskip\setpunct@AmS\fi
+  \if T\ispage@AmS                                                  % NOTE 52.4
+    \prepunct@AmS p.\ \unhbox\pagesbox@AmS\unskip\setpunct@AmS\fi
+ \fi
+  \if T\isfinalinfo@AmS \period\unhbox\finalinfobox@AmS\else          % NOTE 53
+    \if T\refl@AmS .\else ; \fi\fi}
+
+\def\endref{\egroup\gdef\refl@AmS{T}\endref@AmS\par}
+
+
+%  OUTPUT
+
+\newif\ifguides@AmS
+\guides@AmSfalse
+\def\guidelines{\guides@AmStrue}
+\def\noguidelines{\guides@AmSfalse}
+\def\guidelinegap#1{\def\gwidth@AmS{#1}}
+\def\gwidth@AmS{24pt}
+
+\newif\iflogo@AmS
+\def\nologo{\logo@AmSfalse}
+\logo@AmStrue
+
+\def\output@AmS{\ifnum\count0=1
+ \shipout\vbox{\ifguides@AmS\hrule width \hsize \vskip\gwidth@AmS \fi
+   \vbox to \vsize{\boxmaxdepth=\maxdepth\pagecontents}\baselineskip2pc
+\iflogo@AmS \hbox to \hsize{\hfil\eightpoint \logoword@AmS\AmSTeX}\fi
+     \ifguides@AmS \vskip\gwidth@AmS
+\hrule width \hsize\fi}\vsize 44pc\else
+   \shipout\vbox{\ifguides@AmS \hrule width \hsize \vskip\gwidth@AmS\fi
+   \vbox to \vsize{\boxmaxdepth=\maxdepth\pagecontents}\baselineskip2pc\hbox to
+  \hsize{\hfil \tenpoint\number\count0\hfil}\ifguides@AmS
+    \vskip\gwidth@AmS\hrule width \hsize\fi}\fi\global\advance\count0 by 1
+  \global\footmarkcount@AmS=0 \global\foottextcount@AmS=0
+ \ifnum\outputpenalty>-20000 \else\dosupereject\fi}
+
+
+\def\footnoterule{\vskip-3pt
+        \hrule width 2truein \vskip 2.6pt } % the \hrule is .4pt high
+
+
+%  INITIAL STUFF
+
+\def\document{}
+
+\ask@AmS
+
+\tenpoint
+
+\catcode`\@=13
+
+
+

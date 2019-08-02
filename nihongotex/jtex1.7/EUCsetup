@@ -1,0 +1,40 @@
+#!/bin/sh
+# Setup for EUC KANJI code System
+
+(cd kanji; make)
+CONV='README.KANJI INSTALL.DOC doc/jfm.tex doc/jtex.tex doc/jtexdoc.tex
+ jtex/BibTeX/readme jtex/BibTeX/readme.1st.unix jtex/BibTeX/bib/jbibtex.bib
+ jtex/BibTeX/bib/jbtxdoc.bib jtex/BibTeX/bib/jxampl.bib
+ jtex/BibTeX/bst/cpp.awk jtex/BibTeX/bst/jbtxbst.doc
+ jtex/BibTeX/doc/jbtxbst.doc jtex/BibTeX/doc-ASCII/jbibtex.tex
+ jtex/BibTeX/doc-ASCII/jbtxdoc.tex jtex/BibTeX/doc-ASCII/jbtxhak.tex
+ jtex/BibTeX/doc-NTT/jbibtex.tex jtex/BibTeX/doc-NTT/jbtxdoc.tex
+ jtex/BibTeX/doc-NTT/jbtxhak.tex jtex/BibTeX/sample/jplain.sav
+ jtex/BibTeX/sample/sin.tex jtex/BibTeX/sample/test.tex
+ jtex/BibTeX/sty/ipsjcite.sty jtex/BibTeX/sty/tieiccite.sty
+ jmacros/ascmac.sty jmacros/jarticle.sty jmacros/jbook.sty
+ jmacros/jreport.sty jmacros/kinsoku.tex jmacros/meeting.sty
+ jfms/goth10.pl jfms/goth5.pl jfms/goth6.pl jfms/goth7.pl jfms/goth8.pl
+ jfms/goth9.pl jfms/min10.pl jfms/min5.pl jfms/min6.pl jfms/min7.pl
+ jfms/min8.pl jfms/min9.pl jfms/ngoth10.pl jfms/ngoth5.pl jfms/ngoth6.pl
+ jfms/ngoth7.pl jfms/ngoth8.pl jfms/ngoth9.pl jfms/nmin10.pl jfms/nmin5.pl
+ jfms/nmin6.pl jfms/nmin7.pl jfms/nmin8.pl jfms/nmin9.pl
+ jtex/texdir/bigjctex.ch jtex/texdir/jctex.ch'
+
+PATCHY="jctex.ch bigjctex.ch"
+
+for i in $CONV; do
+ j=`echo $i | sed s/\$/.sjis/`
+ echo $i $j
+ mv $i $j
+ chmod 440 $j
+ kanji/sjistoeuc < $j > $i
+done
+ 
+for i in $PATCHY; do
+ j=`echo $i | sed s/\$/.eucpatch/`
+ echo $i $j
+ patch -N jtex/texdir/$i patch/$j
+done
+
+cp jtex/site.h.euc jtex/site.h

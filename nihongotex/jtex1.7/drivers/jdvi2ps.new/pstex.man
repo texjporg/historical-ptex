@@ -1,0 +1,198 @@
+
+
+
+PSTEX(1)                 USER COMMANDS                   PSTEX(1)
+
+
+
+NAME
+     pstex - convert LaTeX figures.
+
+SYNOPSIS
+     pstex [ options ] file[.tex]
+
+DESCRIPTION
+     _P_s_t_e_x is a BiBTeX-like processor for including figures  into
+     LaTeX  documents.  Figures are included using the ``\psbox''
+     macro; this macro  causes  LaTeX  to  make  entries  in  the
+     ``.aux''  file(s)  for  the job.  _P_s_t_e_x finds these entries,
+     locates the corresponding PostScript files (which should  be
+     in EPSF format as appropriate for _d_v_i_p_s), and determines how
+     to size the figure according to the options specified in the
+     macro  in  the  LaTeX, and according to the nominal size and
+     shape of the PostScript.  It creates a  ``.psz''  file  con-
+     taining entries indicating the sizes which it has determined
+     to be appropriate for each figure.  When LaTeX starts up  on
+     subsequent  passes, this ``.psz'' file is read, and LaTeX is
+     then able to leave the correct amount of space for each fig-
+     ure as it encounters them in the text.
+
+     The ``postscript'' macro file must be included in  the  list
+     of  options  in the documentstyle command.  This defines the
+     necessary macros.
+
+     The    primitive    which    is    used    by    _p_s_t_e_x    is
+     ``\postscriptbox{width}{height}{file}''.   This  causes  the
+     postscript of file.ps to be included into  the  document  so
+     that  its  bounding  box  exactly fills the width and height
+     specified.  This creates a box, which is just like a charac-
+     ter,  and can be placed anywhere in the document.  Typically
+     it is included within a  figure  environment  and  a  center
+     environment, and is associated with a caption.
+
+     The higher  level  macro  which  is  provided  by  _p_s_t_e_x  is
+     ``\psbox[options]{file}''.
+
+     If the options string is omitted completely, the  figure  is
+     included at its natural, or design size, as specified in the
+     bounding box data of the PostScript.
+
+     Combinations of four options can be specified, separated  by
+     commas: _w_i_d_t_h=<_w_i_d_t_h>, _h_e_i_g_h_t=<_h_e_i_g_h_t>, _a_s_p_e_c_t=<_a_s_p_e_c_t>, and
+     _s_c_a_l_e=<_s_c_a_l_e> The keyword can be abbreviated, and spaces are
+     allowed.   The width and height options can be any valid TeX
+     or LaTeX which expands into a dimension when placed  as  the
+     argument    to    a    setlength    macro.    For   example,
+     _w_i_d_t_h=\_c_o_l_u_m_n_w_i_d_t_h is a common  specification.   The  aspect
+     ratio and scale parameters must be floating point constants,
+     or must expand to such  at  the  time  the  macro  is  first
+     invoked, for example _s_c_a_l_e=_0._7.
+
+
+
+Sun Release 4.0   Last change: 8 September 1988                 1
+
+
+
+
+
+
+PSTEX(1)                 USER COMMANDS                   PSTEX(1)
+
+
+
+     If one of width or height is specified, the figure is scaled
+     to  that size, keeping its natural aspect ratio, unless that
+     is overridden by the aspect parameter.
+
+     If both of width and height are  specified,  the  figure  is
+     made to fit the specification exactly, if necessary changing
+     its aspect ratio.  In this mode, the aspect ratio  parameter
+     is ignored.
+
+     In any mode, the  scale  parameter  multiplies  all  of  the
+     dimensions.   This  is especially useful to include a figure
+     at some fixed fraction of its natural size, specifying  only
+     a scale factor in the options.
+
+     Note that the dimensions can be TeX rubber dimensions so  as
+     to  fit into the page layout in the best possible manner, if
+     desired.
+
+EXAMPLES
+     (Note that the slash characters below represent backslashes,
+     which are hard to include in troff text!)
+
+     /_p_s_b_o_x{_f_i_l_e}
+          Include file.ps at natural size.
+
+     /_p_s_b_o_x[_s=_0._7]{_f_i_l_e}
+          Include the document at natural  size  scaled  down  to
+          70%.
+
+     /_p_s_b_o_x[_w=/_c_o_l_u_m_n_w_i_d_t_h, _s_c_a_l_e=/_m_y_d_o_c_s_c_a_l_e]{_f_i_l_e}
+          Stretch the figure to the  width  of  the  column,  but
+          scale it down to /mydocscale (which might be defined as
+          0.9 for example).
+
+OPTIONS
+     -z _p_s_d_i_r_s Specify different area for postscript files to  be
+               included.    _P_s_d_i_r_s  will  be   searched  for  all
+               postscript files, instead of the path specified in
+               the environment variable.
+
+ENVIRONMENT
+     DVIPSPATH A  list  of  colon-separated   directories   where
+               PostScript files may be found for insertion.    It
+               defaults  to  ``:/usr/spar/font/ps''  which  means
+               that  the current directory will be searched first
+               and then the default directory.
+
+FILES
+     postscript.sty
+          Macro file defining the macros for LaTeX.
+
+     jobname.aux
+
+
+
+Sun Release 4.0   Last change: 8 September 1988                 2
+
+
+
+
+
+
+PSTEX(1)                 USER COMMANDS                   PSTEX(1)
+
+
+
+          contains pointers to _p_s_t_e_x.
+
+     file.ps
+          EPSF PostScript picture files.
+
+     file.psz
+          File generated by _p_s_t_e_x and read in by LaTeX to  afford
+          communication.
+
+SEE ALSO
+     dvips(1), tex(1).
+
+BUGS
+     LaTeX forces a cumbersome interface  on  its  preprocessors,
+     such  as  BiBTeX  and  _p_s_t_e_x.  After adding a new figure, or
+     changing the specification in the LaTeX,  you  need  to  run
+     LaTeX,  then  _p_s_b_o_x,  then  LaTeX  again  to  see the update
+     results.  After a change to the PostScript, only  the  final
+     LaTeX step is required.
+
+     It is very hard to get troff to put in  backslashes  in  the
+     documentation  in  all  the right places.  Some are missing,
+     others are replaced by slashes.
+
+AUTHOR
+     _P_s_t_e_x was written by Neil Hunt  at  Schlumberger  Palo  Alto
+     Research, now at Teleos Research: Neil%Teleos.com@ai.sri.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sun Release 4.0   Last change: 8 September 1988                 3
+
+
+

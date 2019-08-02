@@ -1,0 +1,81 @@
+/*
+ * AUTHOR(s)
+ *     Mark Senn wrote the early versions of this program for the
+ *     BBN BitGraph.  Stephan Bechtolsheim, Bob Brown, Richard
+ *     Furuta, James Schaad and Robert Wells improved it.  Norm
+ *     Hutchinson ported the program to the Sun.  Neal Holtz ported
+ *     it to the Apollo, and from there to producing PostScript
+ *     output. Scott Jones added intelligent font substitution.
+ *     Jean-Francois Lamy fixed the PostScript interface for illustrations.
+ *     Takafumi Sakurai added LW built-in font support, 256 size
+ *     pxl file support, and pk file support.
+ *     Wasisaka added gf file support.
+ *
+ */
+
+/* Basic method:
+ * Using the local font cacheing machinery that was in the previewer,
+ * we can easily manage to send the bitmap for each chracter only once.
+ * Two passes are made over each page in the DVI file.  The first pass
+ * simply outputs the bitmaps for all characters on that page that haven't
+ * been sent before.  The second pass outputs all the character setting
+ * and positioning commands.  This allows us to bracket the setting portion
+ * with PostScript save's and restore's, thus reclaiming considerable
+ * virtual memory after each page.
+ *
+ * All coordinates are output in the PostScript system (TeX origin),
+ * and in integer units of rasters (300/inch) -- except for character
+ * widths, which are sent as floating point numbers.
+ *
+ * About 2 pages of PostScript support code must be sent to the LaserWriter
+ * before this stuff goes.  It is automatically included unless the
+ * -h option is given.
+ */
+
+
+/* Change log:
+ *
+ * Early 1985, (nmh) -- ported sun version to Apollo.
+ * A little later (nmh) -- changed to continue on in the event of missing
+ *                      font files.
+ * 30-Mar-85 (nmh) -- added -a option to specify a different PXL area
+ * 30-Mar-85 (nmh) -- changed default PXL area to /pxl118
+ * 31-Mar-85 (nmh) -- fixed bug in OpenFontFile() regarding more than MAXOPEN
+ *                    PXL files -- changed to mark files as closed in font_entry.
+ *  7-Apr-85 (nmh) -- made command line argument decoding case insensitive.
+ *                    cleaned up handling of DVI file name argument.
+ * 30-May-85 (nmh) -- new version; hacked to output PostScript commands
+ *  6-Jun-85 (nmh) -- added relative positioning (20% smaller PostScript output)
+ *                    add -m option to specify mag
+ * 11-Jun-85 (nmh) -- fixed bug regarding char spacings in very long "words"
+ * 12-Jun-85 (nmh) -- v1.02 - process DVI pages in reverse order
+ * 13-Jun-85 (nmh) -- fixed bug re PXL files getting opened too often when no PreLoad
+ * 14-Jun-85 (nmh) -- font dict created in PostScript only when 1st char of font downloaded
+ *                    add -m0 -mh -m1 etc. to specify magsteps
+ * 16-Aug-85 (nmh) -- added -c option t0 create output file in spool area (Apollo specific)
+ *                    added -h option to copy header file to output
+ *                    added -o option to pass options through to PostScript
+ * 20-Aug-85 (nmh) -- v1.03
+ * 24-Aug-85 (nmh) -- add -q option (for quiet operation).
+ *                    changed -o option to check PostScript option
+ *                    changed to output coordinates in TeX system (but
+ *                    scaled to raster units) -- (0,0) at 1" in and down from
+ *                      top left (better for use with different size paper).
+ *                 -- v2.00
+ * 25-Aug-85 (nmh) -- added dictionary enclosure to Tex.ps, and output
+ *                      suitable prolog here.
+ * 26-Aug-85 (nmh) -- changes to tex.ps to support Macintosh documents.
+ * 14-Sep-85 (nmh) -- added keyword=value decoding to \special;
+ * 15-Sep-85 (nmh) -- added -i file option.
+ * 23-Sep-85 (saj) -- added font substitution for case when font is
+ *                    unavailable at requested mag. (a frequent occurrence
+ *                    with some macro packages like LaTeX)
+ * 24-Jun-86 (jfl) -- Support Mac illustrations produced by LaserWriter
+ *                    driver 3.0  Changed tex.ps
+ *                    Added rotation for \special inclusions
+ *                    Embedded ^D are ignored in included PostScript files
+ * 14-Mar-87 (ts)  -- added LW buil-in font support and 256 size pxl file
+ *		      support.
+ *		      no font substitution for now.
+ * 12-Jan-88 (ts)  -- added pk font support.
+ */

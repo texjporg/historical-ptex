@@ -1,0 +1,108 @@
+.TH XDVI 1 "21 August 1986" "X Version 11"
+.SH NAME
+xdvi \- DVI previewer for the X window system
+.SH SYNOPSIS
+.B xdvi
+[-options ...]
+.SH DESCRIPTION
+.I Xdvi
+is a program which runs under the X window system.
+It is used to preview DVI files, such as produced by TeX.
+.SH OPTIONS
+.TP 8
+.BI \-s " number"
+Defines the initial shrink factor.
+Default value is 4.
+.TP 8
+.BI \-dpi " number"
+Defines the dots per inch for font selection.
+Default value is 300.
+.TP 8
+.BI \-page " number"
+Defines the initial page number.
+Default value is 1.
+.TP 8
+.B \-portrait, \-landscape
+Defines the page style.
+Default is \fB-portrait\fP.
+.TP 8
+.BI \-paper " papertype"
+Defines the paper type.
+\fIPapertype\fP is \fBletter\fP, \fBa4\fP or \fBb4\fP.
+Default value is \fBa4\fP.
+.SH MOUSE
+.PP
+Clicking the right button will display the next page.
+Clicking the left button will display the previous page.
+Clicking the right button with the Shift key held down
+will display the next window full to the right.
+Clicking the left button with the Shift key held down
+will display the previous window full to the left.
+Clicking the middle button will display the next window full down.
+Clicking the middle button with the Shift key held down
+will display the next window full up.
+.SH KEYBOARD
+.PP
+You can exit the program by typing `q', control-C, or control-D.
+You can move to the next page with `n', `f', or SPACE.
+You can move the the previous page with `p', `b', or control-H.
+You can move up a window-full with `k', down with `j', left with `h',
+and right with `l'.
+You can change the shrink factor by typing in the number (one or more digits),
+followed by `s'.
+If you type `s' without a number, the smallest factor that makes the entire
+page fit in the window will be used.
+You can force redisplay with control-L.
+You can move a relative number of pages by typing an optional `-',
+a number (one or more digits) and then carriage return or line feed.
+You can move to a specific page by typing a number (one or more digits)
+and then `g'.
+You can move to the last page by typing `g' without a number.
+.SH X DEFAULTS
+.PP
+Accepts the following defaults:
+.PP
+.TP 8
+.B KanjiFont
+Set the searching order of Kanji font. Default is ``k%d:k14.%d:xdvi%d''
+.PP
+.TP 8
+.B BorderWidth
+Set the border width of the window.
+.PP
+.TP 8
+.B ReverseVideo
+If ``on'', reverse the definition of foreground and background color.
+.PP
+.TP 8
+.B Foreground
+Set the text/graphics color.
+.PP
+.TP 8
+.B Background
+Set the background color.
+.PP
+.TP 8
+.B Border
+Set the border color.
+.PP
+.TP 8
+.B Highlight
+Set the page border color.
+.PP
+.TP 8
+.B Mouse
+Set the mouse cursor color.
+.SH ENVIRONMENT
+Uses the environment variable ``DISPLAY'' to specify which bit map display
+terminal to use.
+.SH "SEE ALSO"
+X(1).
+.SH "AUTHOR"
+Eric Cooper, CMU, did a version for direct output to a QVSS.
+.br
+Modified for X by Bob Scheifler, MIT Laboratory for Computer Science.
+.br
+Modified for X11 by Akira Kato, Department of Computer Science, TIT.
+.br
+Modified for Kanji by Hiroto Kagotani, Department of Computer Science, TIT.

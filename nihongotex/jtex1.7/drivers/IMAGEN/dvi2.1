@@ -1,0 +1,85 @@
+.TH DVI2 1 "22 August 1989" "dit. Co., Ltd."
+.SH NAME
+dvi2 \- print DVI files
+.SH SYNOPSIS
+.B dvi2
+[ options ]
+file ...
+.SH DESCRIPTION
+.I Dvi2
+converts DVI files to the file for target PRINTER format.
+.\"--------------------------------------------------------------
+.TP 13
+.BR \-s
+Suppress processing page number.
+.TP 13
+.BR \-l
+Landscape Mode on.
+.TP 13
+.BR \-c
+Check only if font exists or not.
+.TP 13
+.BR \-z
+Use printer resident font.
+.TP 13
+.BR \-x
+Exchange fonts if not exist.
+.TP 13
+.BR \-o "\fI output\fR"
+Set name of output file.
+Default is stdout.
+.TP 13
+.BR \-F "\fI format\fR"
+Set font file format.
+.TP 13
+.BR \-L "\fI pdl\fR"
+Set name of page description language.
+.TP 13
+.BR \-R "\fI number\fR"
+Set target printer resolution.
+.TP 13
+.BR \-m \fI{0h12345}\fR
+Magnificate the entire page.
+.TP 13
+.BR \-p "\fI range\fR"
+Process the specified pages only.
+.TP 13
+.BR \-r
+Page reversal on.
+For face-up tray.
+.TP 13
+.BR \-Po
+Process the odd page numbers only.
+.TP 13
+.BR \-Pe
+Process the even page numbers only.
+.TP 13
+.BR \-Ho
+Process the physical odd pages only.
+.TP 13
+.BR \-He
+Process the physical even pages only.
+.TP 13
+.BR \-Ot "\fI units\fR"
+Offset the top margin to ??  [unit = dpi]
+.TP 13
+.BR \-Ol "\fI units\fR"
+Offset the left margin to ?? [unit = dpi]
+.\"--------------------------------------------------------------
+.SH AUTHOR
+Yoshiteru Sagiya (usagi@dit.co.jp)
+.br
+Yoshitaka Tokugawa (toku@dit.co.jp)
+.br
+Nahomi Ushikata (sa22c@dit.co.jp)
+.sp 0
+Copyright \(co 1988 by d.i.t. Co., Ltd.
+.SH SEE ALSO
+.\" jxl4(5L), jtex(1L).
+genimp(1L)
+.sp 0
+.SH BUGS
+.B \-F
+and
+.B \-L
+are not supported.

@@ -1,0 +1,5 @@
+#!/bin/sh
+# setup the ./undump area for Sun4 
+cp Makefile.SUN4 Makefile
+cp undump.SUN4.c undump.c
+

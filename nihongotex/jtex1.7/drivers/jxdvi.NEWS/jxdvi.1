@@ -1,0 +1,2291 @@
+echo x - README.FIRST
+sed 's/^X//' >README.FIRST <<'*-*-END-of-README.FIRST-*-*'
+XPlease Read README.jis.
+XI wrote README.jis using jis code.
+XEscape sequences are:
+X     kanji shift-in = ESC $ @ and
+X     kanji shift-out = ESC ( J.
+XTo convert README.jis to README ( shift jis code ):
+X     Use jconv when you read this file at SONY NEWS.
+X           % jconv -jI README.jis > README
+X     And use nkf when you read this at other machine.
+X           % nkf -x README.jis > README
+X
+X              atsuo@sanken.osaka-u.junet
+*-*-END-of-README.FIRST-*-*
+echo x - README.jis
+sed 's/^X//' >README.jis <<'*-*-END-of-README.jis-*-*'
+Xこのファイルは、ＳＯＮＹ　ＮＥＷＳ上で動作するＡＳＣＩＩ版ＪＴｅＸおよび
+XＴｅＸ用のｊｘｄｖｉ（ｄｖｉプレビュ−ア−）／ｄｖｉ２ｎｗｐ（ＮＷＰ−５３３
+X用ｄｖｉドライバ−）を作成、利用するためのＲＥＡＤＭＥファイルです。
+X-------------------------------------------------------------------------
+Xこのディレクトリに含まれるものは次のとおりです。
+X
+XREADME.jis : このファイルです。
+XMakefile
+Xdv.c
+Xfont.c
+Xfont_load.c
+Xfont_db.c
+Xadd.c 
+Xtable.c
+Xadd.h  : jxdvi/dvi2nwp の定数、変数などの宣言。
+Xdvi.h, pxl.h  : （xdviの定数、その他の宣言）
+Xfont.h : 漢字フォントに関する定数、変数の宣言
+X
+XXDisplayName.c : X.V10R4に含まれ、ＮＥＷＳのXlibに含まれないXlib関数
+X
+Xatsuo-copyright.h : 私が行なった修正、付加に関する著作権の宣言
+Xmit-copyright.h : Ｍ．Ｉ．ＴのＸ−ｗｉｎｄｏｗに関する著作権の宣言
+X
+Xmit-copyright.hは、本プログラムがxdviを改造したものであり、さらに
+XXDisplayName.c を必要とするるために添付してあります。
+X
+Xjxdvi, dvi2nwp でソ−スコ−ドを共有しています。詳しくはMakefileを
+Xご覧下さい。
+X---------------------------------------------------------------------------
+X漢字の利用について
+Xjxdvi/dvi2nwpは漢字フォントとしてＳＯＮＹから販売されている基本フォント
+Xセット、ＮＷＦ−６０４を使用します。以下の説明では基本フォントセットの
+X各ファイルが/usr/sony/lib/font/devnwp533に読み込まれていることを前提
+Xとします。
+X
+X７，８，９，１０，１２ポイントのフォントを利用できます。texファイル
+X中ではそれぞれ、min7 or goth7, min8 or goth8, min9 or goth9,
+Xmin10 or goth10, min12 or goth12 という名前になります。
+Xmagstep についてはfont_db.cを適当に修正してください。
+X
+X漢字を利用しない場合は、もちろん基本フォントセットは不要です。
+X---------------------------------------------------------------------------
+XＴｅＸフォントについて
+X現在のところ、ｐｋフォ−マットのものは使えません。必要なサイズのｐｘｌ
+Xフォントを作成してください。（製法については後述します）ＴｅＸフォント
+Xディレクトリのデフォ−ルト名は、/usr/lib/tex/fontsです。
+X---------------------------------------------------------------------------
+Xjxdvi/dvi2nwp の作成およびインスト−ル法（%はshellのプロンプトです）
+X
+X1. プログラムをmakeします。
+X    % make all
+X	これでjxdviおよびdvi2nwpというプログラムが生成されます。
+X	適当な名前で適当なディレクトリにmvしてください。
+X2. ス−パユ−ザになって漢字フォントリンクを張ります。
+X	% make installFont
+X	これによって、必要な漢字フォントへのシンボリックリンクが
+X	ＴｅＸフォントディレクトリから張られます。
+X3. ＡＳＣＩＩから配布されたｊｆｍフォ−マットのtfmファイルを
+X   ＴｅＸフォントディレクトリにコピ−します。（もちろんリンクでも
+X   構いません）
+X	% cp /usr/JTeX/jfm/*.tfm /usr/lib/tex/fonts   
+X4. ス−パユ−ザになって/etc/printcapファイルを変更します。(dvi2nwp
+X   を使用するときのみ）
+X	# vi /etc/printcap
+X	例えばＮＷＰ５３３のプリンタ名がsjlbpだとします。
+X	sjlbpの定義に次の一行を加えます。
+X		df=/usr/local/dvi2nwp\
+X	以下に例を示します。
+X
+X    lp|sjlbp|nwp533|nwp-533|NWP533|NWP-533|Sony NEWS NWP-533:\
+X    	:lp=/dev/lbp:sh:\
+X    	:sd=/usr/spool/nwp533:\
+X    	:df=/usr/local/dvi2nwp:\
+X    	:nf=/usr/sony/lib/lpf_lbpnf:\
+X    	:tf=/usr/sony/lib/lpf_lbpnf:\
+X    	:if=/usr/sony/lib/lpf_nwp533:
+X
+Xこれて゛作成およびインスト−ルが終了しました。
+X--------------------------------------------------------------------------
+Xjxdvi/dvi2nwpは以下の値をデファ−ルトとして用います。
+X
+XＴｅＸフォントディレクトリ /usr/lib/tex/fonts
+X各フォントのｄｐｉ数       400
+Xjxdviのshrinkファクタ−    5
+Xdvi2nwpが用いるＮＷＰ−５３３のデバイス名    /dev/lbp
+X
+X値の変更については、ソ−スコ−ドをご覧下さい。
+X--------------------------------------------------------------------------
+Xjxdviの使用方法
+X
+Xxdviと全く同じです。ただしドット密度を変えた場合（-pスイッチ）の漢字
+Xの表示はできません。
+X--------------------------------------------------------------------------
+Xdvi2nwpの使用方法
+X
+Xlprで印刷する方法と、直接dvi2nwpを使用する二つの方法があります。
+X直接使用する場合はｓｐｏｏｌしないので注意してください。
+X
+X1. lprを用いる場合
+X   シェルのプロンプトに対して次のように入力するとdviファイル全ぺ−ジ
+X   が印刷されます。
+X       % lpr -d ＜dviファイル名＞
+X
+X2. 直接使用する場合
+X   -diスイッチを付けると直接使用モ−ドになります。
+X       % dvi2nwp -di ＜dviファイル名＞
+X   -diはdvi2nwpに直接使用であることを伝えるスイッチです。
+X   直接使用する場合、オプションとして次のスイッチを付けることができます。
+X        -ds : double side mode （偶数ペ−ジが左にオフセットされて
+X                                 印刷されます）
+X        -o  : odd pages only    （dviファイルの奇数ペ−ジのみ印刷されます）
+X        -e  : even pages only  （同じく偶数ペ−ジのみ印刷されます）
+X        -bp page : begin printing from 'page'
+X             （'page'ペ−ジから印刷を開始します）
+X        -ep page : end printing at 'page'
+X             （'page'ペ−ジで印刷を終了します）
+X        -xo dot  : offset 'dot' left
+X             （紙面上で印刷位置を左に'dot'ドットずらして印刷します）
+X		-yo dot  : offset 'dot' up
+X             （紙面上で印刷位置を上に'dot'ドットずらして印刷します）
+X--------------------------------------------------------------------------
+Xフォントのプレロ−ディングについて
+X
+Xxdviと同様にjxdvi/dvi2nwpもフォントをディマンドロ−ディングします。
+X通常のＴｅＸでは気になりませんが、漢字を用いるときにはロ−ディングに
+Xかなりの時間がかかるため、特に最初のペ−ジを表示する（印刷する）のに時間が
+Xかかります。
+X
+Xそこでフォントのプレロ−ディングモ−ドを設けました。次のようにすると
+Xjtex.dviに必要なすべてのフォントがプレロ−ドされたjxdvi(dvi2nwp)を
+X作ることができます。
+X1. -coreスイッチを付けて全ペ−ジをpreview（印刷）する
+X	% jxdvi -core jtex.dvi
+X2. jxdvi(dvi2nwp)終了時にcoreがダンプされる。
+X	Illegal instruction (core dumped)
+X3. undumpを使ってcoreを実効可能ファイルに変換する。
+X	% undump jjj jxdvi core
+X   必要なフォントすべてがロ−ドされたjxdvi、jjjができる。
+X
+Xjxdviについては十分実用になります。dvi2nwpの場合は、coreが非常に大きく
+Xなるためディスク容量を圧迫してしまい、あまり有効ではありません。
+X--------------------------------------------------------------------------
+Xソ−スコ−ドについて
+X
+X水平タブを４文字間隔に設定して記述されています。
+X--------------------------------------------------------------------------
+X今後すべきこと
+X
+X以下のことをすべきですが、時間の都合で予定が立っていません。
+X優先度の高い順に示します。
+X
+X1. フォントファイルとして.pkフォ−マットのものを使えるようにすること。
+X2. スピ−ドアップ
+X3. マニュアルの作成
+X--------------------------------------------------------------------------
+X著作権について
+X
+X私が行なった修正、付加については制限を設けません（atsuo-copyright.h
+Xをご覧下さい）
+Xしかしどちらのプログラムもxdviを改造したものなので多少ややこしくなって
+Xいます。Ｍ．Ｉ．Ｔもxdviに限ってmit-copyright.hをincludeしていないので
+Xおそらく何もない（ＰＤＳである）のだとは思うのですが．．．
+X
+XjxdviはXDisplayName.cを用います。これの著作権についてはmit-copyright.h
+Xが適用されます。注意してください。
+X
+Xとりあえずmit-copyright.hも見ておいてください。
+X-------------------------------------------------------------------------
+Xお願い
+X
+Xバグ情報、要望、改良など何でも結構ですからお知らせください。
+Xまとめて他の方々にも伝えていきたいと考えています。
+Xよろしくお願いします。
+X
+X                      川口敦生＠産業科学研究所．大阪大学．ｊｕｎｅｔ
+X                      atsuo@sanken.osaka-u.junet
+X
+*-*-END-of-README.jis-*-*
+echo x - Makefile
+sed 's/^X//' >Makefile <<'*-*-END-of-Makefile-*-*'
+X#
+X# Makefile for dvi previewer.
+X#
+X# $Header: Makefile,v 10.5 86/02/01 15:44:17 tony Rel $
+X#
+XDESTDIR=
+XCONFDIR= /usr/new
+XTEXFONTDIR=/usr/lib/tex/fonts
+XSONYFONTDIR=/usr/sony/lib/font/devnwp533
+X
+X
+XJXDVI_CFLAGS= -O -DJXDVI -DSTATISTICS
+X#
+X# Turn on -DACCT if accounting is desired.
+X#
+X# DVI2NWP_CFLAGS= -O -DSTATISTICS -DDVI2NWP -DACCT
+X#
+XDVI2NWP_CFLAGS= -O -DSTATISTICS -DDVI2NWP
+X
+X# JXDVI_CFLAGS= -p -DJXDVI -DSTATISTICS
+X# DVI2NWP_CFLAGS= -g -DSTATISTICS -DDVI2NWP
+X
+XJXDVI_LIBS= -lX
+X# JXDVI_LIBS= -lX_p
+X
+XJXDVI_OBJS= dv_jxdvi.o table_jxdvi.o font_jxdvi.o font_db_jxdvi.o \
+X			c2i_jxdvi.o font_load_jxdvi.o XDisplayName.o
+XDVI2NWP_OBJS= dv.o font.o font_db.o c2i.o add.o font_load.o
+X
+XJXDVI_H= jxdvi.h dvi.h font.h pxl.h
+XDVI2NWP_H=jxdvi.h dvi.h font.h pxl.h add.h
+X
+XSOURCES= $(DVI2NWP_H) dv.c font.c font_db.c c2i.c add.c font_load.c
+X
+Xall: jxdvi dvi2nwp
+X
+Xjxdvi: $(JXDVI_OBJS) $(JXDVI_H)
+X	cc $(JXDVI_CFLAGS) -o $@ $(JXDVI_OBJS) $(JXDVI_LIBS)
+Xdvi2nwp: $(DVI2NWP_OBJS) $(DVI2NWP_H)
+X	cc $(DVI2NWP_CFLAGS) -o $@ $(DVI2NWP_OBJS)
+X
+X# for JXDVI
+Xdv_jxdvi.o : dv.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ dv.c
+Xtable_jxdvi.o : table.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ table.c
+Xfont_jxdvi.o : font.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ font.c
+Xfont_db_jxdvi.o : font_db.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ font_db.c
+Xc2i_jxdvi.o  : c2i.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ c2i.c
+Xfont_load_jxdvi.o: font_load.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ font_load.c
+XXDisplayName.o: XDisplayName.c
+X	cc -c $(JXDVI_CFLAGS) -o $@ XDisplayName.c
+X
+X# for DVI2NWP
+Xdv.o: dv.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ dv.c
+Xfont.o: font.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ font.c
+Xfont_db.o: font_db.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ font_db.c
+Xc2i.o : c2i.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ c2i.c
+Xadd.o: add.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ add.c
+Xfont_load.o: font_load.c
+X	cc -c $(DVI2NWP_CFLAGS) -o $@ font_load.c
+X
+Xlink_font:
+X	-ln -s $(SONYFONTDIR)/M10.font $(TEXFONTDIR)/min7.500nwf
+X	-ln -s $(SONYFONTDIR)/M11.font $(TEXFONTDIR)/min8.500nwf
+X	-ln -s $(SONYFONTDIR)/M12.font $(TEXFONTDIR)/min9.500nwf
+X	-ln -s $(SONYFONTDIR)/M14.font $(TEXFONTDIR)/min10.500nwf
+X	-ln -s $(SONYFONTDIR)/M17.font $(TEXFONTDIR)/min10.600nwf
+X	-ln -s $(SONYFONTDIR)/M17.font $(TEXFONTDIR)/min10.720nwf
+X	-ln -s $(SONYFONTDIR)/M17.font $(TEXFONTDIR)/min10.864nwf
+X	-ln -s $(SONYFONTDIR)/M17.font $(TEXFONTDIR)/min12.500nwf
+X	-ln -s $(SONYFONTDIR)/M39.font $(TEXFONTDIR)/min7.2000nwf
+X	-ln -s $(SONYFONTDIR)/M44.font $(TEXFONTDIR)/min8.2000nwf
+X	-ln -s $(SONYFONTDIR)/M50.font $(TEXFONTDIR)/min9.2000nwf
+X	-ln -s $(SONYFONTDIR)/M55.font $(TEXFONTDIR)/min10.2000nwf
+X	-ln -s $(SONYFONTDIR)/M66.font $(TEXFONTDIR)/min10.2400nwf
+X	-ln -s $(SONYFONTDIR)/M66.font $(TEXFONTDIR)/min10.2880nwf
+X	-ln -s $(SONYFONTDIR)/M66.font $(TEXFONTDIR)/min10.3456nwf
+X	-ln -s $(SONYFONTDIR)/M66.font $(TEXFONTDIR)/min12.2000nwf
+X	-ln -s $(SONYFONTDIR)/G39.font $(TEXFONTDIR)/goth7.2000nwf
+X	-ln -s $(SONYFONTDIR)/G44.font $(TEXFONTDIR)/goth8.2000nwf
+X	-ln -s $(SONYFONTDIR)/G50.font $(TEXFONTDIR)/goth9.2000nwf
+X	-ln -s $(SONYFONTDIR)/G55.font $(TEXFONTDIR)/goth10.2000nwf
+X	-ln -s $(SONYFONTDIR)/G66.font $(TEXFONTDIR)/goth10.2400nwf
+X	-ln -s $(SONYFONTDIR)/G66.font $(TEXFONTDIR)/goth10.2880nwf
+X	-ln -s $(SONYFONTDIR)/G66.font $(TEXFONTDIR)/goth10.3456nwf
+X	-ln -s $(SONYFONTDIR)/G66.font $(TEXFONTDIR)/goth12.2000nwf
+X
+Xclean:
+X	-rm -f *.o *.BAK *.CKP jxdvi dvi2nwp a.out core errs *~ *.s
+X
+Xrcs:
+X	ci $(SOURCES)
+X	co -l $(SOURCES)
+X
+Xrcs_co:
+X	co -l $(SOURCES)
+X
+Xtest:
+X	rcp dump news2:~/lbp
+X	rsh news2 'cd ~/lbp; t'
+X
+Xprofile:
+X	dvi2nwp -di /usr/JTeX/doc/jfm.dvi; mv gmon.out gmon.out.jfm
+X	dvi2nwp -di /usr/JTeX/doc/jtex.dvi; mv gmon.out gmon.out.jtex
+X	dvi2nwp -di /usr/JTeX/doc/jtexdoc.dvi; mv gmon.out gmon.out.jtexdoc
+X	gprof -b dvi2nwp gmon.out.jfm gmon.out.jtex gmon.out.jtexdoc > /tmp/p
+X
+Xinstall:
+X	-mv dvi2nwp /usr/TeX/NEWSbin
+X	-mv jxdvi /usr/TeX/NEWSbin
+X
+*-*-END-of-Makefile-*-*
+echo x - fldtab
+sed 's/^X//' >fldtab <<'*-*-END-of-fldtab-*-*'
+X# numerator
+X25400000
+X# denominator
+X473628672
+X# magnification
+X1000
+X# min9 magstep0
+Xmin9
+X655360
+X655360
+X1
+X3021-4f53
+X# min10 magstep0
+Xmin10
+X655360
+X655360
+X1
+X3021-4f53
+X# min10 magstep1
+X# min10
+X# 786432
+X# 655360
+X# 1
+X# 3021-4f53
+*-*-END-of-fldtab-*-*
+echo x - add.h
+sed 's/^X//' >add.h <<'*-*-END-of-add.h-*-*'
+X/*
+X *	add.h	include file for dvi2nwp.
+X *	$Header: add.h,v 1.1 88/02/06 11:28:30 atsuo Exp $
+X */
+X
+X#include "atsuo-copyright.h"
+X
+X#define NWP_DEV			"/dev/lbp"
+X#define	CELL_FILL		0xff
+X#define	BITS_PAR_CELL	8
+Xtypedef unsigned char	CELL;
+X
+X#define FRAME_BIT_WIDTH		3136
+X#define FRAME_BIT_HEIGHT	4516
+X#define FRAME_SIZE	(FRAME_BIT_WIDTH*FRAME_BIT_HEIGHT/BITS_PAR_CELL)
+X#define FRAME_WIDTH	(FRAME_BIT_WIDTH/BITS_PAR_CELL)
+X#define	FRAME_HEIGHT	FRAME_BIT_HEIGHT
+X
+X#define BIT_LEFT_OFFSET	250		/* About 1.6cm (400dpi) */
+X
+Xextern unsigned char frame[];
+X
+X#define TMPFILE "/tmp/dvi.XXXXXX"
+X
+Xextern int	begin_page_num, end_page_num;
+Xextern int	x_offset, y_offset;
+Xextern int	odd_pages, even_pages;
+Xextern int	direct, double_side, verbose, noprint;
+X
+X#ifdef ACCT
+Xextern int	npages ;
+X#endif
+X
+X#define RETRY 1		/* Retry print_frame()	*/
+X#define ABORT 2		/* Abort dvi2nwp	*/
+X#define RESTART 3	/* Restart lbp		*/ 
+X
+*-*-END-of-add.h-*-*
+echo x - atsuo-copyright.h
+sed 's/^X//' >atsuo-copyright.h <<'*-*-END-of-atsuo-copyright.h-*-*'
+X/*
+X * Copyright (C) Atsuo Kawaguchi, 1987.
+X * 連絡先：
+X *      大阪府茨木市美穂ケ丘８−１
+X *      大阪大学産業科学研究所角所研究室
+X *          川口敦生
+X *        (atsuo@sanken.osaka-u.junet)
+X * このプログラムのいかなる複写、移植、改変、修正も許諾します。
+X * Everyone is permitted to do anything on this program
+X * including copying, porting, debugging, and modifying.
+X */
+X
+*-*-END-of-atsuo-copyright.h-*-*
+echo x - dvi.h
+sed 's/^X//' >dvi.h <<'*-*-END-of-dvi.h-*-*'
+X/*
+X *	dvi.h
+X * 	Code derived from dvi.h for xdvi (X.V10R4)
+X * 	Modified for jxdvi/dvi2nwp by Atsuo Kawaguchi, ISIR.
+X * 	$Header: dvi.h,v 1.1 88/02/06 11:28:01 atsuo Exp $
+X */
+X
+X#define SETCHAR0    0
+X#define SET1        128
+X#define SET2		129
+X#define SETRULE     132
+X#define PUT1        133
+X#define PUTRULE     137
+X#define NOP         138
+X#define BOP         139
+X#define EOP         140
+X#define PUSH        141
+X#define POP         142
+X#define RIGHT1      143
+X#define RIGHT2      144
+X#define RIGHT3      145
+X#define RIGHT4      146
+X#define W0          147
+X#define W1          148
+X#define W2          149
+X#define W3          150
+X#define W4          151
+X#define X0          152
+X#define X1          153
+X#define X2          154
+X#define X3          155
+X#define X4          156
+X#define DOWN1       157
+X#define DOWN2       158
+X#define DOWN3       159
+X#define DOWN4       160
+X#define Y0          161
+X#define Y1          162
+X#define Y2          163
+X#define Y3          164
+X#define Y4          165
+X#define Z0          166
+X#define Z1          167
+X#define Z2          168
+X#define Z3          169
+X#define Z4          170
+X#define FNTNUM0     171
+X#define FNT1        235
+X#define FNT2        236
+X#define FNT3        237
+X#define FNT4        238
+X#define XXX1        239
+X#define XXX2        240
+X#define XXX3        241
+X#define XXX4        242
+X#define FNTDEF1     243
+X#define FNTDEF2     244
+X#define FNTDEF3     245
+X#define FNTDEF4     246
+X#define PRE         247
+X#define POST        248
+X#define POSTPOST    249
+X
+X#define TRAILER     223     /* Trailing bytes at end of file */
+*-*-END-of-dvi.h-*-*
+echo x - font.h
+sed 's/^X//' >font.h <<'*-*-END-of-font.h-*-*'
+X/*
+X *	font.h: include file for font manager of jxdvi
+X *
+X *	$Header: font.h,v 1.1 88/02/06 11:28:15 atsuo Exp $
+X */
+X
+X#include "atsuo-copyright.h"  
+X
+Xtypedef unsigned char ubyte;
+X
+X#define DBG_BITMAP  0x1
+X#define DBG_DVI     0x2
+X#define DBG_ALL     (DBG_BITMAP|DBG_DVI)
+X
+Xtypedef char *Ptr;
+X
+X#define JIS_QUESTION_MARK	0x2129	/* JIS code of '?' */
+X
+X/* Return values of Font Manager */
+X#define ERROR 2
+X#define TRUE  1
+X#define FALSE 0
+X
+X/* Message to Font Manager */
+X#define DEFINE_FONT 0
+X#define GET_GLYPH   1
+X#define CHANGE_FONT 2
+X#define PRE_DEFINE_FONT 3
+X#define	CLOSE_FONT_FILE	4
+X
+X/* Site dependent information */
+X#define FONT_DIRECTORY  "/usr/lib/tex/fonts"
+X#define PXLFONT_SUFFIX ".%dpxl"
+X#define NWFFONT_SUFFIX ".%dnwf"
+X#define TFM_SUFFIX  ".tfm"
+X#define TFM_DIRECTORY "/usr/lib/tex/fonts"
+X
+X/*
+X** Font Kind Database
+X */
+X#define F_ALPHA 0
+X#define F_KANJI 1
+X
+Xextern int font_kind[];
+Xextern int current_font_kind;
+Xextern int boot_mode;
+X
+X/*
+X** Kanji-Bitmap structure for raster ops.
+X*/
+Xstruct k_bitmap{
+X	struct k_bitmap *next;	/* link to next k_bitmap block */
+X	struct k_bitmap *prev;	/* link to previous k_bitmap block */
+X	unsigned int	uc;		/* use count */
+X	int TeXnumber;			/* font number (in DVI file) */
+X	int	info;				/* index to k_glyph table */
+X#ifdef JXDVI
+X	char *bits;				/* pointer to the bits */
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	char *nbits;			/* pointer to the non-reversed bits */
+X#endif
+X};
+X
+X/* Kanji font bitmaps.
+X * The kanji bitmaps are maintained in kanji_font_bitmap. Kanji_font_bitmap
+X * is an 
+X * array of pointers linking to k_bitmap lists. Each entry corresponds to
+X * one of kanji char's.
+X */
+X
+Xextern struct k_bitmap *kanji_font_bitmap[];
+X
+X/*
+X * Character information.
+X * All fields are filled in at font definition time,
+X * except for the bitmap, which is "faulted in"
+X * when the character is first referenced.
+X */
+Xstruct k_glyph {
+X	long dvi_adv;		/* DVI units to move reference point */
+X	short x, y;			/* x and y offset in pixels */
+X	short pxl_adv;		/* pixels to move reference point */
+X};
+X
+X/*
+X * The layout of a kanji-font information block.
+X * There is one of these for every loaded font or
+X * magnification thereof.
+X *
+X * Also note the strange units.  The design size is in 1/2^20 point
+X * units (also called micro-points), and the individual character widths
+X * are in the TFM file in 1/2^20 ems units, i.e. relative to the design size.
+X *
+X * And note that kanji font bitmaps are maintained seperately in
+X * kanji font bitmap list. (by Atsuo, K.)
+X */
+X
+Xstruct k_font {
+X	struct k_font *next;	/* link to next k_font info block */
+X	struct k_font *prev;	/* link to previos k_font info block */
+X	int TeXnumber;			/* font number (in DVI file) */
+X	int	preFontNum;			/* font number (when pre-loaded) */
+X	int scale;				/* scaled size in DVI units */
+X	int design;				/* design size in DVI units */
+X	char *fontname;			/* fontname */
+X	FILE *file;				/* open NWF file or NULL */
+X	short	file_h, file_w;	/* bitmap h & w in pixels (in font file) */
+X	short	file_bytes_wide;/* scan-line width in bytes (in font file) */
+X	short	h, w;			/* bitmap height and width in pixels */
+X	short	bytes_wide;		/* scan-line width in bytes */
+X	struct k_glyph *glyph;	/* k_glyph table */
+X#ifdef STATISTICS
+X	int	use;				/* font use count */
+X	int	load;				/* bitmap read count */
+X	int	load_bytes;			/* bitmap bytes read in */
+X#endif
+X};
+X
+X/* .jfm file format */
+X#define JFM_ID	11
+X
+X#define	J_ID 0		/* id */
+X#define	J_NT 1		/* number of words in the char_type table */
+X#define	J_LF 2		/* length of entire file */
+X#define	J_LH 3		/* length of header */
+X#define	J_BC 4		/* smallest char_type */
+X#define	J_EC 5		/* largest char_type */
+X#define	J_NW 6		/* number of width table */
+X#define	J_NH 7		/* number of height table */
+X#define	J_ND 8		/* number of depth table */
+X#define	J_NI 9		/* number of italic correctiuon table */
+X#define	J_NL 10		/* number of glue/kern talbe */
+X#define	J_NK 11
+X#define	J_NG 12
+X#define	J_NP 13
+X
+Xstruct jfm_char_type {
+X	unsigned short	code;		/* JIS code */
+X	unsigned short	index;		/* index to char_info */
+X};
+X
+Xstruct jfm_char_info {
+X	unsigned char	width_ix;			/* index to width */
+X	unsigned char	height_depth_ix;	/* index to height & depth */
+X	unsigned char	italic_ix_tag;		/* index to italic & tag */
+X	unsigned char	remainder_ix;		/* index to remainder */
+X};
+X
+Xstruct jfm {
+X	char	fn[128];					/* font name (min10, etc.) */
+X	short	table[(J_NP+1)];				/* table */
+X	unsigned long	check_sum;				/* header */
+X	unsigned long	design_size;		
+X	struct	jfm_char_type *type;
+X	struct	jfm_char_info *info;
+X	unsigned long *width;
+X	unsigned long *height;
+X	unsigned long *depth;
+X	unsigned long *italic;
+X};
+X
+X/* Kanji Font Database
+X * Since NWF format does not contain font information,
+X * we need database for it.
+X */
+Xstruct kanji_font_data {
+X	char	*fontname;		/* name of kanji font (including suffix) */
+X	short	h, w;			/* bitmap height and width in pixels */
+X	short	bytes_wide;		/* scan-line width in bytes */
+X};
+X
+Xextern struct kanji_font_data kanji_font_db[];
+*-*-END-of-font.h-*-*
+echo x - font_load.h
+sed 's/^X//' >font_load.h <<'*-*-END-of-font_load.h-*-*'
+X/*
+X**	"font_load.h"
+X**		written by Atsuo, K. 
+X**		on 88/01/12
+X*/
+X
+X#include "atsuo-copyright.h"  
+X
+Xstruct code_range {
+X	short	start;			/* start of jis code */
+X	short	end;			/* end of jis code */
+X};
+X
+Xstruct fldent {
+X	char	fontname[128];			/* name of font */
+X	int		sc;						/* scaled size */
+X	int		d_sc;					/* design size */
+X	int		count;					/* number of ranges */
+X	struct code_range *ranges;		/* list of code ranges */
+X};
+*-*-END-of-font_load.h-*-*
+echo x - jxdvi.h
+sed 's/^X//' >jxdvi.h <<'*-*-END-of-jxdvi.h-*-*'
+X/*
+X *	jxdvi.h	include file for jxdvi/dvi2nwp.
+X *	$Header: jxdvi.h,v 1.3 88/02/27 17:41:20 atsuo Exp $
+X *          written by Atsuo, K.
+X *          on 88/02/09
+X */
+X
+X#include "atsuo-copyright.h"
+X
+X#define one(fp)  ( ((unsigned)getc((fp))) )
+X#define two(fp)  (getc((fp))+(getc((fp))*0x100))
+X/*
+X * #define two(fp)  ( ((unsigned)getc((fp))*0x100) + ((unsigned)getc((fp))) )
+X */
+X#define four(fp) (getc(fp)+(getc(fp)+(getc(fp)+(getc(fp)<<8)<<8)<<8))
+X
+X#define stwo(fp)    snum(fp, 2)
+X#define sfour(fp)   snum(fp, 4)
+X
+X                      
+X/* num((fp), 4)*/
+X/*( ((unsigned)getc((fp))<<24) + ((unsigned)getc((fp))<<16) + ((unsigned)getc((fp))<<8) + ((unsigned)getc((fp))) )
+X*/
+*-*-END-of-jxdvi.h-*-*
+echo x - mit-copyright.h
+sed 's/^X//' >mit-copyright.h <<'*-*-END-of-mit-copyright.h-*-*'
+X/*
+X
+XCopyright 1985 by the Massachusetts Institute of Technology
+X
+XPermission to use, copy, modify, and distribute this
+Xsoftware and its documentation for any purpose and without
+Xfee is hereby granted, provided that the above copyright
+Xnotice appear in all copies and that both that copyright
+Xnotice and this permission notice appear in supporting
+Xdocumentation, and that the name of M.I.T. not be used in
+Xadvertising or publicity pertaining to distribution of the
+Xsoftware without specific, written prior permission.
+XM.I.T. makes no representations about the suitability of
+Xthis software for any purpose.  It is provided "as is"
+Xwithout express or implied warranty.
+X
+XThis software is not subject to any license of the American
+XTelephone and Telegraph Company or of the Regents of the
+XUniversity of California.
+X
+X*/
+X
+*-*-END-of-mit-copyright.h-*-*
+echo x - pxl.h
+sed 's/^X//' >pxl.h <<'*-*-END-of-pxl.h-*-*'
+X/*
+X *	Written by Eric C. Cooper, CMU
+X *
+X */
+X/* $Header: pxl.h,v 1.1 88/02/06 11:28:24 atsuo Exp $ */
+X
+X#define BITS_PER_LONG 32
+X#define BITS_PER_SHORT 16
+X#define BITS_PER_BYTE 8
+X
+X#define BYTES_PER_LONG (BITS_PER_LONG/BITS_PER_BYTE)
+X#define BYTES_PER_SHORT (BITS_PER_SHORT/BITS_PER_BYTE)
+X
+X#define SHORTS_PER_LONG (BITS_PER_LONG/BITS_PER_SHORT)
+X
+X#define ROUNDUP(x,y) (((x)+(y)-1)/(y))
+X
+X/*
+X * Raster ops.
+X */
+X#define ROP_CLEAR	0
+X#define ROP_ERASE	2
+X#define ROP_COPYREV	3
+X#define ROP_COPY	12
+X#define ROP_PAINT	14
+X#define ROP_FILL	15
+X
+X/*
+X * Bitmap structure for raster ops.
+X */	
+Xstruct bitmap{
+X	short h, w;		/* height and width in pixels */
+X	short bytes_wide;	/* scan-line width in bytes */
+X#ifdef JXDVI
+X	char *bits;		/* pointer to the bits */
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	char *nbits;    /* pointer to the non-reversed bits */
+X#endif
+X};
+X
+X#define MAXCHARS 128		/* make 256 for 8 bit characters */
+X
+X/*
+X * Per-character information.
+X * There is one of these for each character in a font.
+X * All fields are filled in at font definition time,
+X * except for the bitmap, which is "faulted in"
+X * when the character is first referenced.
+X */
+Xstruct glyph {
+X	long addr;		/* address of bitmap in PXL file */
+X	long dvi_adv;		/* DVI units to move reference point */
+X	short x, y;		/* x and y offset in pixels */
+X	struct bitmap bitmap;	/* bitmap for character */
+X	short pxl_adv;		/* pixels to move reference point */
+X};
+X
+X/*
+X * The layout of a font information block.
+X * There is one of these for every loaded font or
+X * magnification thereof.
+X *
+X * Also note the strange units.  The design size is in 1/2^20 point
+X * units (also called micro-points), and the individual character widths
+X * are in the TFM file in 1/2^20 ems units, i.e. relative to the design size.
+X */
+X
+Xstruct font {
+X	struct font *next;		/* link to next font info block */
+X	struct font *prev;		/* link to previous font info block */
+X	int TeXnumber;			/* font number (in DVI file) */
+X	int scale;			/* scaled size in DVI units */
+X	int design;			/* design size in DVI units */
+X	char *fontname;			/* PXL file name */
+X	FILE *file;			/* open PXL file or NULL */
+X	struct glyph glyph[MAXCHARS];
+X};
+*-*-END-of-pxl.h-*-*
+echo x - add.c
+sed 's/^X//' >add.c <<'*-*-END-of-add.c-*-*'
+X /*
+X *   add.c
+X *	$Header: add.c,v 1.9 88/02/23 14:59:44 atsuo Exp $
+X *	written by Atsuo, K. (ISIR)
+X */
+X
+X#include "atsuo-copyright.h"
+X
+X#include <stdio.h>
+X#include <X/Xlib.h>
+X#include <fcntl.h>
+X#include <sys/ioctl.h>
+X#include <newsiop/lbp.h>
+X#include "pxl.h"
+X#include "add.h"
+X
+Xchar	tmp_file[64];
+Xint	direct = 0;
+Xint	verbose = 0;
+Xint	double_side = 0;
+Xint	x_offset = 0, y_offset = 0;
+Xint	odd_pages = 0, even_pages = 0;
+Xint	begin_page_num = 0, end_page_num = 9999;
+Xint	noprint = 0;
+X
+Xextern	current_page;
+X
+Xunsigned char frame[FRAME_SIZE+1];	/* guard against overshoot */
+Xint	lbp = -1;
+X
+Xchar *
+XstdinToTempFile()
+X{
+X	int	c;
+X	FILE	*dvi;
+X
+X	strcpy(tmp_file,TMPFILE);
+X	mktemp(tmp_file);
+X
+X	dvi = fopen(tmp_file,"w");
+X	if (dvi == NULL) {
+X		perror("fopen tmp_file");
+X#ifdef JXDVI
+X		exit(1);
+X#endif
+X#ifdef DVI2NWP
+X		exit(0);
+X#endif
+X	}
+X	while((c=getchar()) != EOF) {
+X		putc((unsigned char)c, dvi);
+X	}
+X	fclose(dvi);
+X
+X	return(tmp_file);
+X}
+X
+XrmTempFile()
+X{
+X	unlink(tmp_file);
+X}
+X
+Xclear_image_memory()
+X{
+X	bzero(frame,FRAME_SIZE);
+X}
+X
+Xput_rectangle_to_image(x, y, w, h)
+X	long x, y, w, h;
+X{
+X	register unsigned int	i, j, xl, xr, l, r;
+X	CELL	lc, rc;
+X
+X	x -= x_offset;
+X	y -= y_offset;
+X	/* current_page is odd when even pages are being printed.*/
+X	if (double_side == 1 && (current_page%2)==1) {
+X		x -= BIT_LEFT_OFFSET;
+X	}
+X	if ( x<0 || y<0 ) return;
+X        if ( (x+w)>FRAME_BIT_WIDTH || (y+h)>FRAME_BIT_HEIGHT ) return;
+X/*printf("x:%d,y:%d ",x,y); fflush(stdout);*/
+X
+X	xl = (int) (x / BITS_PAR_CELL);
+X	l = (int) (x % BITS_PAR_CELL);
+X	xr = (int) ((x+w) / BITS_PAR_CELL);
+X	r = (int) ((x+w) % BITS_PAR_CELL);
+X/*printf("x:%d y:%d xl:%d l:%d xr:%d r:%d\n",x,y,xl,l,xr,r); fflush(stdout);*/
+X
+X	if ( w >= BITS_PAR_CELL) {
+X		lc = ((unsigned char)0xff) >> l;
+X		rc = ((unsigned char)0xff) << (BITS_PAR_CELL - r);
+X		for (j = y; j <= y+h; j++) {			/* Up to Down */
+X			if (l != 0) {						/* Left to Right */
+X/*				frame[xl+1+(j*FRAME_WIDTH)] |= lc;*/
+X				frame[xl+(j*FRAME_WIDTH)] |= lc;
+X			} else {
+X				frame[xl+(j*FRAME_WIDTH)] |= 0xff;
+X			}
+X			for ( i=xl+1; i<xr; i++) {
+X				frame[i+(j*FRAME_WIDTH)]  |= (unsigned char) 0xff;
+X			}
+X			if (r != 0) {
+X				frame[xr+(j*FRAME_WIDTH)] |= rc;
+X			}
+X		}
+X	} else {
+X		lc = ((unsigned)((0xff << (BITS_PAR_CELL - w)) & 0xff)) >> l;
+X		rc = ((unsigned)((0xff >> (BITS_PAR_CELL - w)) & 0xff)) <<
+X			(BITS_PAR_CELL - r);
+X/*printf(" | x:%d y:%d w:%d h:%d xl:%d xr:%d l:%d r:%d lc:%#2x rc:%#2x",
+X *				x, y, w, h, xl, xr, l, r, lc, rc);
+X */
+X		for (j = y; j <= y+h; j++) {			/* Up to Down */
+X			frame[xl+(j*FRAME_WIDTH)] |= lc;
+X			if (xl != xr) {
+X				frame[xr+(j*FRAME_WIDTH)] |= rc;
+X			}
+X		}
+X	}
+X}
+X
+X/*
+X * Put_bitmap_to_image() assumes that:
+X *	1. bitmap->nbits contains no garbage bits in padding bits.
+X *	   That is, pad bits are all zeros.
+X */
+X
+Xput_bitmap_to_image(bitmap, x, y)
+X	register struct bitmap *bitmap;
+X	long x;
+X	register long y;
+X{
+X	register int	i, j;
+X	register int	bw;
+X	int	rs;
+X	int	w, h, xx;
+X	unsigned char	buf[128]; /* Must be unsigned !! 128 bytes may be enough */
+X	register unsigned char	*b=buf;
+X	register unsigned char	*f;
+X	register unsigned char	*nb;
+X
+X	x -= x_offset;
+X	y -= y_offset;
+X	/* current_page is odd when even pages are being printed.*/
+X	if (double_side == 1 && (current_page%2)==1) {
+X		x -= BIT_LEFT_OFFSET;
+X	}
+X/*printf("x:%d,y:%d ",x,y); fflush(stdout);*/
+X	w = (int) bitmap->w;
+X	h = (int) bitmap->h;
+X	bw = (int) bitmap->bytes_wide;
+X	nb = (unsigned char *) bitmap->nbits;
+X
+X	if ( x<0 || y<0 ) return;
+X        if ( (x+w)>FRAME_BIT_WIDTH || (y+h)>FRAME_BIT_HEIGHT ) return;
+X
+X	xx = (int) x/BITS_PAR_CELL;
+X	rs = (int) x%BITS_PAR_CELL;			/* 8 is bits width of char */
+X
+X	for (j=0; j<h; j++) {
+X	    bcopy((nb+j*bw),b,bw);			/* Copy nbits to buf */
+X	    if (rs != 0) {				/* Shift buf[] >> rs */
+X		*(b+bw) = (*(b+bw-1)) << (BITS_PAR_CELL-rs);
+X		for (i=bw-1; i>0; i--) {
+X		    *(b+i) = ( (*(b+i)) >> rs ) | ( (*(b+i-1) << (BITS_PAR_CELL-rs)) );
+X		}
+X		*b = (*b) >> rs;
+X	    } else {
+X		*(b+bw) = 0x00;
+X	    }
+X	    f = &(frame[xx+(j+y)*FRAME_WIDTH]);
+X	    for (i=0; i<=bw; i++) {	/* Copy buf[] to frame[] */
+X					/* Note that it must be i<=bw */
+X		*(f+i) |= *(b+i);
+X/*		frame[i+xx+(j+y)*FRAME_WIDTH] |= *(b+i);*/
+X	}
+X    }
+X}
+X
+Xdump_frame()
+X{
+X	FILE	*dump;
+X	register int	i;
+X
+X	if ((dump=fopen("dump","w")) == NULL)
+X		perror("dump_frame");
+X
+X	for (i=0; i<FRAME_SIZE; i++) {
+X		putc(frame[i],dump);
+X	}
+X	fclose(dump);
+X}
+X
+Xinit_lbp()
+X{
+X	if (direct == 1) {
+X		if (lbp == -1) {
+X			lbp = open(NWP_DEV,O_WRONLY);
+X			if (lbp < 0) {
+X				perror("open");
+X				lbp = -2;
+X			}
+X		} else if (lbp == -2) {
+X			return;
+X		}
+X	} else {
+X		lbp = 1;			/* Standard Out */
+X	}
+X}
+X
+Xend_lbp()
+X{
+X	int	err;
+XAGAIN:
+X	err = ioctl(lbp,LBIOCSTOP,0);
+X	if (err < 0) {
+X		if (check_lbp_status(lbp) == RETRY) goto AGAIN;
+X		else exit(2);
+X	}
+X
+X	if (direct == 1) {
+X		close(lbp);
+X	}
+X}
+X
+Xrestart_lbp()
+X{
+X	int	err;
+X	
+XAGAIN:
+Xprintf("Restarting LBP\n");
+X	err = ioctl(lbp,LBIOCSTART,0);
+X	if (err < 0) {
+X		if (check_lbp_status(lbp) == RETRY) goto AGAIN;
+X		else exit(2);
+X	}
+X	err = ioctl(lbp,LBIOCSTOP,0);
+X	if (err < 0) {
+X	/* If lbp is ready, restart lbp before printing new frame. */
+X		if (check_lbp_status(lbp) == RETRY) restart_lbp();
+X		else exit(2);
+X	}
+X}
+X
+Xprint_frame(current_page)
+Xint	current_page;
+X{
+X	int	err;
+X#ifdef PROFILE
+Xreturn(0);
+X#endif
+X	if ( direct && verbose ) {
+X		printf("Printing current: %d\n",
+X				current_page);
+X	}
+X
+X	/* Flush previous page. */
+X	err = ioctl(lbp,LBIOCSTOP,0);
+X	if (err < 0) {
+X		/* If REPRINT needed, restart lbp. */
+X		if (check_lbp_status(lbp) == RESTART) restart_lbp();
+X	}
+X
+XAGAIN:
+X	if (lseek(lbp,0L,0) != 0L) {
+X		perror("dvi2nwp");
+X		exit(2);
+X	}
+X	
+X	err = write(lbp,(char *)frame,FRAME_SIZE);
+X	if (err != FRAME_SIZE) {
+X		perror("dvi2nwp");
+X		exit(2);
+X	}
+X
+X	err = ioctl(lbp,LBIOCSTART,0);
+X	if (err < 0) {
+X		if (check_lbp_status(lbp) == RETRY) goto AGAIN;
+X		else exit(2);
+X	}
+X#ifdef ACCT
+X	npages++;
+X#endif ACCT
+X}
+X
+Xcheck_lbp_status(lbp)
+X/* 
+X * Return RETRY if LBP is ready. 
+X * Return RESTART if reprint needed.
+X */
+Xint	lbp;
+X{
+X	struct lbp_stat status;
+X	int	err;
+X	
+XAGAIN:
+X/* Clear status */
+X	status.stat[0] = status.stat[1] = status.stat[2] = 0;
+X	
+X	err = ioctl(lbp,LBIOCSTATUS,&status);
+X	if (err < 0) {
+X		fprintf("dvi2nwp:Can't get LBP status. Aborting\n");
+X		exit(2);
+X	}
+X	
+X	if (status.stat[0] & ST0_CALL) {
+X		/* Check LBP malfunction */
+X
+X		if (status.stat[2] & ST2_FIXER) {
+X			fprintf(stderr,"LBP Fixer malfunction. ");
+X		}
+X		if (status.stat[2] & ST2_SCANNER) {
+X			fprintf(stderr,"LBP Scanner malfunction. ");
+X		}
+X		if (status.stat[2] & ST2_MOTOR) {
+X			fprintf(stderr,"LBP Motor malfunction. ");
+X		}
+X		if (((status.stat[2])&0x0fe) != 0) { /*  Mask parity bit */
+X			fprintf(stderr,"dvi2nwp:Aborting\n");
+X			exit(2);
+X		}
+X
+X		/* LBP is OK, but some minor errors occured. */
+X		if (status.stat[1] & ST1_NO_CARTRIGE) {
+X			fprintf(stderr,"LBP No tonner cartrige. ");
+X		}
+X		if (status.stat[1] & ST1_NO_PAPER) {
+X			fprintf(stderr,"LBP Out of paper. ");
+X		}
+X		if (status.stat[1] & ST1_JAM) {
+X			fprintf(stderr,"LBP Paper jammed. ");
+X		}
+X		if (status.stat[1] & ST1_OPEN) {
+X			fprintf(stderr,"LBP Door is opened. ");
+X		}
+X		if (status.stat[1] & ST1_TEST) {
+X			fprintf(stderr,"LBP Doing test print. ");
+X		}
+X		if (((status.stat[1])&0x0fe) != 0) { /*  Mask parity bit */
+X			fprintf(stderr,"dvi2nwp is sleeping 60 sec.\n");
+X			sleep(60);
+X			goto AGAIN;
+X		}
+X	}
+X	if (status.stat[0] & ST0_WAIT) {
+X		fprintf(stderr,"LBP Not ready, please wait. ");
+X		fprintf(stderr,"dvi2nwp is sleeping 60 sec.\n");
+X		sleep(60);
+X		goto AGAIN;
+X	}
+X
+X	/* LBP is now OK. let's retry printing */
+X	if (status.stat[0] & ST0_REPRINT_REQ) {
+Xprintf("Need reprint:%d\n",NREPRINT(status.stat[3]));
+X		return RESTART;
+X	}
+X	return RETRY;
+X}
+*-*-END-of-add.c-*-*
+echo x - c2i.c
+sed 's/^X//' >c2i.c <<'*-*-END-of-c2i.c-*-*'
+X/*
+X *	JIS code to NWF index
+X *	$Header: c2i.c,v 1.2 88/02/08 01:31:53 atsuo Exp $
+X *		written by Atsuo, K.
+X *		on 87/12/26
+X */
+X
+X#include "atsuo-copyright.h"  
+X
+X#include <stdio.h>
+X
+Xstruct jis_to_index {
+X	unsigned short	start;		/* start of block */
+X	unsigned short	end;		/* end of block */
+X	unsigned short	index_base;
+X};
+X
+Xstruct jis_to_index jis_code_table[] = {
+X	{ 0x2121, 0x217e, 0 },
+X	{ 0x2221, 0x222e, 94 },
+X	{ 0x223a, 0x2241, 108 },
+X	{ 0x224a, 0x2251, 116 },
+X	{ 0x225c, 0x226a, 123 },
+X	{ 0x2272, 0x2279, 138 },
+X	{ 0x227e, 0x227e, 146 },
+X	{ 0x2330, 0x2339, 147 },		/* 0..9 */
+X	{ 0x2341, 0x235a, 157 },		/* A..Z */
+X	{ 0x2361, 0x237a, 183 },		/* a..z */
+X	{ 0x2421, 0x2473, 209 },		/* 'a'..'nn' (hiragana) */
+X	{ 0x2521, 0x257e, 292 },		/* 'A'..'NN' (katakana) */
+X	{ 0x2621, 0x2638, 378 },
+X	{ 0x2641, 0x2658, 402 },
+X	{ 0x2721, 0x2742, 426 },
+X	{ 0x2751, 0x2771, 459 },
+X	{ 0x2821, 0x2840, 492 }, 
+X	{ 0, 0, 0 }
+X};
+X
+Xjis_to_index(jis)
+Xregister unsigned int jis;
+X{
+X	register int	i;
+X        register struct jis_to_index *j;
+X        
+X        j = jis_code_table;
+X        
+X	for (i=0; ; i++) {				/* 1st block */
+X		if ((j+i)->start == 0) break;
+X
+X		if (jis <= (j+i)->end) {
+X			return (jis - (j+i)->start + 
+X					(j+i)->index_base);
+X		}
+X	}
+X	if (jis <= 0x4f53) {			/* 2nd block */
+X		return ( (((jis-0x3021)>>8)&0x7f)*94 + ((jis-0x3021)&0x7f) + 524 );
+X	}
+X	if (jis <= 0x7424) {			/* 3rd block */
+X		return ( (((jis-0x5021)>>8)&0x7f)*94 + ((jis-0x5021)&0x7f) + 3489 );
+X	}
+X
+X	return (-1);
+X}
+*-*-END-of-c2i.c-*-*
+echo x - font.c
+sed 's/^X//' >font.c <<'*-*-END-of-font.c-*-*'
+X/*
+X *	Font Manager for jxdvi/dvi2nwp
+X *	$Header: font.c,v 1.3 88/02/29 15:24:51 atsuo Exp $
+X *		written by Atsuo, K.
+X *		on 25/12/87
+X */
+X
+X#include "atsuo-copyright.h"  
+X
+X#include <sys/types.h>
+X#include <X/Xlib.h>
+X#include <stdio.h>
+X#include <ctype.h>
+X#include <strings.h>
+X#include "jxdvi.h"
+X#include "font.h"
+X#include "dvi.h"
+X#include "pxl.h"
+X
+Xextern double conv;
+Xextern int	debug;
+X
+X#define pixel_round(x)      ((long) (conv * (double) (x) + 0.5))
+X
+Xextern char *malloc();
+X
+Xextern long	magnification, denominator, numerator;
+Xextern int	pixels_per_inch;
+Xextern struct font *current_font;
+Xextern int shrink_factor;
+Xextern int list_fonts;
+Xextern char reverse_byte[];
+Xextern int font_not_found;
+Xextern int n_open_fonts;
+Xextern unsigned long num();
+X
+X#define MAX_OPEN_K_FONTS 5
+Xint n_open_k_fonts = 0;                /* for LRU management of kanji fonts */
+X
+Xstruct glyph current_kanji_glyph;
+X
+X/* Font Kind Database */
+Xint font_kind[0xff];
+Xint	current_font_kind;
+X
+X/* kanji font ring list and bitmap table */
+Xstruct k_font	*kanji_font_head;
+Xstruct k_font	*current_kanji_font;
+X
+Xstruct k_bitmap *kanji_font_bitmap[7000];
+X
+X/*
+X *	font_manager(command,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+X *		int	command;
+X *		Ptr	arg1, arg2, arg3;
+X *
+X *		commands are:
+X *		DEFINE_FONT		Define font with
+X *			arg1	font_def command (int)
+X *			arg2	font number ( int )
+X *			arg3	check sum   ( int )
+X *			arg4	scale       ( int )
+X *			arg5	design size ( int )
+X *			arg6	name length	( int )
+X *			arg7	name        ( *char )
+X *		GET_GLYPH		Get glyph with
+X *			arg1	char code   ( int )
+X *			arg2    struct glyph( *(struct gryph) )
+X *		CHANGE_FONT		Change current font
+X *			arg1	new font number ( int )
+X *		CLOSE_FONT_FILE: Close all files
+X *
+X *		font_manager returns TRUE if succeeded else return FALUSE.
+X *
+X *		Note: Arguments not used are ignored.
+X */
+X
+Xfont_manager(com,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+Xint	com;
+XPtr arg1, arg2, arg3, arg4, arg5, arg6, arg7;
+X{
+X	switch(com) {
+X	case DEFINE_FONT:
+X	{
+X	/* arg1:font_def command, arg2:font num, arg3:check sum, arg4:scale,
+X	 * arg5:design, arg6:filename len, arg7:font name
+X	 */
+X		int		s;
+X		
+X		s = kanji_font_q((char *)arg7);
+X		if (s == TRUE) {
+X			struct jfm j;
+X			struct k_font *kf, *add_k_font();
+X			struct k_font *search_k_font_by_name();
+X
+X			kf = search_k_font_by_name((char *)arg7, (int)arg4, (int)arg5);
+X			if (kf != NULL) {			/* font is pre-loaded */
+X				kf->TeXnumber = (int)arg2;
+X			} else {
+X				read_jfm((char *)arg7,&j);
+X
+X				kf = add_k_font((int)arg2,(int)arg4,(int)arg5,&j);
+X				make_k_glyph(kf,&j);
+X
+X				if (!open_nwf_file(kf)) {
+X#ifdef JXDVI
+X					printf("%s [not found]\n", kf->fontname);
+X#endif
+X#ifdef DVI2NWP
+X					fprintf(stderr,"%s [not found]\n", kf->fontname);
+X#endif
+X					return;
+X				} else {
+X					if (list_fonts)
+X						printf("%s\n", kf->fontname);
+X				}
+X
+X				if (!font_not_found) {
+X					read_special_k_bitmap(&j,kf);
+X				}
+X			}
+X			/* Register font kind */
+X			font_kind[(int)arg2] = F_KANJI;
+X		} else 
+X		if (s == FALSE) {
+X			struct font *f;
+X			struct font *search_font_by_name();
+X
+X			f = search_font_by_name((char *)arg7, (int)arg4, (int)arg5);
+X			if (f != NULL) {			/* font is pre-loaded */
+X				f->TeXnumber = (int)arg2;
+X			} else {
+X				define_font((int)arg1,(int)arg2,(int)arg3,(int)arg4,(int)arg5,
+X    	                (int)arg6,(char *)arg7);
+X			}
+X			/* Register font kind */
+X			font_kind[(int)arg2] = F_ALPHA;
+X		} else {
+X			return FALSE;
+X		}
+X
+X		break;
+X	}
+X	case CLOSE_FONT_FILE:
+X	{
+X		close_all_file();
+X		close_all_k_file();
+X
+X		break;
+X	}
+X	case PRE_DEFINE_FONT:
+X	{
+X		/* arg1:number (<0) arg2:scale, arg3:design size, arg4:font name */
+X
+X		int		s=TRUE;
+X/*
+X**		s = kanji_font_q((char *)arg7);
+X*/
+X		if (s == TRUE) {
+X			struct jfm j;
+X			struct k_font *kf, *add_k_font();
+X
+Xprintf("Pre-defining font:%s, scale:%d, design size:%d\n",
+X			(char *)arg4, (int)arg2, (int)arg3);
+X
+X			read_jfm((char *)arg4,&j);
+X
+X			kf = add_k_font((int)arg1,(int)arg2,(int)arg3,&j);
+X			make_k_glyph(kf,&j);
+X			if (!font_not_found) {
+Xprintf("Pre-loading special chars of font:%s\n",kf->fontname);
+X				read_special_k_bitmap(&j,kf);
+X				/* Do not register font kind yet 
+X				** We are pre-defining font. But current_font_kind is F_KANJI
+X				*/
+X				/* font_kind[(int)arg2] = F_KANJI;*/
+X				current_font_kind = F_KANJI;
+X			}
+X		} else 
+X		if (s == FALSE) {
+X			define_font((int)arg1,(int)arg2,(int)arg3,(int)arg4,(int)arg5,
+X                    (int)arg6,(char *)arg7);
+X
+X			/* Register font kind */
+X			font_kind[(int)arg2] = F_ALPHA;
+X		} else {
+X			return FALSE;
+X		}
+X
+X		break;
+X	}
+X	case GET_GLYPH:
+X	{
+X		int cc;
+X		struct glyph *set_glyph(), *set_kanji_glyph();
+X		struct glyph ** g;
+X
+X/*printf("%x:",arg1); fflush(stdout);*/
+X		cc = (int)arg1;
+X		g = (struct glyph **)arg2;
+X/*printf("%x ",cc); fflush(stdout);*/
+X		if (current_font_kind == F_ALPHA) {
+X			*g = set_glyph(cc);
+X		} else {
+X			*g = set_kanji_glyph(cc);
+X		}
+X		break;
+X	}
+X	case CHANGE_FONT:
+X		if ( (current_font_kind=font_kind[(int)arg1]) == F_ALPHA) {
+X			change_font((unsigned long)arg1);
+X		} else {
+X			change_k_font((unsigned long)arg1);
+X		}
+X		break;
+X	default:
+X		break;
+X	}
+X}
+X
+Xstruct font *
+Xsearch_font_by_name(name, sc, d_sc)
+Xchar	*name;				/* font name */
+Xint		sc, d_sc;			/* scaled size, design size */
+X{
+X	double realsize;
+X	char	fontname[128];
+X	register struct font *fontp;
+X
+X#ifdef DEBUG
+X	printf("search_font_by_name name:%s, sc:%d, d_sc:%d\n",name,sc,d_sc);
+X#endif
+X
+X	strcpy(fontname,name);
+X	realsize = (magnification/1000.)*((float)sc / d_sc);
+X	make_font_name((double)realsize,&(fontname[strlen(name)]),PXLFONT_SUFFIX);
+X
+X	if ( (fontp=current_font)==NULL ) return NULL;
+X	for (;;) {
+X		if (strcmp(fontp->fontname,fontname)==0) return fontp;
+X		fontp = fontp->next;
+X		if (fontp == current_font) return NULL;
+X	}
+X}
+X
+Xstruct k_font *
+Xsearch_k_font_by_name(name, sc, d_sc)
+Xchar	*name;				/* font name */
+Xint		sc, d_sc;			/* scaled size, design size */
+X{
+X	double realsize;
+X	char	fontname[128];
+X	register struct k_font *fontp;
+X
+X	strcpy(fontname,name);
+X	realsize = (magnification/1000.)*((float)sc / d_sc);
+X	make_font_name((double)realsize,&(fontname[strlen(name)]),NWFFONT_SUFFIX);
+X#ifdef DEBUG
+X	printf("search_k_font_by_name fontname:%s\n",fontname);
+X#endif
+X	if ( (fontp=current_kanji_font)==NULL ) return NULL;
+X	for (;;) {
+X		if (strcmp(fontp->fontname,fontname)==0) return fontp;
+X		fontp = fontp->next;
+X		if (fontp == current_kanji_font) return NULL;
+X	}
+X}
+X
+Xclose_all_file()
+X{
+X	struct font *fontp;
+X
+X	if ( (fontp=current_font)==NULL ) return NULL;
+X	for (;;) {
+X		if (fontp->file != NULL) {
+X			fclose(fontp->file);
+X			fontp->file = NULL;
+X		}
+X		fontp = fontp->next;
+X		if (fontp == current_font) break;
+X	}
+X	n_open_fonts = 0;
+X}
+X
+X/* close_all_k_file() closes all files currently opened.
+X** It's called at the end of pre-loading.
+X*/
+Xclose_all_k_file()
+X{
+X	register struct k_font *fontp;
+X
+X	if ( (fontp=current_kanji_font)==NULL ) return NULL;
+X	for (;;) {
+X#	ifdef DEBUG
+X		printf("Closing font preFontNum:%d\n",fontp->preFontNum);
+X#	endif
+X		if (fontp->file != NULL) {
+X			fclose(fontp->file);
+X			fontp->file = NULL;
+X		}
+X		fontp = fontp->next;
+X		if (fontp == current_kanji_font) break;;
+X	}
+X	n_open_k_fonts = 0;
+X}
+X
+Xstruct k_font *
+Xadd_k_font(n,sc,d_sc,j)
+Xint	n,sc,d_sc;			/* font number, scaled size, design size */
+Xstruct jfm *j;
+X{
+X	struct k_font *kf;
+X	float	realsize;
+X	int		len;
+X
+X	kf = (struct k_font *)calloc(1,(sizeof(struct k_font)));
+X	if (kf == NULL)
+X		error("xdvi: Can't allocate memory for font");
+X	kf->TeXnumber = n;
+X	kf->preFontNum = n;
+X	kf->scale = sc;
+X	kf->design = d_sc;
+X
+X	len = strlen(j->fn);
+X	kf->fontname = malloc((unsigned)(len+10)); /* leave space for mag */
+X	strcpy(kf->fontname,j->fn);
+X
+X	realsize = (magnification/1000.)*((float) kf->scale / kf->design);
+X	make_font_name((double)realsize,&kf->fontname[len],NWFFONT_SUFFIX);
+X	/* NWF format does not contain font information.
+X	 * We refer internal database and set
+X	 * h, w, and bytes_wide.
+X	 */
+X	set_nwf_data(kf);
+X
+X/* for debugging */
+X/*
+X *print_k_font(kf);
+X */
+X
+X	if (kanji_font_head == NULL) {
+X		kanji_font_head = kf;
+X		current_kanji_font = kf;
+X		kf->next = kf;
+X		kf->prev = kf;
+X	} else {
+X		current_kanji_font->prev->next = kf;
+X		kf->prev = current_kanji_font->prev;
+X		current_kanji_font->prev = kf;
+X		kf->next = current_kanji_font;
+X		current_kanji_font = kf;
+X	}
+X
+X	return kf;
+X}
+X
+Xset_nwf_data(kf)
+Xstruct k_font *kf;
+X{
+X	int	i;
+X
+X	for (i=0; ; i++) {
+X		if (kanji_font_db[i].fontname == NULL) break;
+X		if ( strcmp(kf->fontname,kanji_font_db[i]) == 0 ) {
+X			kf->file_h = kf->h = kanji_font_db[i].h;
+X			kf->file_w = kf->w = kanji_font_db[i].w;
+X			kf->file_bytes_wide = kf->bytes_wide = 
+X					kanji_font_db[i].bytes_wide;
+X			break;
+X		}
+X	}
+X}
+X
+X/*
+X**	Make Kanji glyph from jfm
+X*/
+X#define GET_HEIGHT_INDEX(h_d) ( ((h_d)>>4)&0x0f )
+X#define GET_DEPTH_INDEX(h_d)  ( (h_d)&0x0f )
+X
+Xmake_k_glyph(kf,j)
+Xstruct k_font	*kf;
+Xstruct jfm		*j;
+X{
+X	int	i;
+X
+X	kf->glyph = (struct k_glyph *) malloc( 
+X					(unsigned)sizeof(struct k_glyph)*(j->table[J_EC]+1));
+X
+X	for (i=0; i<= j->table[J_EC]; i++) {
+X		kf->glyph[i].dvi_adv =
+X			( (double) kf->scale * j->width[(j->info[i].width_ix)] / (1<<20) );
+X		kf->glyph[i].x = 0;
+X		kf->glyph[i].y = pixel_round(
+X			( (double) kf->scale *
+X			  (j->height[GET_HEIGHT_INDEX(j->info[i].height_depth_ix)]) /
+X			  (1<<20) ) );
+X		kf->glyph[i].pxl_adv = pixel_round(kf->glyph[i].dvi_adv);
+X	}
+X}
+X
+X/*
+X**      define_font reads in
+X**      the specified PXL file, adding it to the global linked-list holding
+X**      all of the fonts used in the job.
+X*/
+X
+Xdefine_font(cmnd,num,cksm,sc,d_sc,fn_len,fn)
+Xint cmnd;
+Xint num, cksm, sc, d_sc,fn_len;
+Xchar *fn;
+X{
+X    register struct font *fontp;
+X	int len;
+X	int unmodsize;
+X	float realsize;
+X	int size;
+X        long checksum;
+X
+X	fontp = (struct font *) malloc(sizeof(struct font));
+X	if (fontp == NULL)
+X		error("xdvi: Can't allocate memory for font");
+X	fontp->TeXnumber = num;
+X	checksum = cksm;
+X	fontp->scale = sc;
+X	fontp->design = d_sc;
+X	len = fn_len;
+X	 /* leave space for magnification */
+X	fontp->fontname = malloc((unsigned)(len+10));
+X	strncpy(fontp->fontname,fn,len);
+X	fontp->fontname[len] = '\0';
+X	fontp->file = NULL;
+X/*
+X**	In the actual implementation, scaled-size/design-size hasn't been
+X**	stored with sufficient precision, hence the messing around to find
+X**	its actual value.
+X*/
+X	realsize = (magnification/1000.)*((float) fontp->scale / fontp->design);
+X
+X	make_font_name((double)realsize,&fontp->fontname[len],PXLFONT_SUFFIX);
+X
+X	if (!open_pxl_file(fontp))
+X		return;
+X	read_glyphs(fontp);
+X	if (current_font == NULL) {
+X		fontp->next = fontp;
+X		fontp->prev = fontp;
+X	} else {
+X		fontp->next = current_font;
+X		fontp->prev = current_font->prev;
+X		current_font->prev->next = fontp;
+X		current_font->prev = fontp;
+X	}
+X	current_font = fontp;
+X}
+X
+Xmake_font_name(realsize,name,suffix)
+Xdouble realsize;
+Xchar *name, *suffix;
+X{
+X	int unmodsize;
+X	int size;
+X/*
+X**	In the actual implementation, scaled-size/design-size hasn't been
+X**	stored with sufficient precision, hence the messing around to find
+X**	its actual value.
+X*/
+X	unmodsize = (realsize * 1000) + 0.5;
+X	/* a real hack to correct for rounding in some cases */
+X	switch (unmodsize) {
+X	    case 1095:
+X		realsize = 1.095445;	/* stephalf */
+X		break;
+X	    case 1315:
+X		realsize = 1.314534;	/* stepihalf */
+X		break;
+X	    case 2074:
+X		realsize = 2.0736;	/* stepiv */
+X		break;
+X	    case 2488:
+X		realsize = 2.48832;	/* stepv */
+X		break;
+X	    case 2986:
+X		realsize = 2.985984;	/* stepiv */
+X		break;
+X	}
+X	/*
+X	 * the remaining magnification steps are represented
+X	 * with sufficient accuracy already
+X	 */
+X	size = (realsize * pixels_per_inch * 5) + 0.5;
+X	sprintf(name, suffix, size);
+X}
+X
+Xextern int backwards;
+X
+Xstruct glyph *
+Xset_glyph(cc)
+Xunsigned int	cc;
+X{
+X    struct glyph *g;
+X
+X	g = &current_font->glyph[cc];
+X#ifdef JXDVI
+X	if (g->bitmap.bits == NULL) {
+X		read_pxl_bitmap(cc, g);
+X		if (backwards) reverse_bytes(&g->bitmap);
+X    }
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	if (g->bitmap.nbits == NULL) {
+X		read_pxl_bitmap(cc, g);
+X    }
+X#endif DVI2NWP
+X
+X	return (g);
+X}
+X
+Xadd_k_bitmap(kb,code)
+Xstruct k_bitmap *kb;
+Xunsigned int	code;
+X{
+X	struct k_bitmap *k;
+X	int	ix;
+X
+X	ix = jis_to_index(code);
+X	if ( kanji_font_bitmap[ix] == NULL ) {
+X		kanji_font_bitmap[ix] = kb;
+X	} else {
+X		k = kanji_font_bitmap[ix];
+X		while ( k->next != NULL) {
+X			k = k->next;
+X		}
+X		k->next = kb;
+X		kb->prev = k;
+X	}
+X	return;
+X}
+X
+Xstruct k_bitmap *
+Xget_k_bitmap(code,number)
+Xint	code;
+Xint	number;
+X{
+X	struct k_bitmap *k;
+X	int	ix;
+X
+X	ix = jis_to_index(code);
+X	if ( ix == -1 ) {
+X		printf("Illeagal code: %d, number: %d\n",code,number);
+X		ix = jis_to_index(JIS_QUESTION_MARK);
+X	}
+X	k = kanji_font_bitmap[ix];
+X	if ( k == NULL ) {
+X		return NULL;
+X	} else {
+X		do {
+X			if (k->TeXnumber == number) {
+X				break;
+X			}
+X			k = k->next;
+X		} while (k != NULL);
+X		return k;
+X	}
+X}
+X
+X/*
+X** read_nwf_bitmap reads in
+X** the specified NWF file, adding it to the global linked-list holding
+X** all of the kanji font bitmap used in the job.
+X*/
+X
+Xstruct k_bitmap *
+Xread_nwf_bitmap(kf,code,info)
+X	struct k_font *kf;
+X	unsigned int code, info;
+X{
+X	struct k_bitmap	*kb;
+X	int	byte_paddings, total_bytes;
+X	struct bitmap b;
+X	int		i, j, k;
+X	short	row;
+X#ifdef JXDVI
+X	char	*ptr;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	char	*n_ptr;
+X#endif DVI2NWP
+X
+X	/* In NWF file, bitmap rows are multiples of 8 bit wide */
+X	byte_paddings = 
+X		((kf->file_bytes_wide*BITS_PER_BYTE)%BITS_PER_SHORT) ? 1 : 0;
+X	total_bytes = kf->file_bytes_wide + byte_paddings;
+X
+X	kb = (struct k_bitmap *) malloc(sizeof(struct k_bitmap));
+X	kb->next = kb->prev = NULL;
+X	kb->uc = 0;
+X	/* kf->preFontNum and TeXnumber are always same when font is
+X	** demand-loaded. If font is pre-loaded, preFontNum gives you
+X	** real font number (in memory).
+X	*/
+X	kb->TeXnumber = kf->preFontNum;
+X	kb->info = info;
+X#ifdef JXDVI
+X	ptr = b.bits = kb->bits = malloc( ( sizeof(char) * kf->file_h *
+X						(kf->file_bytes_wide + byte_paddings) ) );
+X	if (ptr == NULL)
+X		error("jxdvi: Can't allocate bitmap for char. %d, font %s (%d by %d)",
+X				code, kf->fontname, b.h, b.w);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	n_ptr = b.nbits = kb->nbits = 
+X		malloc( ( sizeof(char) * kf->file_h *
+X						(kf->file_bytes_wide + byte_paddings) ) );
+X	if (n_ptr == NULL)
+X		error("jxdvi: Can't allocate nbitmap for char. %d, font %s",
+X			code, kf->fontname);
+X#endif DVI2NWP
+X
+X	b.h = kf->file_h;
+X	b.w = kf->file_w;
+X	b.bytes_wide = kf->bytes_wide = total_bytes;
+X
+X	if (!open_nwf_file(kf))
+X		error("xdvi: Can't find font file %s", kf->fontname);
+X	fseek(kf->file,
+X			(long)(jis_to_index(code)*kf->file_bytes_wide*kf->file_h),0);
+X
+X	for (i = 0; i < b.h; i += 1) {
+X		for (j = 0; j < kf->file_bytes_wide; j += 1) {
+X			unsigned long f;
+X			f = one(kf->file);
+X#		ifdef JXDVI
+X			*ptr++ = (char) reverse_byte[f];
+X#		endif JXDVI
+X#		ifdef DVI2NWP
+X			*n_ptr++ = (unsigned char) f;
+X#		endif DVI2NWP
+X		}
+X		if (byte_paddings) {
+X#		ifdef JXDVI
+X			*ptr++ = 0x00;
+X#		endif JXDVI
+X#		ifdef DVI2NWP
+X			*n_ptr++ = 0x00;
+X#		endif DVI2NWP
+X		}
+X	}
+X
+X#ifdef JXDVI
+X	if (shrink_factor != 1) {
+X		shrink_bitmap(&b, shrink_factor, shrink_factor);
+X		kf->h = b.h;
+X		kf->w = b.w;
+X		kf->bytes_wide = b.bytes_wide;
+X		kb->bits = b.bits;
+X	}
+X	if (backwards) reverse_bytes(&b);
+X#endif JXDVI
+X
+X	add_k_bitmap(kb,code);
+X
+X#ifdef STATISTICS
+X	kf->load += 1;
+X	kf->load_bytes += (kf->file_h * kf->file_bytes_wide);
+X#endif
+X
+X	return kb;
+X}
+X
+Xstruct glyph *
+Xset_kanji_glyph(cc)
+Xint cc;
+X{
+X	struct k_font	*k;
+X	struct k_bitmap *kb;
+X
+X	k = current_kanji_font;
+X#ifdef STATISTICS
+X	k->use += 1;
+X#endif
+X	/* kf->preFontNum and TeXnumber are always same when font is
+X	** demand-loaded. If font is pre-loaded, preFontNum gives you
+X	** real font number.
+X	*/
+X	kb = get_k_bitmap(cc, current_kanji_font->preFontNum);
+X	if (kb == NULL)
+X		kb = read_nwf_bitmap(k,cc,0);	/* demand-loaded fonts 
+X										are always type 0 */
+X
+X	current_kanji_glyph.dvi_adv = k->glyph[kb->info].dvi_adv;
+X	current_kanji_glyph.pxl_adv = k->glyph[kb->info].pxl_adv;
+X	current_kanji_glyph.x = k->glyph[kb->info].x;
+X	current_kanji_glyph.y = k->glyph[kb->info].y;
+X	current_kanji_glyph.bitmap.h = k->h;
+X	current_kanji_glyph.bitmap.w = k->w;
+X	current_kanji_glyph.bitmap.bytes_wide = k->bytes_wide;
+X#ifdef JXDVI
+X	current_kanji_glyph.bitmap.bits = kb->bits;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	current_kanji_glyph.bitmap.nbits = kb->nbits;
+X#endif DVI2NWP
+X
+X	return (&current_kanji_glyph);
+X}
+X
+Xread_pxl_bitmap(ch, g)
+X	ubyte ch;
+X	register struct glyph *g;
+X{
+X	register struct bitmap *bitmap;
+X	register int file_bytes_wide;
+X	register int i, j;
+X#ifdef JXDVI
+X	register char *ptr;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	register char *n_ptr;
+X#endif DVI2NWP
+X
+X	bitmap = &g->bitmap;
+X
+X	/* in file, bitmap rows are multiples of 32 bits wide */
+X	file_bytes_wide = ROUNDUP(bitmap->w, BITS_PER_LONG)*BYTES_PER_LONG;
+X
+X	/* width must be multiple of 16 bits for raster_op */
+X	bitmap->bytes_wide = ROUNDUP(bitmap->w, BITS_PER_SHORT)*BYTES_PER_SHORT;
+X#ifdef JXDVI
+X	ptr = bitmap->bits = malloc((unsigned) bitmap->h * bitmap->bytes_wide);
+X	if (ptr == NULL)
+X		error("jxdvi: Can't allocate bitmap for char. %d, font %s (%d by %d)",
+X			ch, current_font->fontname, bitmap->h, bitmap->w);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	n_ptr = bitmap->nbits = malloc((unsigned) bitmap->h * bitmap->bytes_wide);
+X	if (n_ptr == NULL)
+X		error("jxdvi: Can't allocate n_bitmap for char. %d, font %s",
+X				ch, current_font->fontname);
+X#endif DVI2NWP
+X
+X	if (!open_pxl_file(current_font))
+X		error("xdvi: Can't find font file %s", current_font->fontname);
+X	fseek(current_font->file, g->addr, 0);
+X
+X	for (i = 0; i < bitmap->h; i += 1)
+X		for (j = 0; j < file_bytes_wide; j += 1)
+X			if (j < bitmap->bytes_wide) {
+X				unsigned long f;
+X				f = one(current_font->file);
+X#			ifdef JXDVI
+X				*ptr++ = reverse_byte[f];
+X#			endif JXDVI
+X#			ifdef DVI2NWP
+X				*n_ptr++ = (unsigned char) f;
+X#			endif DVI2NWP
+X			} else {
+X				one(current_font->file);
+X			}
+X#ifdef JXDVI
+X	if (shrink_factor != 1)
+X		shrink_bitmap(bitmap, shrink_factor, shrink_factor);
+X	if (debug & DBG_BITMAP)
+X		print_char(ch, g);
+X#endif JXDVI
+X}
+X
+Xchange_font(n)
+X	unsigned long n;
+X{
+X        register struct font *fontp;
+X
+X	fontp = current_font;
+X	for (;;) {
+X		if (fontp->TeXnumber == n)
+X                        break;
+X		fontp = fontp->next;
+X		if (fontp == current_font)
+X			error("xdvi: Non-existent font #%d", n);
+X	}
+X	if (current_font == fontp)
+X		return;
+X	fontp->prev->next = fontp->next;
+X	fontp->next->prev = fontp->prev;
+X	fontp->next = current_font;
+X	fontp->prev = current_font->prev;
+X	current_font->prev->next = fontp;
+X	current_font->prev = fontp;
+X	current_font = fontp;
+X}
+X
+Xchange_k_font(n)
+Xunsigned long n;
+X{
+X	register struct k_font *fontp;
+X
+X	fontp = current_kanji_font;
+X
+X	/* Note thae kf->TeXnumber always gives you font number in
+X	** dvi file
+X	*/
+X	for (;;) {
+X		if (fontp->TeXnumber == n)
+X                        break;
+X		fontp = fontp->next;
+X		if (fontp == current_kanji_font)
+X			error("xdvi: Non-existent font #%d", n);
+X	}
+X	if (current_kanji_font == fontp)
+X		return;
+X	fontp->prev->next = fontp->next;
+X	fontp->next->prev = fontp->prev;
+X	fontp->next = current_kanji_font;
+X	fontp->prev = current_kanji_font->prev;
+X	current_kanji_font->prev->next = fontp;
+X	current_kanji_font->prev = fontp;
+X	current_kanji_font = fontp;
+X}
+X
+X/*
+X * Close the NWF file for the least recently used font.
+X */
+Xclose_k_lru()
+X{
+X    register struct k_font *f;
+X    
+X    f = current_kanji_font->prev;
+X    for (;;) {
+X        if (f->file != NULL)
+X            break;
+X        f = f->prev;
+X        if (f == current_kanji_font->prev)
+X            error("xdvi: Can't find an open NWF file to close");
+X    }
+Xprintf("Closing K_font:%d\n",f->TeXnumber);
+X    fclose(f->file);
+X    f->file = NULL;
+X    n_open_k_fonts -= 1;
+X}
+X                    
+Xkanji_font_q(fn)
+Xchar *fn;
+X{
+X	char	tfmname[256];
+X	FILE	*tfm;
+X	int		id;
+X
+X/*
+X *	if (n_open_k_fonts == MAX_OPEN_K_FONTS)
+X *        	close_k_lru();
+X */
+X	sprintf(tfmname,"%s/%s%s",TFM_DIRECTORY, fn, TFM_SUFFIX);
+X	tfm = fopen(tfmname,"r");
+X	if (tfm == NULL) {
+X		font_not_found = 1;
+X		printf("%s%s [not found]\n", fn, TFM_SUFFIX);
+X		return(ERROR);
+X	}
+X
+X	/* read jfm id field. */
+X	id = (int) two(tfm);
+X
+X	fclose(tfm);
+X
+X	if ( id == JFM_ID ) {
+X		return TRUE;
+X	} else {
+X		return FALSE;
+X	}
+X}
+X
+X/*
+X** read japanise font metric file since NWF files do not have
+X** font information.
+X*/
+Xread_jfm(fn,j)
+Xchar *fn;
+Xstruct jfm *j;
+X{
+X	char	tfmname[256];
+X	FILE	*tfm;
+X	int		i;
+X
+X	sprintf(tfmname,"%s/%s%s",TFM_DIRECTORY, fn, TFM_SUFFIX);
+X	tfm = fopen(tfmname,"r");
+X	if (tfm == NULL) {
+X		font_not_found = 1;
+X		printf("%s%s [not found]\n", fn, TFM_SUFFIX);
+X		return(ERROR);
+X	}
+X
+X	/* set font name */
+X	strcpy(j->fn,fn);
+X
+X	/* read jfm table field. */
+X	for (i=0; i<=J_NP; i++) {
+X		j->table[i]= (short) two(tfm);
+X	}
+X
+X	/* read jfm header */
+X	j->check_sum = four(tfm);
+X	j->design_size = four(tfm);
+X	fseek(tfm,(long)(sizeof(long)*(j->table[J_LH]-2)),1);
+X
+X	/* read jfm char_type */
+X	j->type = (struct jfm_char_type *)
+X				malloc( (sizeof(struct jfm_char_type)*j->table[J_NT]) );
+X	for (i=0; i<j->table[J_NT]; i++) {
+X		j->type[i].code = (short) two(tfm);
+X		j->type[i].index = (short) two(tfm);
+X	}
+X
+X	/* read jfm char_info */
+X	j->info = (struct jfm_char_info *)
+X				malloc( (sizeof(struct jfm_char_info)*(j->table[J_EC]+1)) );
+X	for (i=0; i<=j->table[J_EC]; i++) {
+X		j->info[i].width_ix = (unsigned char) one(tfm);
+X		j->info[i].height_depth_ix = (unsigned char) one(tfm);
+X		j->info[i].italic_ix_tag = (unsigned char) one(tfm);
+X		j->info[i].remainder_ix = (unsigned char) one(tfm);
+X	}
+X
+X	/* read jfm width */
+X	j->width = (unsigned long *)
+X				malloc((sizeof(unsigned long)*(j->table[J_NW])));
+X	for (i=0; i<j->table[J_NW]; i++) {
+X		j->width[i] = four(tfm);
+X	}
+X
+X	/* read jfm height */
+X	j->height = (unsigned long *)
+X				malloc((sizeof(unsigned long)*(j->table[J_NH])));
+X	for (i=0; i<j->table[J_NH]; i++) {
+X		j->height[i] = four(tfm);
+X	}
+X
+X	/* read jfm depth */
+X	j->depth = (unsigned long *)
+X				malloc((sizeof(unsigned long)*(j->table[J_ND])));
+X	for (i=0; i<j->table[J_ND]; i++) {
+X		j->depth[i] = four(tfm);
+X	}
+X
+X	/* read jfm italic */
+X	j->italic = (unsigned long *)
+X				malloc((sizeof(unsigned long)*(j->table[J_NI])));
+X	for (i=0; i<j->table[J_NI]; i++) {
+X		j->italic[i] = four(tfm);
+X	}
+X/* for debugging */
+X/* print_jfm(j); */
+X}
+X
+Xopen_nwf_file(font)
+Xstruct k_font *font;
+X{
+X	char filename[300];
+X	extern int errno;
+X
+X	if (font->file == NULL) {
+X	    sprintf(filename, "%s/%s",
+X			FONT_DIRECTORY, font->fontname);
+X
+X            if (n_open_k_fonts == MAX_OPEN_K_FONTS)
+X               close_k_lru();
+X            font->file = fopen(filename, "r");
+X	    if (font->file == NULL) {
+X		font_not_found = 1;
+X		return (0);
+X	    }
+X            n_open_k_fonts += 1;
+X    	}
+X	return (1);
+X}
+X
+X/*
+X * We read some kanji fonts since they need special treatment.
+X */
+Xread_special_k_bitmap(j,kf)
+Xstruct jfm *j;
+Xstruct k_font *kf;
+X{
+X	int	i;
+X
+X	for (i=1; i < j->table[J_NT]; i++) {
+X		read_nwf_bitmap(kf,(unsigned int) j->type[i].code,
+X						 (unsigned int) j->type[i].index);
+X	}		
+X}
+X
+Xprint_jfm(j)
+Xstruct jfm *j;
+X{
+X	int	i;
+X
+X	for (i=0; i<=J_NP; i++) {
+X		printf("%d ",j->table[i]);
+X	}
+X	printf("\n");
+X	printf("check_sum:%lx, designe_size:%lx\n",
+X			j->check_sum, j->design_size);
+X	for (i=0; i<j->table[J_NT]; i++) {
+X		printf("code:%x, index:%x\n",j->type[i].code,j->type[i].index);
+X	}
+X	for (i=0; i<=j->table[J_EC]; i++) {
+X		printf("w_ix:%x, hd_ix:%x, i_ix:%x, rm_ix:%x\n",
+X				j->info[i].width_ix, j->info[i].height_depth_ix,
+X				j->info[i].italic_ix_tag, j->info[i].remainder_ix);
+X	}
+X	for (i=0; i<j->table[J_NW]; i++) {
+X		printf("width:%#8x\n",j->width[i]);
+X	}
+X	for (i=0; i<j->table[J_NH]; i++) {
+X		printf("height:%#8x\n",j->height[i]);
+X	}
+X	for (i=0; i<j->table[J_ND]; i++) {
+X		printf("depth:%#8x\n",j->depth[i]);
+X	}
+X	for (i=0; i<j->table[J_NI]; i++) {
+X		printf("italic:%#8x\n",j->italic[i]);
+X	}
+X}
+X
+Xprint_k_font(kf)
+Xstruct k_font *kf;
+X{
+X	printf("TeXnumber:%d, scale:%d, design:%d\n",
+X			kf->TeXnumber, kf->scale, kf->design);
+X	printf("fontname:%s\n",kf->fontname);
+X	printf("file_h:%d, file_w:%d, file_bytes_wide:%d\n",
+X			kf->file_h, kf->file_w, kf->file_bytes_wide);
+X	printf("h:%d, w:%d, bytes_wide:%d\n",
+X			kf->h, kf->w, kf->bytes_wide);
+X}
+X
+X#ifdef STATISTICS
+Xreport_statistics()
+X{
+X	struct k_font	*k_st;
+X	struct k_font	*k;
+X	int	use, load, bytes;
+X
+X	use = load = bytes = 0;	
+X	printf("Kanji Font Usage\n");
+X
+X	k = k_st = kanji_font_head;
+X	if (k==NULL) {
+X		printf("No Kanji used\n");
+X	} else {
+X		do {
+X			use += k->use;
+X			load += k->load;
+X			bytes += k->load_bytes;
+X			printf("%s use:%d, load:%d, bytes:%d\n",
+X					k->fontname, k->use, k->load, k->load_bytes);
+X			k = k->next;
+X		} while( k != k_st );			/* Kanji Font List is ring list */
+X		printf("Total use:%d, load:%d, bytes:%d\n", use, load, bytes);
+X	}
+X}
+X#endif
+*-*-END-of-font.c-*-*
+exit

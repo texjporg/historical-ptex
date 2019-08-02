@@ -1,0 +1,89 @@
+#include "../Imake.Config"
+
+CDEBUGFLAGS=-g 
+
+/***************************************************************************/
+/*	You shouldn't have to change anything below this line		   */
+/***************************************************************************/
+
+      LIBTEXROOT= ../
+      LIBTEXSRC	= ../libtex
+         LIBTEX	= $(LIBTEXSRC)/libtex.a
+      DEPLIBTEX	= $(LIBTEX)
+        DEPLIBS = $(DEPLIBTEX) XawClientDepLibs
+  SYS_LIBRARIES = XawClientLibs -lm
+       INCLUDES	= -I$(LIBTEXROOT) -I$(INCROOT) $(DPS_INCLUDES)
+LOCAL_LIBRARIES = $(LIBTEX) $(DPS_LIB)
+
+SRCS = xtex.c widgets.c \
+                  file.c dialog.c dvi-simple.c \
+                  page.c x11fonts.c mark.c \
+                  DviPage.c DviPage2.c Valuator.c\
+		EzMenu.c EzME.c SmeLine.c
+
+HDRS	= DviPage.h dvi-simple.h mio.h xtex.h x11fonts.h \
+	DviPageP.h mark.h page.h widgets.h Valuator.h ValuatorP.h \
+	EzMenu.h EzMenuP.h EzME.h EzMEP.h
+
+OBJS = xtex.o widgets.o \
+                  file.o dialog.o dvi-simple.o \
+                  page.o x11fonts.o mark.o \
+                  DviPage.o DviPage2.o Valuator.o \
+		EzMenu.o EzME.o SmeLine.o
+
+PROGRAMS = xtex
+
+FILES = $(SRCS) $(SRCS2) $(HDRS) \
+	xtex.man Xtex.ad \
+	xtex.sty \
+	Imakefile Makefile ChangeLog FontMakefile
+
+DEFINES = $(XVERSION_DEFINES) $(POSTSCRIPT_DEFINES) -DPOPUP_WINDOW_TYPE=$(POPUP_WINDOW_TYPE) -DXTEX_VERSION=\"$(VERSION)\"
+
+VERSION	=2.16.1J#
+RCS_VERSION=2p15#
+
+#ifdef DISPLAY_POSTSCRIPT
+   POSTSCRIPT_DEFINES = -DHAVE_DPS
+              DPS_LIB = /usr/lib/libdps.a /usr/lib/libXext.a
+#else
+   POSTSCRIPT_DEFINES =
+              DPS_LIB =
+#endif
+
+all:	xtex
+
+NormalProgramTarget(xtex,$(OBJS),$(DEPLIBS),$(LOCAL_LIBRARIES),$(SYSLIBS))
+InstallProgram(xtex, $(BINDIR))
+InstallManPage(xtex, $(MANDIR))
+InstallAppDefaults(Xtex)
+
+dvi-simple.c: Imakefile
+
+ci:
+	echo "xtex version $(VERSION)" > /tmp/xtex.version
+	ci -l -f -t/tmp/xtex.version -m"xtex $(VERSION)" -n"xtex$(RCS_VESION)" $(FILES)
+
+new-ad:: Xtex.ad
+	$(INSTALL) -c $(INSTAPPFLAGS) Xtex.ad $(XAPPLOADDIR)/Xtex
+
+lint:
+	lint $(CFLAGS) $(SRCS)
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/Xtex/$$file; \
+	done
+
+xtex-$(VERSION).tar.Z:
+	tar crf xtex-$(VERSION).tar $(FILES)
+	compress xtex-$(VERSION).tar
+
+ftp: xtex-$(VERSION).tar.Z
+	mv xtex-$(VERSION).tar.Z /usr/ftp/pub/SeeTeX
+
+DependTarget()
+CleanTarget()
+TagsTarget()

@@ -1,0 +1,5 @@
+#!/bin/sh
+# setup the ./undump area for Sun2 running O.S. 3.2 or above
+echo If you are not running O.S. 3.2, use Setup.VAX4_2 instead
+cp Makefile.SUN_V2 Makefile
+cp undump.SUN_V2.c undump.c 

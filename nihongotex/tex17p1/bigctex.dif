@@ -1,0 +1,803 @@
+diff -c +text +new-file h:texdir/bigjctex.ch texdir/bigjctex.ch
+*** h:texdir/bigjctex.ch	Thu Jan 23 15:34:04 1992
+--- texdir/bigjctex.ch	Wed Feb 24 15:49:48 1993
+***************
+*** 38,44 ****
+  @x
+  @d banner=='This is TeX, Version 2.99' {printed when \TeX\ starts}
+  @y
+! @d banner=='This is BigTeX, C Version 2.99 - j1.7' {printed when \TeX\ starts}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 38,44 ----
+  @x
+  @d banner=='This is TeX, Version 2.99' {printed when \TeX\ starts}
+  @y
+! @d banner=='This is BigTeX, C Version 2.99 - j1.7 - p1.0' {printed when \TeX\ starts}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 625,632 ****
+  @d t_open_in==reset(term_in,'TTY:','/O/I') {open the terminal for text input}
+  @d t_open_out==rewrite(term_out,'TTY:','/O') {open the terminal for text output}
+  @y
+! @ Here is how to open the terminal files.  t_open_out does nothing.
+! t_open_in, on the other hand, does the work of "rescanning", or getting
+  any command line arguments the user has provided.  It's coded in C
+  externally.
+  
+--- 625,632 ----
+  @d t_open_in==reset(term_in,'TTY:','/O/I') {open the terminal for text input}
+  @d t_open_out==rewrite(term_out,'TTY:','/O') {open the terminal for text output}
+  @y
+! @ Here is how to open the terminal files.  |t_open_out| does nothing.
+! |t_open_in|, on the other hand, does the work of "rescanning", or getting
+  any command line arguments the user has provided.  It's coded in C
+  externally.
+  
+***************
+*** 644,651 ****
+  @d clear_terminal == break_in(term_in,true) {clear the terminal input buffer}
+  @d wake_up_terminal == do_nothing {cancel the user's cancellation of output}
+  @y
+! these operations can be specified with {\mc UNIX}.  Update_terminal
+! does an fflush, since that's easy.  wake_up_terminal and clear_terminal
+  are specified in external C routines, if desired.  We call fflush()
+  termflush() here, and fix it with a macro in C, so we can cast it to (void)
+  to keep lint quiet.
+--- 644,651 ----
+  @d clear_terminal == break_in(term_in,true) {clear the terminal input buffer}
+  @d wake_up_terminal == do_nothing {cancel the user's cancellation of output}
+  @y
+! these operations can be specified with {\mc UNIX}.  |Update_terminal|
+! does an fflush, since that's easy.  |wake_up_terminal| and |clear_terminal|
+  are specified in external C routines, if desired.  We call fflush()
+  termflush() here, and fix it with a macro in C, so we can cast it to (void)
+  to keep lint quiet.
+***************
+*** 686,692 ****
+  exit:end;
+  @y
+  @ The following program does the required initialization.
+! Iff anything has been specified on the command line, then t_open_in
+  will return with last > first.
+  @^system dependencies@>
+  
+--- 686,692 ----
+  exit:end;
+  @y
+  @ The following program does the required initialization.
+! Iff anything has been specified on the command line, then |t_open_in|
+  will return with last > first.
+  @^system dependencies@>
+  
+***************
+*** 785,791 ****
+  else  bad_pool('! I can''t read TEX.POOL.')
+  @y
+  else begin
+!    {Like"bad_pool, but must not close file if we never opened it}
+     wake_up_terminal; write_ln(term_out, '! I can''t read jtex.pool.');
+     get_strings_started:= false; return;
+  end
+--- 785,791 ----
+  else  bad_pool('! I can''t read TEX.POOL.')
+  @y
+  else begin
+!    {Like"|bad_pool|, but must not close file if we never opened it}
+     wake_up_terminal; write_ln(term_out, '! I can''t read jtex.pool.');
+     get_strings_started:= false; return;
+  end
+***************
+*** 1244,1250 ****
+  @!KANJI_code=halfword;
+  @=#include "memory.h";@>
+  
+! @ KANJI_code handling
+  
+  @d @!KANJI(#)==#
+  @d @!hbyte==Hi(cur_jchr)
+--- 1244,1250 ----
+  @!KANJI_code=halfword;
+  @=#include "memory.h";@>
+  
+! @ |KANJI_code| handling
+  
+  @d @!KANJI(#)==#
+  @d @!hbyte==Hi(cur_jchr)
+***************
+*** 1495,1501 ****
+      begin print(", shifted "); print_scaled(shift_amount(p));
+      end;
+    end;
+! {if type(p)=hlist_node then begin
+  
+  end;}
+  node_list_display(list_ptr(p)); {recursive call}
+--- 1495,1501 ----
+      begin print(", shifted "); print_scaled(shift_amount(p));
+      end;
+    end;
+! {if type(p)=|hlist_node| then begin
+  
+  end;}
+  node_list_display(list_ptr(p)); {recursive call}
+***************
+*** 1536,1542 ****
+    { The Unix "pc" folks removed this restriction with a remark that
+      invalid bit patterns were vanishingly improbable, so we follow
+      their example without really understanding it.
+!   if abs(mem[p+glue_offset].int)<@'4000000 then print('?.?')
+    else }
+    if fabs(g)>float_constant(20000) then
+      begin if g>float_constant(0) then print_char(">")
+--- 1536,1542 ----
+    { The Unix "pc" folks removed this restriction with a remark that
+      invalid bit patterns were vanishingly improbable, so we follow
+      their example without really understanding it.
+! %  if abs(mem[p+glue_offset].int)< @'4000000 then print('?.?')
+    else }
+    if fabs(g)>float_constant(20000) then
+      begin if g>float_constant(0) then print_char(">")
+***************
+*** 2480,2489 ****
+  @d match_token=@'6400 {$2^8\cdot|match|$}
+  @d end_match_token=@'7000 {$2^8\cdot|end_match|$}
+  @d kanji_token_base=@'10000 {$2^8\cdot|kanji|$}
+! @d jother_token=@'11000 {$2^8\cdot|other_kchar|$}
+  @d kanji_token_end=@'11400 {$2^8\cdot|other_kchar+1|$}
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % [20.293] More useless unsigned comparisons to zero
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 2480,2499 ----
+  @d match_token=@'6400 {$2^8\cdot|match|$}
+  @d end_match_token=@'7000 {$2^8\cdot|end_match|$}
+  @d kanji_token_base=@'10000 {$2^8\cdot|kanji|$}
+! @d new_kanji_token_base==@'100000 {$2^15\cdot$}
+! @d jother_token=@'11000 {$2^8\cdot|other_kchar|$} 
+  @d kanji_token_end=@'11400 {$2^8\cdot|other_kchar+1|$}
+  @z
+  
++ @x
++ @ @<Check the ``constant''...@>=
++ if cs_token_flag+undefined_control_sequence>max_halfword then bad:=21;
++ @y
++ @ @<Check the ``constant''...@>=
++ if cs_token_flag+undefined_control_sequence>new_kanji_token_base 
++     then bad:=21;
++ @z
++ 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % [20.293] More useless unsigned comparisons to zero
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 2503,2511 ****
+    else @<Display the token $(|m|,|c|)$@>;
+    end
+  @y
+! if info(p)>=cs_token_flag then print_cs(info(p)-cs_token_flag)
+! else  begin getcmdx(info(p), m, c);
+!   if (m<kanji)and(c>127) then print_esc("BAD.")
+  @.BAD@>
+    else @<Display the token $(|m|,|c|)$@>;
+    end
+--- 2513,2527 ----
+    else @<Display the token $(|m|,|c|)$@>;
+    end
+  @y
+! if (info(p)>=cs_token_flag) and (info(p)<new_kanji_token_base) 
+! then 
+!    print_cs(info(p)-cs_token_flag) 
+! else  begin 
+!   if info(p) >= new_kanji_token_base then begin 
+!        m:=cat_code(Hi(info(p))); c:=info(p);  end 
+!   else begin  getcmdx(info(p), m, c); end; 
+!     {caution! getcmdx is a multi-statement macro, then must be enclosed!}
+!   if (m<kanji)and(c>127) then print_esc("BAD.") 
+  @.BAD@>
+    else @<Display the token $(|m|,|c|)$@>;
+    end
+***************
+*** 2517,2524 ****
+  mac_param: begin print(c); print(c);
+    end;
+  @y
+! kanji,kana,other_kchar: begin print(c);p:=link(p);
+!   getcmdx(info(p), m, c);print(c);end;
+  left_brace,right_brace,math_shift,tab_mark,sup_mark,sub_mark,spacer,
+    letter,other_char: print(c);
+  mac_param: begin print(c); print(c);
+--- 2533,2540 ----
+  mac_param: begin print(c); print(c);
+    end;
+  @y
+! kanji,kana,other_kchar: begin print(Hi(c));
+!   print(Lo(c)); end;
+  left_brace,right_brace,math_shift,tab_mark,sup_mark,sub_mark,spacer,
+    letter,other_char: print(c);
+  mac_param: begin print(c); print(c);
+***************
+*** 2574,2580 ****
+  spacer: chr_cmd("blank space ");
+  letter: chr_cmd("the letter ");
+  other_char: chr_cmd("the character ");
+! kana,kanji,other_kchar: print("kanji character");
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 2590,2597 ----
+  spacer: chr_cmd("blank space ");
+  letter: chr_cmd("the letter ");
+  other_char: chr_cmd("the character ");
+! kana,kanji,other_kchar: begin print("kanji character ");
+!   print_char(Hi(chr_code)); print_char(Lo(chr_code)); end;
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 2768,2774 ****
+    begin cur_chr:=buffer[loc]; incr(loc);
+    if jflag = 1  then begin jflag:=0; goto exit; end;
+    reswitch: cur_cmd:=cat_code(cur_chr);
+!   if (cur_cmd >= kanji)and(cur_cmd <= other_kchar) then incr(jflag);
+    @<Change state if necessary, and |goto switch| if the
+      current character should be ignored,
+      or |goto reswitch| if the current character
+--- 2785,2793 ----
+    begin cur_chr:=buffer[loc]; incr(loc);
+    if jflag = 1  then begin jflag:=0; goto exit; end;
+    reswitch: cur_cmd:=cat_code(cur_chr);
+!   if (cur_cmd >= kanji)and(cur_cmd <= other_kchar) then begin
+!        cur_chr := cur_chr*256 + buffer[loc]; incr(loc);
+!    end;
+    @<Change state if necessary, and |goto switch| if the
+      current character should be ignored,
+      or |goto reswitch| if the current character
+***************
+*** 2941,2949 ****
+    if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
+    else if cat=spacer then state:=skip_blanks
+    else state:=mid_line;
+!   if (cat=other_kchar)and(k<=limit) then begin
+      cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
+!   end else if ((cat=letter)or(cat=kanji)or(cat=kana))and(k<=limit) then
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 2960,2968 ----
+    if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
+    else if cat=spacer then state:=skip_blanks
+    else state:=mid_line;
+!   if (cat=other_kchar)and(k<=limit+1) then begin
+      cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
+!   end else if ((cat=letter)or(cat=kanji)or(cat=kana))and(k<=limit+1) then
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 2976,2981 ****
+--- 2995,3021 ----
+  % [24.357] input from token list
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  @x
++ @<Input from token list, |goto restart| if end of list or
++   if a parameter needs to be expanded@>=
++ if loc<>null then {list not exhausted}
++ @^inner loop@>
++   begin t:=info(loc); loc:=link(loc); {move to next}
++   if t>=cs_token_flag then {a control sequence token}
++     begin cur_cs:=t-cs_token_flag;
++     cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
++ @y
++ @<Input from token list, |goto restart| if end of list or
++   if a parameter needs to be expanded@>=
++ if loc<>null then {list not exhausted}
++ @^inner loop@>
++   begin t:=info(loc); loc:=link(loc); {move to next}
++   if (t>=cs_token_flag) and (t<new_kanji_token_base) then
++                                           {a control sequence token}
++     begin cur_cs:=t-cs_token_flag;
++     cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
++ @z
++ 
++ @x
+        if cur_cmd=dont_expand then
+          @<Get the next token, suppressing expansion@>
+        else check_outer_validity;
+***************
+*** 2988,2994 ****
+          @<Get the next token, suppressing expansion@>
+        else check_outer_validity;
+      end
+!   else  begin get_cmd(t); {cur_cmd:=t div @'400; cur_chr:=t mod @'400;}
+      case cur_cmd of
+      left_brace: incr(align_state);
+  @z
+--- 3028,3036 ----
+          @<Get the next token, suppressing expansion@>
+        else check_outer_validity;
+      end
+!   else  if t >= new_kanji_token_base then 
+!      begin cur_chr:= t; cur_cmd:= cat_code(Hi(t)) end else 
+! begin get_cmd(t); {cur_cmd:=t div @@'400; cur_chr:=t mod @@'400;}
+      case cur_cmd of
+      left_brace: incr(align_state);
+  @z
+***************
+*** 3001,3007 ****
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @y
+! if cur_cs=0 then set_tok
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+--- 3043,3051 ----
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @y
+! if cur_cs=0 then 
+!    if cur_chr >= new_kanji_token_base then 
+!         cur_tok := cur_chr else set_tok 
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+***************
+*** 3018,3023 ****
+--- 3062,3089 ----
+  %othercases @<Complain about an undefined macro@>
+  %@z
+  
++ @x
++ @<Suppress expansion...@>=
++ begin save_scanner_status:=scanner_status; scanner_status:=normal;
++ get_token; scanner_status:=save_scanner_status; t:=cur_tok;
++ back_input; {now |start| and |loc| point to the backed-up token |t|}
++ if t>=cs_token_flag then
++   begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
++   link(p):=loc; start:=p; loc:=p;
++   end;
++ end
++ @y
++ @<Suppress expansion...@>=
++ begin save_scanner_status:=scanner_status; scanner_status:=normal;
++ get_token; scanner_status:=save_scanner_status; t:=cur_tok;
++ back_input; {now |start| and |loc| point to the backed-up token |t|}
++ if (t>=cs_token_flag) and (t<new_kanji_token_base) then
++   begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
++   link(p):=loc; start:=p; loc:=p;
++   end;
++ end
++ @z
++ 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % [25.374] get_chr
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 3028,3034 ****
+  @y
+  @:TeX capacity exceeded buffer size}{\quad buffer size@>
+      end;
+!   buffer[j]:=get_chr(info(p)); {info(p) mod @'400;} incr(j); p:=link(p);
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 3094,3106 ----
+  @y
+  @:TeX capacity exceeded buffer size}{\quad buffer size@>
+      end;
+!   if info(p) >= new_kanji_token_base then begin 
+!       buffer[j]:=Hi(info(p)); incr(j); 
+!       buffer[j]:=Lo(info(p)); incr(j); 
+!       p:=link(p); end 
+!   else 
+!   begin buffer[j]:=get_chr(info(p)); {info(p) mod @@'400;} 
+!         incr(j); p:=link(p);  end;
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 3041,3047 ****
+  end;
+  @y
+  goto restart;
+! done: if cur_cs=0 then set_tok {cur_tok:=(cur_cmd*@'400)+cur_chr}
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+--- 3113,3121 ----
+  end;
+  @y
+  goto restart;
+! done: if cur_cs=0 then 
+!           if cur_cmd >=kanji then cur_tok := cur_chr else 
+!               set_tok {cur_tok:=(cur_cmd*@@'400)+cur_chr}
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+***************
+*** 3064,3090 ****
+    begin expand;
+    get_next;
+    end;
+! if cur_cs=0 then set_tok {cur_tok:=(cur_cmd*@'400)+cur_chr}
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+- % [25.393] store 2nd KANJI token at macro parameter
+- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+- @x
+-     if info(r)>=match_token then goto continue;
+- store_new_token(cur_tok);
+- end
+- @y
+-     if info(r)>=match_token then goto continue;
+- store_new_token(cur_tok);
+- if (cur_tok>kanji_token_base)and(cur_tok<kanji_token_end) then
+- begin get_token; store_new_token(cur_tok); end;
+- end
+- @z
+- 
+- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % [26.413] scan_somthing_internal
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  @x
+--- 3138,3151 ----
+    begin expand;
+    get_next;
+    end;
+! if cur_cs=0 then 
+!           if cur_cmd >=kanji then cur_tok := cur_chr else 
+!               set_tok {cur_tok:=(cur_cmd*@@'400)+cur_chr}
+  else cur_tok:=cs_token_flag+cur_cs;
+  end;
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % [26.413] scan_somthing_internal
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  @x
+***************
+*** 3191,3206 ****
+  @y
+  @<Scan an alphabetic character code into |cur_val|@>=
+  begin get_token; {suppress macro expansion}
+! if cur_tok<cs_token_flag then
+!   if (cur_cmd>=kanji) and (cur_cmd <= other_kchar) then
+!     begin skip_mode:=false;
+!       PutHi(cx,cur_chr); get_next; PutLo(cx,cur_chr);
+!       cur_val:=tonum(cx);
+!     end else begin cur_val:=cur_chr;
+        if cur_cmd<=right_brace then
+          if cur_cmd=right_brace then incr(align_state)
+          else decr(align_state);
+      end
+  else if cur_tok<cs_token_flag+single_base then
+    cur_val:=cur_tok-cs_token_flag-active_base
+  else cur_val:=cur_tok-cs_token_flag-single_base;
+--- 3252,3266 ----
+  @y
+  @<Scan an alphabetic character code into |cur_val|@>=
+  begin get_token; {suppress macro expansion}
+! if (cur_tok<cs_token_flag) then 
+!     begin cur_val:=cur_chr; 
+        if cur_cmd<=right_brace then
+          if cur_cmd=right_brace then incr(align_state)
+          else decr(align_state);
+      end
++ else if (cur_tok>=new_kanji_token_base) then begin
++   skip_mode:=false; cur_val:=tonum(cur_chr); cx:=cur_chr;
++   end
+  else if cur_tok<cs_token_flag+single_base then
+    cur_val:=cur_tok-cs_token_flag-active_base
+  else cur_val:=cur_tok-cs_token_flag-single_base;
+***************
+*** 3247,3256 ****
+    incr(k);
+    end;
+  @y
+!   if (t<0)or(t>127) then begin
+!   if t<0 then t:=t+256; t:=jother_token+t;
+!   fast_store_new_token(t); incr(k);
+!   t:=str_pool[k]; if t<0 then t:=t+256; t:=jother_token+t;
+    end else if t=" " then t:=space_token
+    else t:=other_token+t;
+    fast_store_new_token(t);
+--- 3307,3314 ----
+    incr(k);
+    end;
+  @y
+!   if t>=128 then begin
+!       t:=t*256+str_pool[k+1]; incr(k);
+    end else if t=" " then t:=space_token
+    else t:=other_token+t;
+    fast_store_new_token(t);
+***************
+*** 3386,3393 ****
+  sjis_code,jis_code,kuten_code,number_code,roman_numeral_code: scan_int;
+  string_code, meaning_code: begin save_scanner_status:=scanner_status;
+    scanner_status:=normal; get_token;
+!   if (cur_cmd >= kanji) and (cur_cmd <= other_kchar) then
+!     begin PutHi(cx, cur_chr); get_token; end;
+     scanner_status:=save_scanner_status;
+    end;
+  font_name_code: scan_font_ident;
+--- 3444,3452 ----
+  sjis_code,jis_code,kuten_code,number_code,roman_numeral_code: scan_int;
+  string_code, meaning_code: begin save_scanner_status:=scanner_status;
+    scanner_status:=normal; get_token;
+!   if cur_tok >= new_kanji_token_base then begin
+!     cx:=cur_chr; scanner_status:=save_scanner_status;
+!   end;
+     scanner_status:=save_scanner_status;
+    end;
+  font_name_code: scan_font_ident;
+***************
+*** 3415,3479 ****
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! % [28.498] conditional: temp var for ifx
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! @x
+! @p procedure conditional;
+! label exit,common_ending;
+! var b:boolean; {is the condition true?}
+! @!r:"<"..">"; {relation to be evaluated}
+! @!m,@!n:integer; {to be tested against the second operand}
+! @!p,@!q:pointer; {for traversing token lists in \.{\\ifx} tests}
+! @!save_scanner_status:small_number; {|scanner_status| upon entry}
+! @!save_cond_ptr:pointer; {|cond_ptr| corresponding to this conditional}
+! @!this_if:small_number; {type of this conditional}
+! begin @<Push the condition stack@>;@+save_cond_ptr:=cond_ptr;this_if:=cur_chr;@/
+! @y
+! @p procedure conditional;
+! label exit,common_ending;
+! var b:boolean; {is the condition true?}
+!   @!r:"<"..">"; {relation to be evaluated}
+!   @!m,@!n:integer; {to be tested against the second operand}
+!   @!p,@!q:pointer; {for traversing token lists in \.{\\ifx} tests}
+!   @!x:integer; {to be tested against the second operand}
+!   @!y,@!z:pointer; {for traversing token lists in \.{\\ifx} tests}
+!   @!save_scanner_status:small_number; {|scanner_status| upon entry}
+!   @!save_cond_ptr:pointer; {|cond_ptr| corresponding to this conditional}
+!   @!this_if:small_number; {type of this conditional}
+! begin @<Push the condition stack@>;@+save_cond_ptr:=cond_ptr;this_if:=cur_chr;@/
+! @z
+! 
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! % [28.507] ifx : Test token : kanji token
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! % ifx Ç≈ÇÃ äøéöÉgÅ[ÉNÉìÇÃàµÇ¢.
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  @x
+! @<Test if two tokens match@>=
+! begin save_scanner_status:=scanner_status; scanner_status:=normal;
+! get_next; n:=cur_cs; p:=cur_cmd; q:=cur_chr;
+! get_next; if cur_cmd<>p then b:=false
+! else if cur_cmd<call then b:=(cur_chr=q)
+! else @<Test if two macro texts match@>;
+! scanner_status:=save_scanner_status;
+  end
+  @y
+! @<Test if two tokens match@>=
+!   begin
+!     save_scanner_status:=scanner_status; scanner_status:=normal;
+!     get_next; n:=cur_cs; p:=cur_cmd; q:=cur_chr;
+!     if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then begin
+!       getnext; q:=256*q+cur_chr;
+!     end;
+!     get_next; z:=cur_chr;
+!     if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then begin
+!       getnext; cur_chr:=256*z+cur_chr;
+!     end;
+!     if cur_cmd<>p then b:=false
+!     else if cur_cmd<call then b:=(cur_chr=q)
+!     else @<Test if two macro texts match@>;
+!     scanner_status:=save_scanner_status;
+    end
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 3474,3516 ----
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! % [28.???] if : Test Character : KANJI character
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! % if Ç≈ÇÃ äøéöÇÃàµÇ¢.
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  @x
+! @<Test if two characters match@>=
+! begin get_x_token_or_active_char;
+! if (cur_cmd>active_char)or(cur_chr>127) then
+!   begin m:=relax; n:=256;
+!   end
+! else  begin m:=cur_cmd; n:=cur_chr;
+!   end;
+! get_x_token_or_active_char;
+! if (cur_cmd>active_char)or(cur_chr>127) then
+!   begin cur_cmd:=relax; cur_chr:=256;
+!   end;
+! if this_if=if_char_code then b:=(n=cur_chr)@+else b:=(m=cur_cmd);
+  end
+  @y
+! @<Test if two characters match@>=
+! begin get_x_token_or_active_char;
+! if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then begin
+!   m:=cur_cmd; n:=cur_chr;
+    end
++ else if (cur_cmd>active_char)or(cur_chr>127) then
++   begin m:=relax; n:=256;
++   end
++ else  begin m:=cur_cmd; n:=cur_chr;
++   end;
++ get_x_token_or_active_char;
++ if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then begin
++   end
++ else if (cur_cmd>active_char)or(cur_chr>127) then
++   begin cur_cmd:=relax; cur_chr:=256;
++   end;
++ if this_if=if_char_code then b:=(n=cur_chr)@+else b:=(m=cur_cmd);
++ end
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 3530,3536 ****
+  @x
+  else  begin if (c=">")or(c=":") then
+  @y
+! else  begin if (c="/") then
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+--- 3567,3573 ----
+  @x
+  else  begin if (c=">")or(c=":") then
+  @y
+! else  begin if (c="/")or(c=":") then
+  @z
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************
+*** 5518,5525 ****
+  @<Insert post_break_penalty, check char_node@>;
+  f:=cur_jfont; l:=qi(0);
+  goto skip_loop_1;
+! main_loop_j1: PutHi(cx, cur_chr);
+! get_next; PutLo(cx,cur_chr);{get 2nd byte}
+  main_loop_j2:
+  if (not font_jtype[f] or (hbyte = 255)) then
+    begin jchar_warning(f, cx); goto big_switch;
+--- 5555,5561 ----
+  @<Insert post_break_penalty, check char_node@>;
+  f:=cur_jfont; l:=qi(0);
+  goto skip_loop_1;
+! main_loop_j1: cx:= cur_chr;
+  main_loop_j2:
+  if (not font_jtype[f] or (hbyte = 255)) then
+    begin jchar_warning(f, cx); goto big_switch;
+***************
+*** 5538,5544 ****
+  skip_loop_1:
+  i:=char_info(f)(l); KANJI(cx):=min_halfword;
+  if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!   begin PutHi(cx,cur_chr); get_next; PutLo(cx,cur_chr); 
+      l:=qi(get_jfm_pos(KANJI(cx), f)); end
+    else if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+      l:=qi(0)
+--- 5574,5580 ----
+  skip_loop_1:
+  i:=char_info(f)(l); KANJI(cx):=min_halfword;
+  if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!    begin cx := cur_chr;
+      l:=qi(get_jfm_pos(KANJI(cx), f)); end
+    else if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+      l:=qi(0)
+***************
+*** 5546,5552 ****
+        if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+  	l:=qi(0)
+          else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!           begin PutHi(cx,cur_chr); get_next; PutLo(cx,cur_chr); 
+              l:=qi(get_jfm_pos(KANJI(cx), f)); end
+  	  else if cur_cmd=char_num then
+  	    begin scan_char_num; 
+--- 5582,5588 ----
+        if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+  	l:=qi(0)
+          else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!            begin cx := cur_chr;
+              l:=qi(get_jfm_pos(KANJI(cx), f)); end
+  	  else if cur_cmd=char_num then
+  	    begin scan_char_num; 
+***************
+*** 5673,5686 ****
+    if (cur_chr>=0)and(cur_chr<256)then r:=qi(cur_chr) else
+      begin r:=qi(256); KANJI(cur_jchr):=cur_val; end
+  else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!   begin r:=qi(256); PutHi(cur_jchr,cur_chr);
+!     get_next; PutLo(cur_jchr,cur_chr); end
+  else  begin x_token; {set |cur_cmd|, |cur_chr|, |cur_tok|}
+    if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+      r:=qi(cur_chr)
+    else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!     begin r:=qi(256); PutHi(cur_jchr,cur_chr);
+!     get_next; PutLo(cur_jchr,cur_chr); end
+    else if cur_cmd=char_num then
+      begin scan_char_num;
+        if (cur_val>=0)and(cur_val<256) then
+--- 5709,5720 ----
+    if (cur_chr>=0)and(cur_chr<256)then r:=qi(cur_chr) else
+      begin r:=qi(256); KANJI(cur_jchr):=cur_val; end
+  else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!   begin r:=qi(256); cur_jchr := cur_chr; end
+  else  begin x_token; {set |cur_cmd|, |cur_chr|, |cur_tok|}
+    if (cur_cmd=letter)or(cur_cmd=other_char)or(cur_cmd=char_given) then
+      r:=qi(cur_chr)
+    else if(cur_cmd >= kanji)and(cur_cmd <= other_kchar) then
+!   begin r:=qi(256); cur_jchr := cur_chr; end
+    else if cur_cmd=char_num then
+      begin scan_char_num;
+        if (cur_val>=0)and(cur_val<256) then
+***************
+*** 5973,5979 ****
+        else KANJI(cx):=cur_chr
+      end else
+        if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar)then
+!       begin f:=cur_jfont; PutHi(cx,cur_chr); get_next; PutLo(cx,cur_chr);
+        end
+  else back_input;
+  if KANJI(cx)<>empty then begin
+--- 6007,6013 ----
+        else KANJI(cx):=cur_chr
+      end else
+        if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar)then
+!       begin f:=cur_jfont; cx := cur_chr; 
+        end
+  else back_input;
+  if KANJI(cx)<>empty then begin
+***************
+*** 6081,6088 ****
+            end;
+          end;
+      end else KANJI(cx):=cur_chr;
+! kanji,kana,other_kchar: begin PutHi(cx,cur_chr); get_next; PutLo(cx,cur_chr);
+!   end;
+  @z
+  
+  @x
+--- 6115,6121 ----
+            end;
+          end;
+      end else KANJI(cx):=cur_chr;
+! kanji,kana,other_kchar: cx := cur_chr;
+  @z
+  
+  @x
+***************
+*** 6119,6126 ****
+      if cur_chr<128 then set_math_char(ho(math_code(cur_chr)))
+      else set_math_char(cur_chr)
+    else set_math_kchar(cur_chr);
+! mmode+kanji,mmode+kana,mmode+other_kchar: begin PutHi(cx,cur_chr);
+!   get_next; PutLo(cx,cur_chr); set_math_kchar(KANJI(cx));
+    end;
+  mmode+char_num: begin scan_char_num;
+    if (cur_chr>=0)and(cur_chr<256) then 
+--- 6152,6159 ----
+      if cur_chr<128 then set_math_char(ho(math_code(cur_chr)))
+      else set_math_char(cur_chr)
+    else set_math_kchar(cur_chr);
+! mmode+kanji,mmode+kana,mmode+other_kchar: begin cx := cur_chr;
+!                                 set_math_kchar(KANJI(cx));
+    end;
+  mmode+char_num: begin scan_char_num;
+    if (cur_chr>=0)and(cur_chr<256) then 

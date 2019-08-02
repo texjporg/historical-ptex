@@ -1,0 +1,4 @@
+The programs in this directory are now basically unsupported.
+For almost all systems, undumped TeX is an inferior approach
+and the intrinsic machine dependency of these programs makes
+them too costly to maintain with any promise of reliability.

@@ -1,0 +1,29 @@
+# lips3dvi.cnf -- lips3dvi configuration file
+#start		-1				# print start page
+#end		32767				# print end page
+paper		a4				# paper size
+#p_height	297.0				# paper height
+#p_width	210.0				# paper width
+#landscape					# landscape
+#portrait					# portrait
+porth_base	229				# printing base point offset
+portv_base	186
+landh_base	240				# printing base point offset
+landv_base	173
+#h_offset	0.0				# horizontal offset
+#v_offset	0.0				# vertical offset
+#magnification	1.0				# magnification
+#jxlfont	no				# use JXL4 font
+downloadsize	-1				# byte to download
+fontdir		/usr/local/lib/tex/pkfonts;/usr/local/lib/tex/jxlfonts # font directory
+tfmdir		/usr/local/lib/tex/tfm;/usr/local/lib/tex/jfm	# TFM directory
+infofile	/var/tmp/.fontinfo		# download information
+font		tmin	J80TW22			# Mincho font attribute
+font		tgoth	J81TW22			# Gothic font attribute (Kaku goth.)
+#font		tgoth	J82TW2			#			(Maru goth.)
+#verbose	no				# show message
+#minchoface	80				# face # of Mincho
+#gothicface	81				# face # of Gothic
+#forcedownload	no				# force download
+#side		both				# even/odd page
+

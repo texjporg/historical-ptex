@@ -1,0 +1,28 @@
+OBJS	=tex3b1.o
+SRCS	=tex3b1.c
+
+FILES	=Imakefile Makefile.3b1 $(SRCS) tex3b1.1 assist.s misc.c README
+
+      LIBTEXROOT= ../
+      LIBTEXSRC	= ../libtex
+         LIBTEX	= $(LIBTEXSRC)/libtex.a
+      DEPLIBTEX	= $(LIBTEX)
+        DEPLIBS = $(DEPLIBTEX) 
+LOCAL_LIBRARIES = $(LIBTEX)
+
+        DEFINES = -I$(LIBTEXROOT)
+
+all: tex3b1
+
+NormalProgramTarget(tex3b1,$(OBJS),$(DEPLIBS),$(LOCAL_LIBRARIES),$(SYSLIBS))
+InstallProgram(tex3b1, $(BINDIR))
+InstallManPage(tex3b1,$(MANDIR))
+DependTarget()
+TagsTarget()
+
+tar:
+	cd ../..;\
+	for file in $(FILES); \
+	do \
+	  tar rf $(TARFILE) $(PRODUCT)/Tex3b1/$$file; \
+	done

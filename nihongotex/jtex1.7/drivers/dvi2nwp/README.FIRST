@@ -1,0 +1,12 @@
+Please Read README.jis.
+I wrote README.jis using jis code.
+Escape sequences are:
+     kanji shift-in = ESC $ @ and
+     kanji shift-out = ESC ( J.
+To convert README.jis to README ( shift jis code ):
+     Use jconv when you read this file at SONY NEWS.
+           % jconv -jI README.jis > README
+     And use nkf when you read this at other machine.
+           % nkf -x README.jis > README
+
+              atsuo@sanken.osaka-u.junet

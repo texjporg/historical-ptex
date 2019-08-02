@@ -1,0 +1,126 @@
+*** pltotf.ch	Mon Nov 16 16:21:53 1987
+--- pltotf.ch.new	Tue Nov 24 17:12:20 1987
+***************
+*** 36,42
+  @x
+  @d banner=='This is PLtoTF, Version 2.3' {printed when the program starts}
+  @y
+! @d banner=='This is ASCII kanji extended PLtoTF, Version 2.3 for Berkeley UNIX'
+                                           {printed when the program starts}
+  @z
+  
+
+--- 36,42 -----
+  @x
+  @d banner=='This is PLtoTF, Version 2.3' {printed when the program starts}
+  @y
+! @d banner=='This is PLtoTF, Version 2.3j for Berkeley UNIX'
+                                           {printed when the program starts}
+  @z
+  
+***************
+*** 68,74
+    begin print_ln(banner);@/
+    @<Set initial values@>@/
+    end;
+! function kanjiord(c : char) : integer;
+      external;
+  function mstojis(kcode : integer) : integer;
+      external;
+
+--- 68,75 -----
+    begin print_ln(banner);@/
+    @<Set initial values@>@/
+    end;
+! {
+!  function kanjiord(c : char) : integer;
+      external;
+   function mstojis(kcode : integer) : integer;
+      external;
+***************
+*** 70,76
+    end;
+  function kanjiord(c : char) : integer;
+      external;
+! function mstojis(kcode : integer) : integer;
+      external;
+  function isfbkanji(c : char) : boolean;
+      external;
+
+--- 71,77 -----
+  {
+   function kanjiord(c : char) : integer;
+      external;
+!  function mstojis(kcode : integer) : integer;
+      external;
+  }
+  function isfbkanji(c : char) : boolean;
+***************
+*** 72,77
+      external;
+  function mstojis(kcode : integer) : integer;
+      external;
+  function isfbkanji(c : char) : boolean;
+      external;
+  @z
+
+--- 73,79 -----
+      external;
+   function mstojis(kcode : integer) : integer;
+      external;
++ }
+  function isfbkanji(c : char) : boolean;
+      external;
+  @z
+***************
+*** 523,531
+  end;
+  
+  function get_jis_from_kanji(byte1 : char) : integer;
+- var
+-   byte2 : char;
+-   ms_code : integer;
+  begin
+  byte2 := get_next_raw;
+  {
+
+--- 536,541 -----
+  end;
+  
+  function get_jis_from_kanji(byte1 : char) : integer;
+  begin
+    get_jis_from_kanji := (ord(byte1) + 128) * 256 + ord(get_next_raw) + 128;
+  end; { ord returns negative value }
+***************
+*** 527,547
+    byte2 : char;
+    ms_code : integer;
+  begin
+! byte2 := get_next_raw;
+! {
+! write_ln('kanji bytes: ', kanjiord(byte1):1, ' and ', kanjiord(byte2):1);
+! }
+! if kanjiord(byte1) < 0 then
+!   ms_code := 256 + kanjiord(byte1)
+! else
+!   ms_code := kanjiord(byte1);
+! ms_code := ms_code * 256;
+! if kanjiord(byte2) < 0 then
+!   ms_code := ms_code + 256 + kanjiord(byte2)
+! else
+!   ms_code := ms_code + kanjiord(byte2);
+! get_jis_from_kanji := mstojis(ms_code);
+! end;
+  
+  function get_hex_code(ch : char) : integer;
+  var
+
+--- 537,544 -----
+  
+  function get_jis_from_kanji(byte1 : char) : integer;
+  begin
+!   get_jis_from_kanji := (ord(byte1) + 128) * 256 + ord(get_next_raw) + 128;
+! end; { ord returns negative value }
+  
+  function get_hex_code(ch : char) : integer;
+  var

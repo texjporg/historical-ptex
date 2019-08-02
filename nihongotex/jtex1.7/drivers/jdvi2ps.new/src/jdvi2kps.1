@@ -1,0 +1,231 @@
+.\"
+.\" jdvi2kps: DVI to Japanese PostScript driver
+.\"
+.\" Copyright (c) 1989 Matsushita Electric Industrial Co. Ltd.
+.\"
+.\" $Header: jdvi2kps.1,v 1.1 90/04/17 13:05:51 kakiuchi Exp $
+.\"
+.TH JDVI2KPS Local "7 September 1989"
+.de }F
+.ev 1
+.ft R
+.ps 12
+'sp .5i
+.sp |10.6i
+.if o .tl @\s10\fRBE-OS 1.1@\s8\fRRevision 1.0@\s12\fR%@
+.if e .tl @\s12\fR%@\s8\fRRevision 1.0@\s10\fRBE-OS 1.1@
+'bp
+.ev
+..
+.UC
+.SH NAME
+jdvi2kps \- DVI ファイルを PostScript に変換する
+(PostScript は米国 Adobe 社の商標です。)
+.SH SYNOPSIS
+.B jdvi2kps
+.RB "[\|" -d
+.IR n "\|]"
+.RB "[\|" -f
+.IR n "\|]"
+.RB "[\|" -h "\|]"
+.RB "[\| -i
+.IR file "\|]"
+.RB "[\|" -m
+.IR n "\|]"
+.RB "[\|" -n
+.IR n "\|]"
+.RB "[\|" -o
+.IR str "\|]"
+.RB "[\|" -p "\|]"
+.RB "[\|" -q "\|]"
+.RB "[\|" -r "\|]"
+.RB "[\|" -s "\|]"
+.RB "[\|" -t
+.IR n "\|]"
+.I dvifile
+.RI "[\|" .dvi "\|]"
+.SH DESCRIPTION
+.I jdvi2kps
+は ASCII 社版日本語 TeX の DVI ファイルを PostScript に変換し、
+結果を標準出力に出力するものです。変換された PostScript ソースを印刷する
+ためには、初期設定のための PostScript コードを前もってプリンタに送る必要が
+あります。
+(デフォールトでは、このコードはあらかじめ出力ソースに付加されています。)
+.PP
+.SH OPTIONS
+.PP
+.TP
+.BI \-d " n"
+解像度を指定します。 (300 dpi (default)、320 dpi 又は 600 dpi)
+.TP
+.BI \-f " n"
+開始ページナンバーを指定します。
+(TeX のページナンバー(\\count0)をセットします。)
+.TP
+.B \-h
+デフォールトの PostScript ヘッダファイルを付けません。
+.TP
+.BI \-i " file"
+指定したファイルを出力に付けます。
+指定したファイルをデフォールトヘッダファイルの後に付加し出力します。
+.TP
+.B "-m0 | -mh | -m1 | -m2 | -m3 | -m4"
+印刷時の magstep を指定します。この指定は、DVI ファイル内での指定よ
+り優先されます。
+.TP
+.BI \-m " n"
+印刷時の magnification を指定します。
+.I n
+の値は 1000, 1095, 1200, 1440, 1728 のうちのいずれかでなければな
+りません。（引数チェックは行っていません）
+注意：300 dpi のフォントが全て用意されていない場合動作しません。
+.TP
+.BI \-n " n"
+印刷部数の指定。
+.TP
+.BI \-o " str"
+印刷オプションの指定。
+"a4", "b4", "a4landscape", "b4landscape", "letter", "note", "legal",
+"landscape", "manualfeed" から選択できます。
+この引数は繰り返し指定できます。
+.TP
+.B \-p
+フォント情報をプリロードしません。
+フォントの情報をシステムにプリロードするに十分なメモリがない
+場合、
+.B \-p
+オプションを付けることによってフォントのプリロード
+をやめてデマンドローディングにすることが出来ます。
+.TP
+.B \-q
+サイレントモード。
+ページ変換終了などのメッセージを出力しません。
+.TP
+.B \-r
+ページを逆順に出力します。
+デフォールトでは、プリンタの出力トレイに正しい順で積み重ねられる
+ように、ページを逆順に出力されます。
+このオプションを指定すると正順に出力されるようになります。
+.TP
+.BI \-t " n"
+終了ページを指定します。
+.TP
+.B \-w
+ワーニングを表示しません。
+.TP
+.B \-s
+ロードされたフォントの情報を標準エラー出力に出力します。
+.SH NOTES
+.I jdvi2kps
+は出力に必要な英文フォントがない場合にも処理を続行します。
+この場合、ワーニングメッセージに注意して下さい。
+また、出力が意図したものと異なります。
+日本語フォントについては、明朝(min)、ゴシック(goth)の両書体に
+ついては、全てのサイズを PostScript デバイスで生成して、出力させます。
+.SH TeX の \\\\special コマンド
+このプログラムでは TeX の "\\special" コマンドを使用することによって
+PostScript で書かれた図などを挿入できます。
+TeX のソース内で "\\special{psfile=foo.ps}" と指定することによってその場
+所に PostScript で書かれた "foo.ps" というファイルを出力できます。
+\\special コマンドが書かれた場所を (0,0) 座標として、上、右方向に
+それぞれ x,y 座標をとります。
+長さの単位はポイント(1/72 inch)です。
+したがって、通常、\\special コマンドを書く前に図のスペースをあけておく
+必要があります。
+Apple 社の Macintosh の MacDraw や MacPaint 等で書かれた図は左上隅が
+原点となっていますので、この場合は、\\special コマンドの後に図のスペース
+をあける必要があります。
+.PP
+\\special は以下の "keyword=value" の組を任意の数だけ引数として持つこと
+ができます。引数の間はブランクで区切られている必要があります。
+.PP
+.nf
+.ta 1c 4c 7c
+	Keyword	Value Type
+	-------	----------
+	psfile	string		- 挿入する PostScript ファイル名
+	hsize	dimension	- 最大幅(クリッピング用)
+	vsize	dimension	- 最大高さ(クリッピング用)
+	hoffset	dimension	- 水平オフセット
+	voffset	dimension	- 垂直オフセット
+	hscale	number		- 水平スケーリングファクター
+	vscale	number		- 垂直スケーリングファクター
+.fi
+.PP
+単位はポイント (1/72 inch) です。
+.PP
+例: \\special{psfile=foo.ps hoffset=72 hscale=0.9 vscale=0.9}
+"foo.ps" という PostScript ファイルを 1 インチ右にシフトし 0.9 倍
+に縮小して挿入します。
+.PP
+hsize と vsize は元の原点 (0,0) に対するもので、オフセットやスケーリン
+グファクターに影響されません。
+.PP
+オフセットは \\special コマンドが書かれた点に対するもので、スケーリング
+ファクターに影響されません。
+.PP
+Macintosh で書かれた図を挿入する場合、laserprep ファイルをプリンタへダ
+ウンロードしなければなりません。
+これは "tex.ps" という標準ヘッダファイルに付け加えるか、
+又は別のヘッダファイルとしてロードします。
+.PP
+なお、このバージョンでは、pstex による PostScript ファイルの挿入をサポート
+しています。
+\\special コマンドの引数が "postscriptbox" で始まる場合は、
+pstex による PostScript ファイルの挿入が指示されたものとみなして
+処理します。
+.SH ENVIRONMENT VARIABLES
+.TP
+.B KPSHEADER
+PostScript ヘッダファイルのファイル名。
+デフォールトのファイル名は、`/usr/lib/tex/jtex.ps' です。
+.TP
+.B TEXFONTPATH
+TeX フォントのパスを指定します。
+`:' で区切って複数のパスを指定することができます。
+デフォールトのパスは、`/usr/lib/tex/fonts' です。
+.TP
+.B TEXTFMPATH
+TeX の TFM ファイルのパスを指定します。
+`:' で区切って複数のパスを指定することができます。
+デフォールトのパスは、`/usr/lib/tex/fonts' です。
+.TP
+.B DVIPSPATH
+PostScript ファイルのパスを指定します。
+`:' で区切って複数のパスを指定することができます。
+デフォールトのパスは、`.' です。
+.SH FILES
+.nf
+.ta 7c
+*.dvi	TeX の中間出力ファイル
+.PP
+/usr/lib/tex/fonts/%.%pxl	デフォールト英文フォント
+/usr/lib/tex/fonts/%.%gf	デフォールト英文フォント
+/usr/lib/tex/fonts/%.%pk	デフォールト英文フォント
+/usr/lib/tex/jtex.ps		標準ヘッダファイル
+.fi
+.SH BUG
+出力するドキュメントにより (特に英文字が多い場合) 出力結果が大きくなり
+1Mbyteを越え "lpr" が通らなくなります。
+その場合 "lpr" の -s オプションを利用して下さい。
+(ただしリモートプリンタを利用している場合はできません。)
+.PP
+.nf
+#     プリンタによって出力できるドキュメントのサイズに制限
+#     があります。プリンタが VMerrors となった場合、'-f' や
+#     '-t' オプションを使って出力ページを選択して下さい。
+.fi
+.PP
+Macintosh 用の laserprep ファイルがダウンロードされている場合、Mac 以外
+で作られた PostScript ファイルに対して \\special{} の中のオフセット、サ
+イズ、スケールが正しく動作しないことがあります。
+.SH AUTHOR(s)
+Mark Senn がこのプログラムの初期のバージョンである、BBN BitGraph 用のド
+ライバを作成しました。
+Stephan Bechtolsheim, Bob Brown, Richard Furuta,James Schaad, Robert Wells
+がこれを改良しました。
+Norm Hutchinson がこれを SUN に移植しました。
+Neal Holts が Apollo に移植し、この時 PostScript を出力するようにしました。
+岡本勝也、垣内隆志 (kakiuchi@sws.cpd.mei.co.jp)、
+宮部義幸 (miyabe@sws.cpd.mei.co.jp) がこれを BE に移植すると同時に漢字
+PostScript 対応にしました。

@@ -1,0 +1,829 @@
+##
+## File:         Xtex.ad
+## Description:  Application Default: put in ...app-defaults/Xtex
+## Author:       Dirk Grunwald
+##
+## 
+##  Copyright 1989 Dirk Grunwald
+##  
+##  Permission to use, copy, modify, distribute, and sell this software
+##  and its documentation for any purpose is hereby granted without fee,
+##  provided that the above copyright notice appear in all copies and that
+##  both that copyright notice and this permission notice appear in
+##  supporting documentation, and that the name of Dirk Grunwald or M.I.T.
+##  not be used in advertising or publicity pertaining to distribution of
+##  the software without specific, written prior permission.  Dirk
+##  Grunwald and M.I.T. makes no representations about the suitability of
+##  this software for any purpose.  It is provided "as is" without express
+##  or implied warranty.
+##  
+##  DIRK GRUNWALD AND M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+##  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+##  FITNESS, IN NO EVENT SHALL M.I.T.  BE LIABLE FOR ANY SPECIAL, INDIRECT
+##  OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+##  OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+##  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
+##  OR PERFORMANCE OF THIS SOFTWARE.
+##  
+##  Author:
+##  	Dr. Dirk Grunwald
+##  	Dept. of Computer Science
+##  	Campus Box 430
+##  	Univ. of Colorado, Boulder
+##  	Boulder, CO 80309
+##  
+##  	grunwald@colorado.edu
+##  	
+##  
+## Please send any improvements, bug fixes, useful modifications, and comments
+## to grunwald@boulder.colorado.edu
+##
+
+##
+## Variables to make installation a little easier
+##
+*.incorrectlyInstalled: false
+*.resourcesVersion: 2.16.1J
+*.helpText:\
+Welcome to Xtex, Version 2.16.1J\n\
+Modified for Japanese TeX\n\
+Copyright(C) 1989, 1990 Dirk Grunwald\n
+
+##
+##
+##	These specify the top and left offsets, in inches. If you decrease
+##	these, and don't intrude on the 1inch default TeX margins, you can
+##	view more of your document at once.
+##
+*.topOffset: 1
+*.leftOffset: 1
+##
+##	This is the size, in inches, of the intended paper. If you
+##	swap these values, you can get a landcape printing.
+##
+*.paperWidth:8.5
+*.paperHeight:11
+###vvvv added by Hiroto Kagotani
+xtexltr*.paperWidth:8.5
+xtexltr*.paperHeight:11
+#xtex*.paperWidth:8.26
+#xtex*.paperHeight:11.67
+xtexa4*.paperWidth:8.26
+xtexa4*.paperHeight:11.67
+xtexb4*.paperWidth:10.14
+xtexb4*.paperHeight:14.33
+xtexb5*.paperWidth:7.16
+xtexb5*.paperHeight:10.14
+###^^^^
+##
+##	Xtex attempts to size the final dvi page to your display.
+##	On a sun3, I use twm & specify no header bar, 2bit bourders
+##	and a maxPageHt of 890, paperHeight of 10.4 and topOffset of 0.75.
+##	This lets me see an entire page without having to move it around
+##	while stilling being able to look at it in large mode.
+##
+*.pageMaxWd: 0
+*.pageMaxHt: 0
+##
+##	Font specifications:
+##
+#
+#	This specifies the location of the TFM files that xtex needs to
+#	determine true font widths.
+#
+*.tfmPath: .:/usr/local/lib/tex82/fonts:/usr/local/lib/tex/fonts:/usr/lib/tex82/fonts:/usr/lib/tex/fonts:/usr/local/lib/tex/tfm:/usr/local/Tex/lib/tex/tfm
+#
+# Note that the sun does not have 1x1 pixels; they vary slightly,
+# at least on mine. In cases like this, we use the horizontal dpi
+# as the size for selecting fonts. If you don't specify dpiVert,
+# then it defaults to the value in `dpiHoriz'. It they're the same,
+# it's better to leave dpiVert unspecified; otherwise, you need
+# to specify -dpiVert on the Xtex command line to change the vertical
+# spacing.
+# You can use floats, for dpiHoriz and dpiVert
+#
+#	Use these if you're using shrunken 300dpi fonts
+#
+#	*.mag:333
+#	*.smallMag:333
+#	*.largeMag:500
+#	*.dpiHoriz:300
+#	*.dpiVert:300
+#
+# Use these if you're using metafont generated 85dpi fonts for Suns.
+*.dpiHoriz: 85
+*.dpiVert: 83.5
+*.mag: 1000
+*.smallMag: 1000
+*.largeMag: 1440
+##
+##	Valid magnifications:
+##	
+##	For shrunken fonts: 1000,500,333,250,100
+##	For screen resolution fonts: 500, 1000, 1098, 1200, 1440, 1728
+##				2074, 2489
+##
+##	Note: your site may not have 1/2 sizes, e.g. 11point is cmr10 at
+##	1098. If you set your `large' mag to 1440, you'd need cmr10 @ 1581
+##	to match.
+
+##
+##	The DviPage widget is much faster when you enable backing store,
+##	If it's available, do it.
+##	However, this has caused problems on microvaxen, and chews up
+##	server memory.
+##	Backing store also makes the PMAX UWS2.2 server suck down VM.
+##	
+*.DviPage.backingStore: default
+
+##
+##	If useButtons is True, each dviPage will have a row of buttons
+##	across the top to select forward-page, etc.
+##
+*.useButtons: True
+##
+##	If updateNames is True, the window and icon names will be updated
+##	to reflect the current DVI file and page number.
+##
+*.updateNames: True
+##
+##	pushOnStart can be either 'open' or 'copy', and opens or copy&opens
+##	any file name given to xtex. This makes it similar to e.g., xdvi.
+##
+*.pushOnStart:open
+##
+##	A 'diversion' is when you want to visit another page for a little
+##	while. This is normally signalled by a 'xtex special' implementing
+##	a button. If divertByPush is *true*, you'll just ``push'' the current
+##	page and view the new page within the current window. If divertByPush
+##	is false, you'll create a new page in which to view the diversion.
+##
+*.divertByPush:true
+##
+##	The ``print'' command is used to print selected pages or the
+##	entire document. You will be asked to confirm the print command
+##	before it is issued. Myself, I specify this in my .resources
+##	file because ``lpr -d'' doesn't work on my machine.
+##
+*.print:lpr -d
+##
+##	If autoSize is true, the dviPages will shrink or expand to fit
+##	the paper size at the current magnification.
+##
+*.autoSize:True
+
+##
+##	For persnicity window manager
+##
+*.input:True
+
+##
+##	The width of the top level display
+##
+
+##*.topLevel.width: 					525
+*.topLevel.fileName.width: 				525
+*.topLevel.markMenuViewPort.width: 			525
+## *.topLevel.markMenuViewPort.markMenuList.width: 	510
+*.topLevel.directoryLabel.width:			525
+*.topLevel.fileLabel.width: 			525
+
+*.topLevel.dialogText.height:	150
+*.topLevel.dialogText.width: 	525
+*.topLevel.dialogText.scrollVertical: Always
+*.topLevel.dialogText.scrollHorizontal: Never
+*.topLevel.dialogText.Wrap: line
+*.topLevel.dialogText.resize: never
+
+*.topLevel.directoryLabel.font: fixed
+*.topLevel.fileLabel.font: fixed
+
+*.markMenuViewPort.height: 50
+*.markMenuViewPort.resize:True
+*.markMenuViewPort.resizable:False
+*.markMenuViewPort.allowHoriz:False
+*.markMenuViewPort.allowVert:True
+*.markMenuViewPort.forceBars:True
+
+*.markMenuList.verticalList:False
+*.markMenuList.resize:False
+*.markMenuList.resizable:False
+*.markMenuList.translations:#override\n\
+	<Btn1Up>:		Notify()\n\
+	<Btn2Up>:		xtex-mark-all(clear)\n\
+	<Btn3Up>:		xtex-mark-all(toggle)
+
+##
+##	Translations for the filename entry widget. Note that the pressing
+##	return *.down* opens the file. The upstroke is used to pop up a page.
+##
+*.topLevel.fileName.translations:#override\n\
+	<KeyDown>Return: xtex-file(reopen)\n\
+	<KeyUp>Return: xtex-page-popup()\n\
+	<Key>Escape:		xtex-noop() \n\
+	Ctrl<Key>M:		xtex-noop() \n\
+	Meta<Key>]:		xtex-noop() \n\
+	Ctrl<Key>[:		xtex-noop() \n\
+	Ctrl<Key>N:		xtex-noop() \n\
+	Ctrl<Key>P:		xtex-noop() \n\
+	Ctrl<Key>V:		xtex-noop() \n\
+	Meta<Key>V:		xtex-noop() \n\
+	Ctrl<Key>Z:		xtex-noop() \n\
+	Meta<Key>Z:		xtex-noop() \n\
+	Ctrl<Key>J:		xtex-noop() \n\
+	Ctrl<Key>O:		xtex-noop() \n
+
+##
+##	Button labels for the top level box
+##
+*.topLevel.Command.Font: variable
+*.topLevel.Command.Resizable: False
+
+*.topLevel.quitButton.label: Quit
+*.topLevel.quitButton.translations:#override\n\
+	<Btn1Up>:		xtex-quit() notify() unset()
+
+*.topLevel.openButton.label: Open
+*.topLevel.openButton.horizDistance: 15
+*.topLevel.openButton.translations:#override\n\
+	<Btn1Up>:		xtex-file(open) notify() unset()
+
+*.topLevel.copyButton.label: Copy
+*.topLevel.copyButton.translations:#override\n\
+	<Btn1Up>:		xtex-file(copy) notify() unset()
+
+*.topLevel.closeButton.label: Close
+*.topLevel.closeButton.translations:#override\n\
+	<Btn1Up>:		xtex-file(close) notify() unset()
+
+*.topLevel.cdButton.label: Set Directory
+*.topLevel.cdButton.translations:#override\n\
+	<Btn1Up>:		xtex-file(cd) notify() unset()
+
+*.topLevel.pageButton.label: Popup Page
+*.topLevel.pageButton.horizDistance: 15
+*.topLevel.pageButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-popup() notify() unset()
+
+*.topLevel.printAllButton.label: Print All
+*.topLevel.printAllButton.translations:#override\n\
+	<Btn1Up>:		xtex-print-using(all) notify() unset()
+
+*.topLevel.printMarkedButton.label: Print Marked
+*.topLevel.printMarkedButton.translations:#override\n\
+	<Btn1Up>:		xtex-print-using(set) xtex-mark-all(clear) notify() unset()
+
+*.topLevel.printUnmarkedButton.label: Print Unmarked
+*.topLevel.printUnmarkedButton.translations:#override\n\
+	<Btn1Up>:		xtex-print-using(clear) xtex-mark-all(clear) notify() unset()
+
+*.topLevel.clearMarksButton.label: Clear Marks
+*.topLevel.clearMarksButton.translations:#override\n\
+	<Btn1Up>:		xtex-mark-all(clear) notify() unset()
+
+*.topLevel.dialogClear.label: Clear Dialog Box
+
+##
+##	String query popup
+##
+*.stringQuery.resizable: True
+
+*.stringQuery.width: 500 
+*.stringQuery.height: 85
+*.stringQuery.form.confirm.width: 30
+*.stringQuery.form.cancel.width: 30
+*.stringQuery.form.translations:#override\n\
+	<Key>Return: xtex-string-confirm()\n\
+	<Key>Escape:	xtex-string-cancel()\n\
+	Ctrl<Key>G:	xtex-string-cancel()
+
+*.stringQuery.form.title.top: chaintop
+*.stringQuery.form.title.left: chainleft
+*.stringQuery.form.title.right: chainright
+*.stringQuery.form.title.resize: True
+*.stringQuery.form.title.resizable: True
+
+*.stringQuery.form.Command.resizable: False
+
+*.stringQuery.form.confirm.foreground: green
+*.stringQuery.form.confirm.background: dim grey
+*.stringQuery.form.confirm.label: Confirm
+*.stringQuery.form.confirm.top: chaintop
+*.stringQuery.form.confirm.left: chainleft
+*.stringQuery.form.confirm.fromVert: title
+
+*.stringQuery.form.cancel.foreground:red
+*.stringQuery.form.cancel.background:wheat
+*.stringQuery.form.cancel.label: Cancel
+*.stringQuery.form.cancel.left: chainleft
+*.stringQuery.form.cancel.bottom: chainbottom
+*.stringQuery.form.cancel.fromVert: confirm
+
+*.stringQuery.form.string.height: 40
+*.stringQuery.form.string.foreground: White
+*.stringQuery.form.string.background: Black
+*.stringQuery.form.string.resizable: True
+*.stringQuery.form.string.right: chainright
+*.stringQuery.form.string.fromHoriz: confirm
+*.stringQuery.form.string.horizDistance: 10
+*.stringQuery.form.string.fromVert: title
+*.stringQuery.form.string.scrollHorizontal: Always
+*.stringQuery.form.string.translations:#override\n\
+	<Key>Return: 	xtex-string-confirm()\n\
+	<Key>Escape:	xtex-string-cancel()\n\
+	Ctrl<Key>G:	xtex-string-cancel()\n\
+	Ctrl<Key>M:	xtex-noop() \n\
+	Meta<Key>]:	xtex-noop() \n\
+	Ctrl<Key>[:	xtex-noop() \n\
+	Ctrl<Key>V:	xtex-noop() \n\
+	Meta<Key>V:	xtex-noop() \n\
+	Ctrl<Key>Z:	xtex-noop() \n\
+	Meta<Key>Z:	xtex-noop() \n\
+	Ctrl<Key>J:	xtex-noop() \n\
+	Ctrl<Key>O:	xtex-noop()
+
+###
+###	TeX page display
+###
+*.xtex-page.allowShellResize: True
+
+##
+##	Make ``bad keys'' beep in the ``what page number'' box.
+##	
+*.xtex-page.form.numberText.translations:#override\n\
+	Ctrl<Key>Return:	xtex-noop() \n\
+	Ctrl<Key>M:		xtex-noop() \n\
+	Meta<Key>]:		xtex-noop() \n\
+	Ctrl<Key>[:		xtex-noop() \n\
+	Ctrl<Key>N:		xtex-noop() \n\
+	Ctrl<Key>P:		xtex-noop() \n\
+	Ctrl<Key>V:		xtex-noop() \n\
+	Meta<Key>V:		xtex-noop() \n\
+	Ctrl<Key>Z:		xtex-noop() \n\
+	Meta<Key>Z:		xtex-noop() \n\
+	Ctrl<Key>J:		xtex-noop() \n\
+	Ctrl<Key>O:		xtex-noop() \n
+
+*.xtex-page.form.*.Font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+*.xtex-page.form.*.top: chaintop
+*.xtex-page.form.Command.resizable: False
+
+*.xtex-page.form.quitButton.label: Quit
+*.xtex-page.form.quitButton.left: chainleft
+*.xtex-page.form.quitButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-quit() notify() unset()
+
+*.xtex-page.form.forwardButton.label: Forward
+*.xtex-page.form.forwardButton.fromHoriz: quitButton
+*.xtex-page.form.forwardButton.horizDistance: 30
+*.xtex-page.form.forwardButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-forward() notify() unset()
+
+*.xtex-page.form.backwardButton.label: Backward
+*.xtex-page.form.backwardButton.fromHoriz: forwardButton
+*.xtex-page.form.backwardButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-backward() notify() unset()
+
+*.xtex-page.form.markButton.label: Mark
+*.xtex-page.form.markButton.fromHoriz: backwardButton
+*.xtex-page.form.markButton.translations:#override\n\
+	<Btn1Up>:		xtex-mark-page(toggle) notify() unset()
+
+*.xtex-page.form.dupButton.label: Dup
+*.xtex-page.form.dupButton.fromHoriz: markButton
+*.xtex-page.form.dupButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-duplicate() notify() unset()
+
+*.xtex-page.form.tieButton.label: Tied
+*.xtex-page.form.tieButton.fromHoriz: dupButton
+*.xtex-page.form.tieButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-tie() notify() unset()
+
+*.xtex-page.form.largeButton.label: Large
+*.xtex-page.form.largeButton.fromHoriz: tieButton
+*.xtex-page.form.largeButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-magnify(large) notify() unset()
+
+*.xtex-page.form.smallButton.label: Small
+*.xtex-page.form.smallButton.fromHoriz: largeButton
+*.xtex-page.form.smallButton.translations:#override\n\
+	<Btn1Up>:		xtex-page-magnify(small) notify() unset()
+
+*.xtex-page.form.reopenButton.label: Reopen
+*.xtex-page.form.reopenButton.fromHoriz: smallButton
+*.xtex-page.form.reopenButton.translations:#override\n\
+	<Btn1Up>:		xtex-file(reopen) notify() unset()
+
+*.xtex-page.form.numberText.resize: width
+*.xtex-page.form.numberText.editType: textEdit
+*.xtex-page.form.numberText.fromHoriz: reopenButton
+*.xtex-page.form.numberText.horizDistance: 30
+*.xtex-page.form.numberText.width: 40
+*.xtex-page.form.numberText.translations:#override\n\
+	<KeyDown>Return: xtex-page-goto(box)
+
+*.xtex-page.form.gotoButton.label: Goto
+*.xtex-page.form.gotoButton.fromHoriz: numberText
+*.xtex-page.form.gotoButton.translations:#override\n\
+	<Btn1Up>:	xtex-page-goto(box) notify() unset()
+
+##
+##	The following accelerators allow you to press the Up key to
+##	page up, and Down to go down and the Space back to flip
+##	between the two halves; note that space only works when you're
+##	originally looking at the top of the display.
+##
+*.xtex-page.form.viewPort.left: chainleft
+*.xtex-page.form.viewPort.resizable: True
+*.xtex-page.form.viewPort.allowHoriz:True
+*.xtex-page.form.viewPort.allowVert:True
+*.xtex-page.form.viewPort.vertical.accelerators:\
+  <KeyUp>Up: StartScroll(Backward) NotifyScroll(FullLength) EndScroll() \n\
+  <KeyUp>Down: StartScroll(Forward) NotifyScroll(FullLength) EndScroll()
+
+
+##
+##	left & right keys move around window
+##
+*.xtex-page.form.viewPort.horizontal.accelerators:\
+  <KeyUp>Right: StartScroll(Forward) NotifyScroll(FullLength) EndScroll() \n\
+  <KeyUp>Left: StartScroll(Backward) NotifyScroll(FullLength) EndScroll()
+##
+
+##
+##	The Goto popup - currently bound to button-2, so we also
+##	enable button-2 for confirm/cancel buttons.
+##
+*.Goto.resizable:True
+*.Goto.width: 400
+*.Goto.height: 80
+*.Goto.translations:#override\n\
+	<KeyDown>Return: xtex-page-goto-popup-confirm()\n\
+	<KeyDown>Escape: xtex-page-goto-popup-cancel()\n\
+	Ctrl<KeyDown>G: xtex-page-goto-popup-cancel()
+
+*.Goto.form.confirm.width:80
+*.Goto.form.cancel.width:80
+
+*.Goto.form.valueLabel.resize:True
+*.Goto.form.valueLabel.resizable:True
+*.Goto.form.valueLabel.top:chaintop
+*.Goto.form.valueLabel.left:rubber
+*.Goto.form.valueLabel.right:rubber
+*.Goto.form.valueLabel.label:Select Physical Page Number:
+
+*.Goto.form.value.resize:True
+*.Goto.form.value.resizable:True
+*.Goto.form.value.top: chaintop
+*.Goto.form.value.fromHoriz: valueLabel
+*.Goto.form.value.right: chainright
+
+*.Goto.form.confirm.foreground:green
+*.Goto.form.confirm.background:dim grey
+
+*.Goto.form.confirm.label:Confirm
+*.Goto.form.confirm.resizable: True
+*.Goto.form.confirm.resize: True
+*.Goto.form.confirm.fromVert: valueLabel
+*.Goto.form.value.left: chainleft
+*.Goto.form.confirm.translations:#override\n\
+	<Btn1Up>: xtex-page-goto-popup-confirm() notify() unset()\n\
+	<Btn2Up>: xtex-page-goto-popup-confirm() notify() unset()
+
+*.Goto.form.cancel.foreground:red
+*.Goto.form.cancel.background:wheat
+
+*.Goto.form.cancel.label:Cancel
+*.Goto.form.cancel.resizable: True
+*.Goto.form.cancel.resize: True
+*.Goto.form.cancel.fromVert: confirm
+*.Goto.form.cancel.left: chainleft
+*.Goto.form.cancel.translations:#override\n\
+	<Btn1Up>: xtex-page-goto-popup-cancel() notify() unset()\n\
+	<Btn2Up>: xtex-page-goto-popup-cancel() notify() unset()
+
+*.Goto.form.valuator.resize:True
+*.Goto.form.valuator.resizable:True
+*.Goto.form.valuator.fromVert: valueLabel
+*.Goto.form.valuator.fromHoriz: confirm
+*.Goto.form.valuator.right: chainright
+*.Goto.form.valuator.format:%4.0f
+
+##
+##	We define keypresses for equivilent functions to the buttons --
+##	this allows us to omit the buttons, giving us a bigger display area.
+##
+
+*.dviPage.resizable: True
+*.dviPage.translations:#replace\n\
+	Shift<Key>q: xtex-quit()\n\
+	Shift<Key>x: xtex-quit()\n\
+	Ctrl<Key>d: xtex-quit()\n\
+	<Key>q: xtex-page-quit()\n\
+	<Key>x: xtex-page-quit()\n\
+\
+	Meta<Key>g: xtex-page-divert() xtex-page-number-reset()\n\
+	<Key>g: xtex-page-goto() xtex-page-number-reset()\n\
+	Meta<Key>p: xtex-page-undivert() xtex-page-number-reset()\n\
+	<Key>p: xtex-page-backward() xtex-page-number-reset()\n\
+\
+	Shift<Btn1Down>:dvi-line-undraw() dvi-line-draw()\n\
+	Shift<Btn1Motion>: dvi-line-undraw() dvi-line-draw()\n\
+	Shift<Btn1Up>:\n\
+	Ctrl<Btn1Down>: dvi-line-undraw() dvi-line-draw()\n\
+	Ctrl<Btn1Motion>:\n\
+	Ctrl<Btn1Up>:dvi-line-undraw() dvi-line-castoff()\n\
+	Meta<Btn1Down>: dvi-line-anchor() dvi-line-draw() \n\
+	Meta<Btn1Motion>: \n\
+	Meta<Btn1Up>: \n\
+\
+	<Btn1Down>: dvi-line-anchor() dvi-line-draw() \n\
+	<Btn1Motion>: dvi-line-undraw() dvi-line-draw() \n\
+	<Btn1Up>: dvi-line-undraw() dvi-line-castoff() \n\
+\
+	Meta<Btn2Down>: dvi-push-button()\n\
+	Meta<Btn2Up>: xtex-page-undivert()\n\
+	<Btn2Up>: dvi-push-button()\n\
+\
+	Ctrl<Key>l: xtex-page-redisplay()\n\
+	<Key>question: xtex-system(lpq)\n\
+\
+	Meta<Btn3Down>: xtex-page-goto-popup() xtex-page-number-reset()\n\
+	<Btn3Down>: XawPositionSimpleMenu(menu) MenuPopup(menu)\n\
+\
+	<Key>f: xtex-page-foreward() xtex-page-number-reset()\n\
+	<Key>space: xtex-page-foreward() xtex-page-number-reset()\n\
+	<Key>n: xtex-page-foreward() xtex-page-number-reset()\n\
+	Ctrl<Key>n: xtex-page-foreward() xtex-page-number-reset()\n\
+	<Key>Return: xtex-page-foreward() xtex-page-number-reset()\n\
+\
+	<Key>b: xtex-page-backward() xtex-page-number-reset()\n\
+\
+	Ctrl<Key>h: xtex-page-backward() xtex-page-number-reset()\n\
+	<Key>BackSpace: xtex-page-backward() xtex-page-number-reset()\n\
+	<Key>Delete: xtex-page-backward() xtex-page-number-reset()\n\
+\
+	Ctrl<Key>t: xtex-mark-push() xtex-mark-page(set) xtex-print-using(set)  xtex-mark-pop()\n\
+\
+	<Key>l: xtex-page-magnify(large) xtex-page-number-reset()\n\
+	<Key>s: xtex-page-magnify(small) xtex-page-number-reset()\n\
+	Shift<Key>m: xtex-page-magnify() xtex-page-number-reset()\n\
+\
+	<Key>t: xtex-mark-page(toggle) xtex-page-number-reset()\n\
+	<Key>m: xtex-mark-page(set) xtex-page-number-reset()\n\
+	<Key>u: xtex-mark-page(clear) xtex-page-number-reset()\n\
+\
+	<Key>F12: xtex-file(reopen) xtex-page-number-reset()\n\
+	<Key>r: xtex-file(reopen) xtex-page-number-reset()\n\
+\
+	Shift<Key>d: xtex-page-duplicate() xtex-page-number-reset()\n\
+	Shift<Key>t: xtex-page-tie() xtex-page-number-reset()\n\
+\
+	<Key>a: dvi-push-button()\n\
+\
+	<Key>Escape: xtex-page-number-reset()\n\
+	<Key>0: xtex-page-number(0)\n\
+	<Key>1: xtex-page-number(1)\n\
+	<Key>2: xtex-page-number(2)\n\
+	<Key>3: xtex-page-number(3)\n\
+	<Key>4: xtex-page-number(4)\n\
+	<Key>5: xtex-page-number(5)\n\
+	<Key>6: xtex-page-number(6)\n\
+	<Key>7: xtex-page-number(7)\n\
+	<Key>8: xtex-page-number(8)\n\
+	<Key>9: xtex-page-number(9)\n\
+	<Key>-: xtex-page-number-minus()\n
+
+##
+##	The menu specifications. Have you kept count? That's three
+##	user interfaces to moving around. yech.
+##
+*.xtex-page*.menu.label: XTeX Menu
+*.xtex-page*.menu*.RowHeight: 16
+*.xtex-page*.menu.menu:\
+	(line)\
+	(item "Forward" (action "xtex-page-foreward()"))\
+	(item "...10 pages" (action "xtex-page-number(1) xtex-page-number(0) xtex-page-foreward() xtex-page-number-reset()"))\
+	(item "Backward" (action "xtex-page-backward()"))\
+	(item "...10 pages" (action "xtex-page-number(1) xtex-page-number(0) xtex-page-backward() xtex-page-number-reset()"))\
+	(item "Goto..." (action "xtex-page-goto-popup()"))\
+	(blank)\
+	(item "Overview" (action "xtex-page-magnify(small)"))\
+	(item "Detail View" (action "xtex-page-magnify(large)"))\
+	(blank)\
+	(item "Mark" (action "xtex-mark-page(set)"))\
+	(item "Unmark" (action "xtex-mark-page(clear)"))\
+	(blank)\
+	(item "Reopen" (action "xtex-file(reopen) xtex-page-number-reset()"))\
+	(blank)\
+	(menu "Print..." \
+		(line)\
+		(item "This Page" \
+		   (action "xtex-mark-push() xtex-mark-page(set) xtex-print-using(set)  xtex-mark-pop()"))\
+		(item "All Pages" (action "xtex-print-using(all)"))\
+		(item "All Marked Pages" (action "xtex-print-using(set)"))\
+		(item "All Unmarked Pages" (action "xtex-print-using(clear)"))\
+	)\
+	(blank)\
+	(menu "Ruler Units..."\
+		(line)\
+		(item "Inches" (action "dvi-line-units(in)"))\
+		(item "Points" (action "dvi-line-units(pt)"))\
+		(item "Centimeters" (action "dvi-line-units(cm)"))\
+		(item "Millimeters" (action "dvi-line-units(mm)"))\
+		(item "Scaled Points" (action "dvi-line-units(sp)"))\
+		(item "Picas" (action "dvi-line-units(pc)"))\
+		(item "Big Points" (action "dvi-line-units(bp)"))\
+		(item "Didot" (action "dvi-line-units(dd)"))\
+		(item "Cicero" (action "dvi-line-units(cc)"))\
+	)\
+	(blank)\
+	(item "Quit Page" (action "xtex-page-quit()"))\
+	(item "Quit XTeX" (action "xtex-quit()"))
+##
+##
+##	If you have lots of fonts, you might want to enable the following.
+##	I don't have lots of fonts, so I don't.
+##	
+##	(menu "Magnification..."\
+##		(item "4 magsetp" (action "xtex-page-magnify(2074)"))\
+##		(item "3 magstep" (action "xtex-page-magnify(1728)"))\
+##		(item "2 magstep" (action "xtex-page-magnify(1440)"))\
+##		(item "1 magstep" (action "xtex-page-magnify(1200)"))\
+##		(item ".5 magstep" (action "xtex-page-magnify(1098)"))\
+##		(item "0 magstep" (action "xtex-page-magnify(1000)"))\
+##	)\
+##
+
+
+*.DviPage.scale.allowShellResize: True
+*.DviPage.scale.x: 0
+*.DviPage.scale.y: 0
+*.DviPage.scale.label.label: 88888888888888888
+*.DviPage.scale.label.justify: center
+*.DviPage.scale.label.resize: True
+
+*.DviPage.DPSpreamble:\
+/cvsprint{=string cvs print ( ) print} def\
+\
+/bdf { bind def } def\
+                             \
+/Inch  {Resolution mul} bdf  \
+/Dots {72 div Resolution mul} bdf  \
+\
+/dopage\
+  { 72 Resolution div dup neg scale          \
+	 translate\
+  } bdf\
+\
+/@letter\
+  { Resolution dup -10 mul dopage } bdf\
+\
+/@note { @letter } bdf\
+\
+/@a4\
+  { Resolution dup -10.6929133858 mul dopage } bdf\
+\
+/@translate { translate } bdf\
+\
+/@scale { scale } bdf\
+\
+/@rotate { rotate } bdf\
+\
+/@landscape\
+  { [ 0 1 -1 0 0 0 ] concat\
+    Resolution dup dopage } bdf\
+\
+/@legal\
+  { Resolution dup -13 mul dopage } bdf\
+\
+/@manualfeed\
+   { statusdict /manualfeed true put\
+   } bdf\
+\
+        \
+/@copies\
+   { /#copies exch def\
+   } bdf\
+/psf$TeXscale { 65536 div } def\
+\
+/@start         \
+  {\
+    /Scaling exch def \
+    /Resolution exch def\
+    /TeXEncoding 256 array def\
+    0 1 255 {TeXEncoding exch 1 string dup 0 3 index put cvn put} for\
+  } bdf\
+\
+/startTexFig {\
+	/psf$SavedState save def\
+	userdict maxlength dict begin\
+\
+	/psf$ury exch psf$TeXscale def\
+	/psf$urx exch psf$TeXscale def\
+	/psf$lly exch psf$TeXscale def\
+	/psf$llx exch psf$TeXscale def\
+	/psf$ht exch psf$TeXscale def\
+	/psf$wd exch psf$TeXscale def\
+	\
+	Scaling psf$wd mul psf$urx psf$llx sub div\
+	Scaling psf$ht mul psf$ury psf$lly sub div scale\
+	psf$llx neg psf$ury neg translate \
+	\
+	/showpage {\
+	} def\
+	/erasepage {\
+	} def\
+	/copypage {\
+	} def\
+} def\
+\
+\
+/doclip {\
+        psf$llx psf$lly psf$urx psf$ury\
+	currentpoint 6 2 roll\
+	newpath 4 copy\
+	4 2 roll moveto\
+	6 -1 roll exch lineto\
+	exch lineto\
+	exch lineto\
+	closepath clip\
+	newpath\
+	moveto\
+} def\
+\
+/endTexFig { end psf$SavedState restore } def\
+/@MacSetUp\
+  { userdict /md known\
+      { userdict /md get type /dicttype eq\
+	{\
+	md begin\
+	/letter {} def\
+	/note {} def\
+	/legal {} def\
+	/od{txpose\
+	    1 0 mtx defaultmatrix dtransform exch atan/pa exch def\
+	    newpath clippath mark\
+	    {transform{itransform moveto}}\
+	    {transform{itransform lineto}}\
+	    { 6 -2 roll transform\
+	      6 -2 roll transform\
+	      6 -2 roll transform\
+	      { itransform 6 2 roll\
+		itransform 6 2 roll\
+		itransform 6 2 roll\
+		curveto\
+	      }\
+	    }\
+	    {{closepath}}\
+	    pathforall newpath counttomark array astore /gc xdf\
+	    pop ct 39 0 put\
+	    10 fz 0 fs 2 F/|______Courier fnt invertflag{PaintBlack}if\
+	}def\
+	/txpose{\
+	    pxs pys scale ppr aload pop\
+	    por {\
+		noflips {\
+		    pop exch neg exch translate pop 1 -1 scale\
+		}if\
+		xflip yflip and {\
+		    pop exch neg exch translate 180 rotate 1 -1 scale\
+		    ppr 3 get ppr 1 get neg sub neg ppr 2 get\
+		    ppr 0 get neg sub neg translate\
+		}if \
+		xflip yflip not and {\
+		    pop exch neg exch translate pop 180 rotate\
+		    ppr 3 get ppr 1 get neg sub neg 0 translate\
+		}if\
+		yflip xflip not and {\
+		    ppr 1 get neg ppr 0 get neg translate\
+		}if\
+	    }\
+	    {\
+		noflips {\
+		    translate pop pop 270 rotate 1 -1 scale\
+		}if\
+		xflip yflip and {\
+		    translate pop pop 90 rotate 1 -1 scale\
+		    ppr 3 get ppr 1 get neg sub neg ppr 2 get\
+		    ppr 0 get neg sub neg translate\
+		}if\
+		xflip yflip not and {\
+		    translate pop pop 90 rotate ppr 3 get\
+		    ppr 1 get neg sub neg 0 translate\
+		}if\
+		yflip xflip not and {\
+		    translate pop pop 270 rotate ppr 2 get\
+		    ppr 0 get neg sub neg 0 exch translate\
+		}if\
+	    }ifelse\
+	    scaleby96 {\
+		ppr aload pop 4 -1 roll add 2 div 3 1 roll add 2 div 2 copy\
+		translate .96 dup scale neg exch neg exch translate\
+	    }if\
+	}def\
+	/cp {pop pop showpage pm restore}def\
+        end\
+      }if\
+    } if    \
+  } def

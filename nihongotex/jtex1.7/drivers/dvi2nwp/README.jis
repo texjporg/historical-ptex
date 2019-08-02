@@ -1,0 +1,765 @@
+************************************************************************
+このファイルは, SONY NEWS 上で動作する TeX および ASCII 版JTeX 用の 
+JXDVI (dviプレビュ－ア－) / dvi2nwp (NWP-533, 537用 dvi ドライバ－) を
+作成、利用するための README ファイルです。 
+------------------------------------------------------------------------
+(注意) 
+
+1989 年 2 月以前にリリースされたものと比較して, 今回のものはインストー
+ルの方法その他が大幅に変更されています. このファイルを最後まで読んでか
+ら作業を開始して下さい. 
+
+以下前者をリリース 2, 後者をリリース 3 と呼びます. 
+------------------------------------------------------------------------
+ファイルの一覧
+
+配布ファイルのリストが Manifest.jis にあります. 必要なファイルがすべて
+揃っているかどうか確認してください. 
+
+jxdvi, dvi2nwp でソ－スコ－ドを共有しています。詳しくはMakefileを
+ご覧下さい。
+
+(リリース 2 との相違)
+NEWS 上でも X.V10R4 が標準 (OS 2 系) になったので, XDisplayName.c は配
+布物から除かれています. 
+------------------------------------------------------------------------
+漢字の利用について (漢字フォントについて)
+
+jxdvi/dvi2nwp は, 漢字フォントとしてＳＯＮＹから販売されている基本フォ
+ントセット (NWF-604) あるいは拡張フォントセット (NWF-605, アウトライン
+フォントです) を使用します. またこれらのフォントセットがなくても, 文字
+位置の確認程度のプレビューが可能です. 漢字を利用しない場合は, もちろん
+これらのフォントセットは不要です. 
+
+基本フォントセットを使用する場合は, ASCII版で想定されている文字の大き
+さと若干の差違があるため, 拡張フォントセットを使用する場合に比べて若干, 
+印刷品質が低下します. 
+
+拡張フォントセットを使用する場合は, 使用頻度の高い文字サイズについてあ
+らかじめビットマップに展開したフォントファイルを作成することによって, 
+実行速度を改善することができます (付録参照). 
+
+(リリース 2 との相違)
+拡張フォントセットがサポートされました. 
+---------------------------------------------------------------------------
+英語系フォントについて
+
+PXL および PK フォーマットのものが使用できます. 
+
+dvi2nwp 用に 400 dpi のものが必要です. 作成法については後述します. 
+jxdvi についてはデフォールトの dpi 値を任意に設定できます. 
+
+(リリース 2 との相違)
+PK フォーマットサポートがあらたに追加されました. 
+---------------------------------------------------------------------------
+プリンタについて (dvi2nwp のみに関係あり)
+
+NWP-533 (A4 判専用) および NWP-537 (A4 および B4 判用) が使用できます. 
+
+(リリース 2 との相違)
+NWP-537 があらたにサポートされました. 
+
+(お願い)
+dvi2nwp の開発は NWP-533 を用いて行ないました. NWP-537 使用時に生じた
+不具合を是非報告してください. 
+------------------------------------------------------------------------
+ウィンドウシステムについて (jxdvi のみに関係あり)
+
+X.V10R4 および X.V11R2, R3 が使用できます. 
+
+(リリース 2 との相違)
+X.V11R3 が本格的にサポートされています. X11 用のものにはページキャッシュ
+の機能がありますので, こちらの使用をお薦めします. 
+------------------------------------------------------------------------
+jxdvi/dvi2nwp の作成およびインスト－ルの概要
+
+インストール手順の概要は, 以下の通りです. 
+    1. config.h をエディットし, サイトに依存するパラメータの設定を行な
+       います. 
+    2. Makefile をエディットし, プログラムをインストールするディレクト
+       リを設定します. 
+    3. make して, プログラムを作成します. 
+    4. フォントファイルの整備を行ないます. 
+    5. dvi2nwp については, printcap ファイルを修正し, dvi ドライバーと
+       して登録します. 
+
+(リリース 2 との相違)
+リリース 2 では Makefile に記述していたサイト依存の情報は, すべて 
+config.h に記述することになりました. 
+------------------------------------------------------------------------
+config.h のエディット
+
+1. 漢字フォントの定義
+
+まず, 使用する漢字フォントを定義します. 基本フォントセットを使用する場
+合は NWF_604 を, また 拡張フォントセットを使用する場合は NWF_605 を定
+義します. どちらも使用しない場合は, 何も定義しない (空行にする) でくだ
+さい. なお, 拡張フォントセットからあらかじめ, ビットマップに展開したフォ
+ントファイルを使用する場合も, NWF_605 を定義します. 
+
+以下は, NWF_605 を #define した例です. 
+
+	/*
+	 * NWF Kanji font to be used. (See also README.jis)
+	 *    Define one of the following:
+	 *      NWF_604
+	 *      NWF_605
+	 *    If you have neither of them, leave none of them defined.
+	 */
+	#define NWF_605
+
+なお, NWF_605 を #define しただけでは, プログラム実行時のベクトル展開
+機能は, サポートされません. この機能を有効にするには, 次のセクションで 
+V_NWF を定義する必要があります. 
+
+2. 拡張フォントセットを使用する場合の定義. 	
+
+拡張フォントセットを使用する場合は, V_NWF を定義し, 拡張フォントのディ
+レクトリ (V_NWF_FONT_DIR), 明朝体 (M_V_FONT) およびゴシック体 
+(G_V_FONT) のファイル名を定義します. 
+
+以下は, 拡張フォントセットのディレクトリが /usr/KF, 明朝体およびゴシッ
+ク体のファイル名が, それぞれ Mincho.vfont, Gothic.vfont の場合の例です. 
+
+	/*
+	 * NWF Outline Kanji font (See README.jis)
+	 *    If you want to use NWF-605 Outline font, 
+	 *    define V_NWF and give some names.
+	 */
+	#define V_NWF
+	#define V_NWF_FONT_DIR	"/usr/KF"
+	#define M_V_FONT "Mincho.vfont"
+	#define G_V_FONT "Gothic.vfont"
+
+3. その他のフォントファイルに関する定義 
+
+フォントファイルのディレクトリを, 種類に応じて定義します. それぞれの意
+味は, 
+    PXL_FONT_DIR	pxl ファイルのディレクトリ
+    PK_FONT_DIR		pk  ファイルのディレクトリ
+    JFM_DIR		jfm (ASCII版JTeX に添付されています) のディレクトリ
+    NWF_FONT_DIR	nwf ファイルのディレクトリ
+    NWFADJ_DIR		nwfadj ファイルのディレクトリ
+
+nwf ファイルおよび nwfadj ファイルについては後で説明します. 
+
+以下にすべて同じ /usr/lib/tex/fonts というディレクトリにした場合を示し
+ます. 
+	/*
+	 * file directories
+	 */
+	#define PXL_FONT_DIR	"/usr/lib/tex/fonts"
+	#define PK_FONT_DIR	"/usr/lib/tex/fonts"
+	#define JFM_DIR		"/usr/lib/tex/fonts"
+	#define NWF_FONT_DIR	"/usr/lib/tex/fonts"
+	#define NWFADJ_DIR	"/usr/lib/tex/fonts"
+
+4. デフォールトのドット密度の設定
+
+jxdvi に限って, デフォールトの dpi 値を設定できます. 400 に設定すると, 
+すべてのフォントファイルを dvi2nwp と共有できます. また, より小さい値
+にすれば, プログラムの実行速度が速くなります. ただし, 特殊な値にすると
+フォントをすべて Metafont を用いて作成せねばならなくなります. 118 にす
+ると, TeX の配布テープに含まれているフォントが使用できます. 
+
+以下に 400 に設定した場合を示します. 
+
+	/*
+	 * Default DPI value: (effective only for jxdvi)
+	 *	118, 300, 400, etc.
+	 */
+	#define DEFAULT_DPI	400
+
+5. デフォールトの Shrink Factor の設定
+
+jxdvi はフォントを機械的に縮小して, 表示します. この縮小の度合いを示す
+のが, Shrink Factor です. 例えば, 5 に設定すると文字を 1/5 に縮小して
+表示します. これは NEWS で DEFAULT_DPI を400 に設定した場合に, A4 版の
+プレビューウィンドウがちょうどスクリーンに納まる値です. 
+
+以下に 5 に設定した場合を示します. 
+	/*
+	 * Default Shrink Factor: (effective only for jxdvi)
+	 */
+	#define DEFAULT_SHRINK	5
+
+6. デファールトの印刷位置のオフセット設定
+
+dvi2nwp が印刷する際の, 紙面上でのデフォールトのオフセット値を設定しま
+す. 単位はドット (すなわち 1/400 inch) です. 
+
+以下のように設定すると, A4 判の左上角が dvi ファイル内での座標の原点に
+なります. 
+	/*
+	 * Default X and Y offset on paper: (effective only for dvi2nwp)
+	 */
+	#define DEFAULT_X_OFFSET 113
+	#define DEFAULT_Y_OFFSET 60
+
+7. アカウンティング
+
+各ユーザの印刷ページ数の記録をとることができます. ACCT を定義してください. 
+詳細は後述します. 
+
+以下にアカウンティングを行なう際の定義を示します. 
+
+/*
+ * Accounting:
+ *   If accounting information is needed, define
+ *      ACCT
+ */
+#define ACCT
+
+以上で config.h のエディットは終わりです. 
+------------------------------------------------------------------------
+Makefile のエディット
+
+まず, Makefile 内の, 
+   JXDVI_BIN	jxdvi をインストールするディレクトリおよびプログラム名
+   JX11DVI_BIN	X11 用 jxdvi をインストールするディレクトリおよびプログラム名
+   DVI2NWP_BIN	dvi2nwp をインストールするディレクトリおよびプログラム名
+を設定します. 
+
+以下に, すべてのプログラムを /usr/local/bin にそれぞれ jxdvi, jx11dvi, 
+dvi2nwp という名前でインストールする際の設定例を示します. 
+
+	JXDVI_BIN=/usr/TeX/NEWSbin/jxdvi
+	JX11DVI_BIN=/usr/TeX/NEWSbin/jx11dvi
+	DVI2NWP_BIN=/usr/TeX/NEWSbin/dvi2nwp
+
+次に作成するプログラム名を指定します. 
+   all:		作成するプログラム
+
+例えば, X10 および X11 用のプレビューアと dvi2nwp を 3 つとも作成する
+場合は, 
+	all: jxdvi jx11dvi dvi2nwp
+とします. 
+------------------------------------------------------------------------
+プログラムの作成 (make)
+
+以上で準備が整いましたので, プログラムを作成します. 以下, % は shell 
+のプロンプトです. 
+
+all: で指定したプログラムが, 
+    % make all
+で作成できます. さらに
+    % make install
+で指定したディレクトリに指定した名前で install できます. 
+
+また, 以下のようにして各プログラムを個別に作成, install できます. 
+
+X10 上で動作するプレビューア:
+    % make jxdvi
+    % make install_jxdvi
+
+X11 上で動作するプレビューアは, 次のようにして作成できます. 
+    % make jx11dvi
+    % make install_jx11dvi
+
+dvi2nwp は, 次のようにして作成できます. 
+    % make dvi2nwp
+    % make install_dvi2nwp
+
+なお, install する際は必要に応じて, スーパユーザになってください. 
+
+(リリース 2 との相違)
+jx11dvi という名前で, X11 用のプレビューアが作成できます. 
+------------------------------------------------------------------------
+フォントファイルの整備
+
+1. 漢字フォント (ASCII 版 JTeX を使用するときのみ)
+
+使用する漢字フォントによって手順が異なりますので, 注意して下さい. なお, 
+基本フォントセットと拡張フォントセットを混在させて使用することはできま
+せん. 
+
+(a) 基本フォントセット (NWF-604) を使用する場合. 
+
+    まず, Makefile 中の NWF_FONT_DIR と SONY_FONT_DIR を設定します. 
+    NWF_FONT_DIR は, config.h に記述したものと同じでなければなりません. 
+    SONY_FONT_DIR は, NWF-604 をインストールしたディレクトリです. 
+
+    例えば, 以下のように設定します. 
+
+	NWF_FONT_DIR = /usr/lib/tex/fonts
+	SONY_FONT_DIR= /usr/sony/lib/font/devnwp533
+
+    以下のように make すると, 漢字フォントに関する設定が行なえます. 
+
+	% make link_604_font
+
+(b) 拡張フォントセット (NWF-605) のみを使用する場合
+
+    拡張フォントセットを使用する場合, あらかじめビットマップに展開した
+    ものを使用することができます. これについては付録に述べます. 
+
+    config.h で設定した	V_NWF_FONT_DIR, M_V_FONT, G_V_FONT の値が正し
+    いか確認してください. 具体的には V_NWF_FONT_DIR で定義したディレク
+    トリに M_V_FONT および G_V_FONT で定義した名前のアウトラインフォン
+    トファイルがなければいけません. 
+
+2. jfm ファイル (ASCII 版 JTeX を使用するときのみ)
+
+ASCII から配布された jfm フォ－マットの tfm ファイルを config.h で設定
+した JFM_DIR にコピーします (もちろんリンクでも構いません). 
+
+例えば, 次のようにします.    
+
+    % cp /usr/JTeX/jfm/*.tfm /usr/lib/tex/fonts
+
+3. nwfadj ファイル (ASCII 版 JTeX を使用するときのみ)
+
+jxdvi/dvi2nwp の配布に含まれる拡張子が .nwfadj のファイルを, config.h 
+で設定した NWFADJ_DIR にコピーします. これらのファイルには, ASCII 版 
+TeX で想定されているフォントと SONY のフォントセットとの相違を補整する
+ための情報が納められています. 
+
+例えば, 次のようにします.    
+
+    % cp ./*.nwfadj /usr/lib/tex/fonts
+
+4. TeX フォント
+
+使用するフォントの種類に応じて, config.h で設定した PXL_FONT_DIR ある
+いは PK_FONT_DIR にフォントファイルを作成します. メタフォントを用いて 
+400 dpi のフォントを作成する方法については後述します. 
+
+なお, ASCII 版 JTeX の配布テープの 2nd ファイルに 400 dpi の英字フォン
+トが納められているようですので, お試し下さい. 
+
+フォントファイルの整備については以上ですが, 最後にフォントファイルのア
+クセスモードを確認しておきます. フォントファイルの所有者以外でも read 
+できるかどうか, 確認してください. 
+------------------------------------------------------------------------
+printcap ファイルの修正 (dvi2nwp を使用するときのみ）
+
+ス－パユ－ザになって/etc/printcapファイルを変更します. 
+
+	# vi /etc/printcap
+
+例えばプリンタ名がsjlbpだとします. sjlbpの定義に次の一行を加えます. 
+
+	df=/usr/local/dvi2nwp\
+
+以下に例を示します。
+
+    lp|sjlbp|nwp533|nwp-533|NWP533|NWP-533|Sony NEWS NWP-533:\
+    	:lp=/dev/lbp:sh:\
+    	:sd=/usr/spool/nwp533:\
+    	:df=/usr/local/dvi2nwp:\
+    	:nf=/usr/sony/lib/lpf_lbpnf:\
+    	:tf=/usr/sony/lib/lpf_lbpnf:\
+    	:if=/usr/sony/lib/lpf_nwp533:
+
+これて゛作成およびインスト－ルが終了しました。
+--------------------------------------------------------------------------
+jxdviの使用方法
+
+X.V10R4 の xdvi とほとんど同じです. 新たに以下のスイッチが追加されています. 
+    -core	フォントのプレローディングの項を参照してください. 
+    -A4
+    -B4
+    -LETTER	使用する紙のサイズの指定. デフォールトは A4 です. 
+
+他のスイッチの詳細については xdvi の man ページをご覧ください. 
+
+(リリース 2 との相違)
+ドット密度を変えた場合（-pスイッチ）の漢字の表示ができませんでしたが, 
+拡張フォントセットを使用した場合に限り, この問題は解消されています. 
+--------------------------------------------------------------------------
+dvi2nwpの使用方法
+
+lpr で印刷する方法と, シェルから直接 dvi2nwp を使用する二つの方法があ
+ります。直接使用する場合は spool しないので他のユーザと同時に使用しな
+いよう注意してください. 
+
+1. lprを用いる場合
+
+シェルのプロンプトに対して次のように入力するとdviファイル全ぺ－ジが印
+刷されます。 
+       % lpr -d ＜dviファイル名＞
+
+また, dviselect を使用することによって任意のページを選択して印刷するこ
+とができます. 例えば, 次のようにして 2 ページと 3 ページのみを印刷する
+ことができます. 
+       % dviselect 2 3 <dviファイル名> | lpr -d 
+
+dviselect は TeX 配布テープの
+	./tex82/TeXdevices/ctex/dvi
+に納められています. 
+
+2. 直接使用する場合 
+
+-diスイッチを付けると直接使用モ－ドになります。
+	% dvi2nwp -di [オプション] <dviファイル名>
+
+-diはdvi2nwpに直接使用であることを伝えるスイッチです. 直接使用する場合, 
+オプションとして次のスイッチを付けることができます. 
+
+	-ds : double side mode	(偶数ペ－ジが左にオフセットされて
+                                 印刷されます)
+        -o  : odd pages only	(dviファイルの奇数ペ－ジのみ印刷されます)
+	-e  : even pages only	(同じく偶数ペ－ジのみ印刷されます)
+	-bp <page> : begin printing from <page>
+	    (dvi ファイルの先頭から数えて <page> ペ－ジ目から印刷を開始します)
+	-ep <page> : end printing at <page>
+	    (dvi ファイルの先頭から数えて <page> ペ－ジ目で印刷を終了します)
+        -xo <dot>  : offset <dot> left
+	    (紙面上で印刷位置を左に <dot> ドットずらして印刷します)
+	-yo dot  : offset <dot> up
+	    (紙面上で印刷位置を上に <dot> ドットずらして印刷します)
+--------------------------------------------------------------------------
+フォントのプレロ－ディングについて
+
+xdvi と同様に jxdvi/dvi2nwp もフォントのビットマップをディマンドロ－ディ
+ングします. 通常の TeX ではあまり気になりませんが、漢字を用いるときに
+はロ－ディングにかなりの時間がかかるため、特に最初のペ－ジを表示する 
+(印刷する) のに時間がかかります。 
+
+そこでフォントのプレロ－ディングモ－ドを設けました. 次のようにすると
+jtex.dviに必要なすべてのフォントがプレロ－ドされた jxdvi (dvi2nwp) を
+作ることができます. 
+
+1. -coreスイッチを付けて全ペ－ジをpreview（印刷）する
+	% jxdvi -core jtex.dvi
+2. jxdvi (dvi2nwp) 終了時に core がダンプされる。
+	Illegal instruction (core dumped)
+3. undump を使って core を実行可能ファイルに変換する。
+	% undump jjj jxdvi core
+   必要なフォントすべてがロ－ドされたjxdvi、jjjができる。
+
+jxdviについては十分実用になります. dvi2nwpの場合は, undump してできた
+実行可能ファイルの大きさが 2 Mbytes 以上になってしまいます. 
+--------------------------------------------------------------------------
+今後すべきこと
+
+以下のことをすべきですが、時間の都合で予定が立っていません。
+優先度の高い順に示します。
+
+1. 何か適当な special のサポート
+2. マニュアル (man ページ) の作成
+--------------------------------------------------------------------------
+著作権について
+
+私が行なった修正, 付加については制限を設けません (atsuo-copyright.hを
+ご覧下さい) しかしどちらのプログラムもxdviを改造したものなので多少やや
+こしくなっています. MIT も xdvi に限って mit-copyright.h を include し
+ていないのでおそらく何もない (PDSである) のだとは思うのですが... とり
+あえずmit-copyright.hも見ておいてください。 
+
+なお, read_pk.c については,  ikadai@sra.junet さんの readpk.c を改造し
+たものです. 
+
+(リリース 2 との相違)
+今回のリリースでは XDisplayName.c をはずしました. 
+-------------------------------------------------------------------------
+謝辞
+
+以下の方々が, このプログラムの開発, 改良に当たってなんらかの貢献をして
+くださいました. ここで感謝の意を表したいと思います(リストに漏れてい
+る方, 是非お知らせ下さい). 
+
+倉沢＠アスキーさん
+	jxdvi/dvi2nwp の配布と TeX に関するさまざまな情報
+松井　学@東北大さん
+	put_bitmap() まわりのバグ修正
+篠田@東工大さん		
+	put_bitmap() まわりのバグ修正とアカウンティングの追加
+一井信吾@高エネルギー物理学研究所さん
+	プリンタ制御に関するバグ修正
+鈴木摂＠応用材料研究所さん
+	font_db.c に関するバグ修正
+山岡健志@慶応義塾大学
+	one(), two(), four() および X11 カラーに関するバグ修正
+澤田　晃@京都大学
+	同じく one(), two(), four() および X11 カラーに関するバグ修正. 
+	また, dvi2nwp の印刷位置に関する問題点の指摘
+坂本仁明@NTTさん
+	NWP-537 用のテスト
+
+------------------------------------------------------------------------
+バグ情報、要望、改良など何でも結構ですからお知らせください。
+まとめて他の方々にも伝えていきたいと考えています。
+よろしくお願いします。
+
+                      川口敦生＠産業科学研究所．大阪大学．ｊｕｎｅｔ
+                      atsuo@sanken.osaka-u.junet
+************************************************************************
+付録
+
+400 dpi のフォントの作り方について
+font_db.c ファイルについて
+NWF-605 をビットマップに展開して使用する方法
+nwfadj ファイルについて
+アカウンティングについて
+------------------------------------------------------------------------
+400 dpi のフォントの作り方について
+
+詳細はmetafontについてくる説明に譲りますが，参考までに400dpiのフォントを
+作るのに私たちが使っているデバイス定義を以下に示します．ただし，これが
+ベストというわけではありませんから，パラメータの値を適当に調節して見て
+ください．
+-----------------------------------------------------------------------------
+% devnews.mf
+%
+% This file can be loaded after PLAIN.MF.
+% It introduces conventions that are commonly used at SONY/NEWS.
+base_version:=base_version&"/NEWS";
+
+% The WAITS implementation allows an extended character set;
+% characters :=, <=, <>, and >= are put into the class with <, =, >, :, and |;
+% character ^^L (form feed) is in a class by itself, and is like an "outer" \.
+% Files containing these special characters should not be expected to work
+% elsewhere unless the following replacements are made:
+  let <= = <=;
+  let <> = <>;
+  let >= = >=;
+  let := = :=;
+
+% Say "boise_proof" on the command line, to get proofmode on boise
+def boise_proof = lcode_:=" /";
+ extra_setup:=extra_setup&"grayfont grbois;" enddef;
+
+screen_rows:=400; screen_cols:=480;
+
+% Here are conventions for local output devices:
+
+mode_def news =         % news mode: for previewing on SONY NEWS (100dpi)
+ proofing:=0;           % no, we're not making proofs
+ fontmaking:=1;         % yes, we are making a font
+ tracingtitles:=0;      % no, don't show titles in the log
+ pixels_per_inch:=100;
+ blacker:=.55;          % make pens somewhat blacker
+ fillin:=.1;            % no compensation for fillin
+ o_correction:=.3;      % but don't overshoot as much
+ enddef;
+
+mode_def nwp =  	% nwp mode: for the SONY NWP533 (400dpi)
+ proofing:=0;      	% no, we're not making proofs
+ fontmaking:=1;      	% yes, we are making a font
+ tracingtitles:=0;    	% no, don't show titles in the log
+ pixels_per_inch:=400;
+ blacker:=.2;      	% make pens a wee bit blacker
+ fillin:=.2;      	% and compensate for fillin
+ o_correction:=.4;    	% but don't overshoot as much
+ enddef;
+
+localfont:=nwp;
+
+% Finally, here are macros for Xerox-world font info:
+
+def font_family expr s =  % string s names the font family, e.g., "CMR"
+ headerbyte 49: BCPL_string(s,20);
+ special "identifier "&s enddef;
+def coding_scheme expr s = % string s names the scheme, e.g. "TEX TEXT"
+ headerbyte 9: BCPL_string(s,40);
+ special "codingscheme "&s enddef;
+def font_face_byte expr x = % integer x gives the family member number,
+ headerbyte 72: x;          % which should be between 0 and 255
+ special "fontfacebyte"; numspecial x enddef;
+
+def BCPL_string(expr s,n)= % string s becomes an n-byte BCPL string
+ for l:=if length(s)>=n: n-1 else: length(s) fi: l
+  for k:=1 upto l: , substring (k-1,k) of s endfor
+  for k:=l+2 upto n: , 0 endfor endfor enddef;
+
+Xerox_world:=1;    % users can say `if known Xerox_world:...fi'
+
+inner end;
+def bye=
+ if fontmaking>0: font_family font_identifier_;
+  coding_scheme font_coding_scheme_;
+  font_face_byte max(0,254-round 2designsize); fi
+ tracingstats:=1;  % at least for now we want this
+ end
+ enddef;
+
+outer bye,end;
+------------------------------------------------------------------------
+font_db.c ファイルについて
+
+jxdvi/dvi2nwp は日本語フォントとして, SONY の基本フォントセットを使用
+することができます. ここでは基本フォントセットのフォーマットを NWF フォー
+マットと呼ぶことにします. 
+
+さて, TeX で使用されている pxl その他のフォーマットと異なり, NWF フォー
+マットにはそのフォント自身に関する情報が一切含まれていません. そのため, 
+何らかの方法でフォントファイル内の各文字に関する情報 (bitmap の幅, 高
+さなど) を知る必要があります. 
+
+jxdvi/dvi2nwp では二つの方法を用いています. 一つは対応する tfm (jfm) 
+ファイルから読み込みます. もう一つがこの font_db.c に記述されている内
+容です. 
+
+tfm ファイルからは, 文字の幅を知ります. ただしここで言う文字の幅は, 一
+文字の bitmap の幅ではなく, その文字を紙面上に置いた時にどれだけ基準点
+を移動させねばならないかという幅です. 
+
+font_db.c からは NWF フォーマットの各ファイルに含まれている bitmap (約 
+7千文字文) の幅と高さを知ります. NWF フォーマットの場合, すべての文字
+の bitmap は同じ大きさですので, 次のような形式で記述されています. 
+
+struct kanji_font_data kanji_font_db[] = {
+/*    font name, height, width, byte wides	*/
+                    :
+                    :
+	{ "min10.2000nwf",  55,  55,  7 },   /* 10pt (0)    */
+                    :
+                    :
+	{ (char *)NULL, 0, 0, 0 }
+};
+
+例えば, min10.2000nwf (10ポイントの明朝体, magstep=0) の場合, 基本フォ
+ントセットの M55.font が最も近いサイズになります. そこでフォントのディ
+レクトリ min10.2000nwf から M55.font へリンクを張ります. M55.font には
+高さ 55 ドット, 幅 55 ドットの bitmap が含まれています. 幅方向には 7 
+バイトですから, 結局, 
+	{ "min10.2000nwf",  55,  55,  7 },   /* 10pt (0)    */
+となるわけです. 
+
+(リリース 2 との相違)
+リリース 2 では 2 種類の font_db.c ファイルを基本および拡張フォントセッ
+ト用に使い分けていましたが, 拡張フォントセットに関しては, 必要な情報を
+すべて jfm ファイルから計算するよう改めました. 
+------------------------------------------------------------------------
+NWF-605 をビットマップに展開して使用する方法
+
+拡張フォントにサンプルとして添付されていた mkbitmap というプログラムを
+使って任意サイズの NWF フォーマットフォント (ビットマップフォント) を作
+ることができます. 
+
+ビットマップに展開すると, プレビューおよび印刷が高速になります. 
+
+ただし, ASCII 版 JTeX で定義されているすべてのフォントをビットマップに
+展開すると約 100 Mbyte のディスクを必要とします. 使用頻度の高いフォン
+トだけをビットマップにしておくだけで, かなりの速度改善が望めますので, 
+この方法をお薦めします. 
+
+参考までに, jxdvi/dvi2nwp で参照する nwf フォント名と, NWF フォーマッ
+トフォントのファイル名との対応を以下に示します. なお, make 
+link_605_font とすることによって, NWF-604 を用いる時と同様にリンクを張
+ることができます. 
+
+goth10.1020nwf -> G26.font     	min10.1020nwf -> M26.font
+goth10.1223nwf -> G31.font      min10.1223nwf -> M31.font
+goth10.1468nwf -> G37.font      min10.1468nwf -> M37.font
+goth10.2000nwf -> G51.font      min10.2000nwf -> M51.font
+goth10.2191nwf -> G56.font      min10.2191nwf -> M56.font
+goth10.2400nwf -> G61.font      min10.2400nwf -> M61.font
+goth10.2880nwf -> G73.font      min10.2880nwf -> M73.font
+goth10.3456nwf -> G88.font      min10.3456nwf -> M88.font
+goth10.4147nwf -> G105.font     min10.4147nwf -> M105.font
+goth10.4977nwf -> G126.font     min10.4977nwf -> M126.font
+goth10.590nwf -> G15.font       min10.590nwf -> M15.font
+goth10.646nwf -> G16.font       min10.646nwf -> M16.font
+goth10.708nwf -> G18.font       min10.708nwf -> M18.font
+goth10.850nwf -> G22.font       min10.850nwf -> M22.font
+goth5.2000nwf -> G25.font       min5.2000nwf -> M25.font
+goth5.590nwf -> G7.font         min5.590nwf -> M7.font
+goth6.2000nwf -> G30.font       min6.2000nwf -> M30.font
+goth6.590nwf -> G9.font         min6.590nwf -> M9.font
+goth7.2000nwf -> G36.font       min7.2000nwf -> M36.font
+goth7.590nwf -> G10.font        min7.590nwf -> M10.font
+goth8.2000nwf -> G41.font       min8.2000nwf -> M41.font
+goth8.590nwf -> G12.font        min8.590nwf -> M12.font
+goth9.2000nwf -> G46.font       min9.2000nwf -> M46.font
+goth9.590nwf -> G13.font        min9.590nwf -> M13.font
+
+jxdvi/dvi2nwp はフォントをオープンする際, まず nwf フォーマットのもの
+がないかどうか, NWF_FONT_DIR に探しに行きます. 見付かればそれを使用し
+ますし, 見付からない時はアウトラインフォントからビットマップを (内部で) 
+生成します. 
+------------------------------------------------------------------------
+nwfadj ファイルについて
+
+ASCII 版 JTeX で想定されている日本語フォントと SONY のフォントセットの
+違いを補整するために, nwfadj ファイルを用いています. 「」などは, これ
+らが正しくインストールされていないとうまく印刷されません. 
+
+ディレクトリ中に次のファイルが存在するはずです. 
+          min5.nwfadj,   min6.nwfadj,   min7.nwfadj,
+          min8.nwfadj,   min9.nwfadj,   min10.nwfadj,
+          goth5.nwfadj,  goth6.nwfadj,  goth7.nwfadj,
+          goth8.nwfadj,  goth9.nwfadj,  goth10.nwfadj,
+
+nwfadj ファイルはテキストファイルで, 次のような行からなります. 
+         type x y<nl>
+type は jfm ファイルの char_type に対応するものです. x, y はの type に
+属する文字の印刷位置を補整するパラメータで, それぞれ x および y 方向の
+補整値を示します (単位は designsize * 2^-20 だがほとんど意味はない). 
+たとえば
+         1 -180000 1000
+と記述すると, char_type が 1 の文字は, 印刷時に左へ 180000, 上へ 1000 
+ずらして印刷します. 
+
+用意した各 nwfadj ファイルの値は, 拡張フォントセットを用いた場合に適切
+となるように決めてあります. 値が気に入らない時は, 適当に修正して下さい. 
+------------------------------------------------------------------------
+アカウンティングについて
+
+config.h で ACCT を定義すると, 各ユーザの印刷ベージ数を記録することが
+できます. 通常のインストールに加えて, 以下の作業を行なって下さい. 
+
+1. printcap ファイルを修正する際に, af (Accounting file) の定義を付け
+   加える. 例えば, /usr/adm/lp-acct というファイルに記録を取る場合は, 以
+   下の行を加えます. 
+
+	af=/usr/adm/lp-acct:\
+
+2. /usr/adm/lp-acct に dvi2nwp が書き込めるようにします. 具体的には, 
+	(a) ファイル (とおそらく /usr/adm ) のアクセスモードを変える. 
+	(b) dvi2nwp の 'set user ID on execution' mode を on する. 
+   などがあります. 
+
+このようにすると, 印刷ページ数とユーザ名の記録を取ることができます. 
+------------------------------------------------------------------------
+このdvi2nwpには、あと2種類の拡張が施されています。(ソニーCSL河野 
+kono@csl.sony.co.jp) 
+
+1. ランドスケープモード
+
+ランドスケープモードは、鈴木摂＠応用材料研究所setsu@aml.co.jp (Setsu
+Suzuki) ものそのものです。optionとして、
+	 -l		Landscape mode
+をつけるとlランドスケープモードになります。lprのfilterとして使えるよう
+にコマンドの最後の文字も判断するようにしてあります。
+	ln -s dvi2nwp dvi2nwpL	ランドスケープモード
+	ln -s dvi2nwp dvi2nwpB	B4モード
+
+2. tpic extension
+
+こちらは、xfig または、xpicで書かれた図を、\special macroの形にして、
+TeXに挿入するものです。
+
+xfigなら附属のf2tpicで、
+	f2tpic figure.xfig > fiugre.tex
+とし、xpicなら、
+	x2tpic figure.x 
+とします。それを、
+	\input figure.tex
+	\box\graph
+という形でTeXのファイルに挿入します。\specialには以下のようなものがあ
+ります。(矢印が汚いのと、点線のスプライン、fill、shadingがないのがいま
+いちですが…)
+
+f2tpicは、xfigのディレクトリでコンパイルします。texx2に対するパッチも
+含まれています。jxdviは、tpic supportではありません。ごめんなさい。
+
+Each coordinates are represented in 1/1000inch.
+
+\special{pa %d %d}	set point
+\special{fp}		connect previous points by flat line.
+\special{da}		connect previous points by flat line. (should be dashed)
+\special{dt}		connect previous points by flat line. (should be doted)
+\special{sp}		connect previous points by spline.
+\special{ar %d %d %d %d %lf %lf} write arc (circle/ellipse)
+	center_x, center_y, radious_x, radious_y, start_radian, end_radian
+		if (radous_x == radous_y) {
+			if ( start_radian==end_radian ) circle;
+			else arc;
+		} else ellipse;
+\special{pn %d}		line width ( dot unit )
+
+tpicは、PicTeXよりはましとはいえ、やはりTeXの容量を食います。必ず
+BigTeXを使いましょう。
+----------------------- End of README.jis ----------------------------------

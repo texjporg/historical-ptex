@@ -1,0 +1,31 @@
+%
+% "a4j" document style option.
+%
+\@ifundefined{@twoc}{%
+\topmargin-.3in
+\oddsidemargin0pt
+\evensidemargin0pt
+\parindent1zw
+\@ifundefined{@lands}{\ifcase \@ptsize
+    % mods for 10 pt
+    \textheight55\baselineskip
+    \textwidth60zw
+\or % mods for 11 pt 
+    \textheight53\baselineskip
+    \textwidth55zw
+\or % mods for 12 pt
+    \textheight50\baselineskip
+    \textwidth50zw
+\fi}{\ifcase\@ptsize
+    % mods for 10 pt
+    \textheight35\baselineskip
+    \textwidth93zw
+\or % mods for 11 pt 
+    \textheight35\baselineskip
+    \textwidth84zw
+\or % mods for 12 pt
+    \textheight33\baselineskip
+    \textwidth77zw
+\fi}
+\advance\textheight\topskip
+\def\@ps@{3}}{\@warning{Sorry, I igunored `b4j' style}}

@@ -1,0 +1,32 @@
+jxl4フォントフォーマットを扱えるように
+作成したファイル。
+
+jxl4font.c:
+	rastfont.c、pxlfont.c及び
+	IMAGEN用ドライバのfontglyph.c
+	dvi2nwpのread_dnf.c
+	それぞれのファイル中の関数を元に作成。
+
+jxl4info.h:
+	rastfont.c内でのrastfntinfo構造体を
+	元に、作成。
+	jxl4フォントファイルを扱うための
+	型を持たせた(jxl4font.hで定義)。
+
+jxl4font.h:
+	jxl4font.c内で扱うデータ構造の定義
+	jxl4フォントデータ用の構造体。
+	IMAGEN用ドライバのjxl4.h,config.hを
+	元に、作成。
+
+jxl4.c:	IMAGEN用ドライバでの同名ファイル。
+	高水準ファイルライブラリ用に書き変え。
+
+psjxl4.c:
+	psrast.cを元にjxl4info構造体を扱うのに
+	必要な書き変え。
+
+
+		拓殖大学 工学部 情報工学科 3年
+
+			               濱岡正志

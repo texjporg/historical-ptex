@@ -1,0 +1,335 @@
+##
+## File:         Texx2.ad
+## Description:  Application Default: put in ...app-defaults/Texx2
+## Author:       Dirk Grunwald
+##
+## Copyright 1988, 1989 Dirk C. Grunwald
+## Permission to use, copy, modify, and distribute this software and
+## its documentation for any purpose and without fee is hereby
+## granted, provided that the above copyright notice appear in all
+## copies and that both that copyright notice and this permission
+## notice appear in supporting documentation, and that the name of
+## Dirk Grunwald not be used in advertising or publicity pertaining to
+## distribution of the software without specific, written prior
+## permission.  Dirk Grunwald makes no representations about the
+## suitability of this software for any purpose.  It is provided "as
+## is" without express or implied warranty.
+##
+## Please send any improvements, bug fixes, useful modifications, and comments
+## to grunwald@cs.uiuc.edu
+##
+##
+*.print:lpr -d
+*.autoSize:True
+##
+##	These specify the top and left offsets, in inches. If you decrease
+##	these, and don't intrude on the 1inch default TeX margins, you can
+##	view more of your document at once.
+##
+*.topOffset: 1
+*.leftOffset: 1
+##
+##	This is the size, in inches, of the intended paper. If you
+##	swap these values, you can get a landcape printing.
+##
+*.paperWidth:8.5
+*.paperHeight:11
+##
+##	Texx2 attempts to size the final dvi page to your display.
+##	On a sun3, I use twm & specify no header bar, 2bit bourders
+##	and a maxPageHt of 890, paperHeight of 10.4 and topOffset of 0.75.
+##	This lets me see an entire page without having to move it around
+##	while stilling being able to look at it in large mode.
+##
+*.pageMaxWd: 0
+*.pageMaxHt: 0
+#
+#	Use these if you're using shrunken 300dpi fonts
+#
+#	*.mag:333
+#	*.smallMag:333
+#	*.largeMag:500
+#	*.dpi:300
+
+#
+#	Use these if you're using metafont generated 85dpi fonts for Suns
+#
+*.dpi: 300
+*.mag: 250
+*.smallMag: 250
+*.largeMag: 500
+*.paperWidth: 8.26
+*.paperHeight: 11.67
+
+##
+##	DviPage.MaxDrift determines the maximum drift, in points, allowed
+##	from the ``true'' point. Since the glyphs we lay down aren't *exactly*
+##	like the TeX glyphs, the placement of glyphs can accumulate some
+##	error. We could correct this by plotting each individual glyph
+##	with specific placement, but this is (relatively) slow in X11,
+##	because we make many server calls.
+##
+##	Our comprimize is to allow some ``drift'' from the actual position;
+##	this lets us plot ``runs'' of characters (typically 3 -> 5), making
+##	things faster while still allowing us to place glyphs correctly
+##	to the human eye.
+##
+##	If the default isn't good enough (placement is bad), lower the number.
+##	Be warned that this will make texx2 run slightly slower. To force
+##	exact placement, set MaxDrift to 0.
+##
+
+*DviPage.MaxDrift: 1
+
+##
+## this is the help display that comes up initially when you run Texx2
+##
+*helpText:\
+Welcome to TeXx, Version 2.9\n\
+Copyright(C) 1989 Dirk Grunwald\n\
+This is the dialog box. Press ``Clear Dialog Box'' to clear.\n\
+TeXx2 understands various accelerators (e.g. return, backspace,\
+up-arrow, down-arrow) at the file box & dvi page box.\n\
+See app-defaults/Texx2 for full details.\n
+
+##
+##	The DviPage widget is much faster when you enable backing store,
+##	If it's available, do it.
+##	However, this has caused problems on microvaxen.
+##
+*DviPage.backingStore: whenMapped
+
+##
+##	The width of the top level display
+##
+
+*topLevel.width: 		600
+*topLevel.directoryLabel.width: 600
+*topLevel.directoryLabel.font: fixed
+
+*topLevel.fileLabel.width: 	600
+*topLevel.fileLabel.font: fixed
+
+*topLevel.dialogText.width: 	600
+*topLevel.dialogText.height:	150
+
+##
+##	Translations for the filename entry widget. Note that the pressing
+##	return *down* opens the file. The upstroke is overriden by the
+##	pageButton accelerator to pop up a page. Thus, to avoid a page popup,
+##	change the pageButton entry, not this one.
+##
+*topLevel.fileName.width: 	600
+*topLevel.fileName.translations:#override\n\
+	<KeyDown>Return: texx2-file-reopen() \n\
+	<Key>Escape:		texx2-noop() \n\
+	Ctrl<Key>M:		texx2-noop() \n\
+	Meta<Key>]:		texx2-noop() \n\
+	Ctrl<Key>[:		texx2-noop() \n\
+	Ctrl<Key>N:		texx2-noop() \n\
+	Ctrl<Key>P:		texx2-noop() \n\
+	Ctrl<Key>V:		texx2-noop() \n\
+	Meta<Key>V:		texx2-noop() \n\
+	Ctrl<Key>Z:		texx2-noop() \n\
+	Meta<Key>Z:		texx2-noop() \n\
+	Ctrl<Key>J:		texx2-noop() \n\
+	Ctrl<Key>O:		texx2-noop() \n
+
+##
+##	Button labels for the top level box
+##
+
+*topLevel.quitButton.label: Quit
+*topLevel.quitButton.resize: False
+*topLevel.quitButton.font: variable
+
+*topLevel.openButton.label: Open
+*topLevel.openButton.resize: False
+*topLevel.openButton.font: variable
+*topLevel.openButton.horizDistance: 15
+
+*topLevel.copyButton.label: Copy
+*topLevel.copyButton.resize: False
+*topLevel.copyButton.font: variable
+
+*topLevel.closeButton.label: Close
+*topLevel.closeButton.resize: False
+*topLevel.closeButton.font: variable
+
+*topLevel.cdButton.label: Set Directory
+*topLevel.cdButton.resize: False
+*topLevel.cdButton.font: variable
+
+##
+##	note that this must appear *after* the translation table
+##	for fileName for this override to have any affect.
+##
+*topLevel.pageButton.label: Popup Page
+*topLevel.pageButton.resize: False
+*topLevel.pageButton.font: variable
+*topLevel.pageButton.horizDistance: 15
+*topLevel.pageButton.accelerators:#override\n\
+	<KeyUp>Return: set() notify() unset()
+
+*topLevel.printAllButton.label: Print All
+*topLevel.printAllButton.resize: False
+*topLevel.printAllButton.font: variable
+
+*topLevel.printMarkedButton.label: Print Marked
+*topLevel.printMarkedButton.resize: False
+*topLevel.printMarkedButton.font: variable
+
+*topLevel.printUnmarkedButton.label: Print Unmarked
+*topLevel.printUnmarkedButton.resize: False
+*topLevel.printUnmarkedButton.font: variable
+
+*topLevel.clearMarksButton.label: Clear Marks
+*topLevel.clearMarksButton.resize: False
+*topLevel.clearMarksButton.font: variable
+
+*topLevel.dialogClear.label: Clear Dialog Box
+*topLevel.dialogClear.resize: False
+*topLevel.dialogClear.font: variable
+
+##
+##	Make ``bad keys'' beep in the ``what page number'' box.
+##	
+*page.numberText.translations:#override\n\
+	Ctrl<Key>Return:	texx2-noop() \n\
+	Ctrl<Key>M:		texx2-noop() \n\
+	Meta<Key>]:		texx2-noop() \n\
+	Ctrl<Key>[:		texx2-noop() \n\
+	Ctrl<Key>N:		texx2-noop() \n\
+	Ctrl<Key>P:		texx2-noop() \n\
+	Ctrl<Key>V:		texx2-noop() \n\
+	Meta<Key>V:		texx2-noop() \n\
+	Ctrl<Key>Z:		texx2-noop() \n\
+	Meta<Key>Z:		texx2-noop() \n\
+	Ctrl<Key>J:		texx2-noop() \n\
+	Ctrl<Key>O:		texx2-noop() \n
+
+*page.quitButton.label: Quit
+*page.quitButton.resize: False
+*page.quitButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+*page.forwardButton.label: Forward
+*page.forwardButton.horizDistance: 30
+*page.forwardButton.resize: False
+*page.forwardButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.backwardButton.label: Backward
+*page.backwardButton.resize: False
+*page.backwardButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.markButton.label: Mark
+*page.markButton.resize: False
+*page.markButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.dupButton.label: Dup
+*page.dupButton.resize: False
+*page.dupButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.tieButton.label: Tied
+*page.tieButton.resize: False
+*page.tieButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.largeButton.label: Large
+*page.largeButton.resize: False
+*page.largeButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.smallButton.label: Small
+*page.smallButton.resize: False
+*page.smallButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.reopenButton.label: Reopen
+*page.reopenButton.resize: False
+*page.reopenButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.numberText.resize: False
+*page.numberText.resizable: False
+*page.numberText.editType: textEdit
+*page.numberText.horizDistance: 30
+*page.numberText.width: 40
+*page.numberText.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+
+*page.gotoButton.label: Goto
+*page.gotoButton.resize: False
+*page.gotoButton.font: -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
+Texx2*gotoButton.accelerators:#override\n\
+	<Key>Return: set() notify() unset()\n\
+
+##
+##	The following accelerators allow you to press the Up key to
+##	page up, and Down to go down and the Space back to flip
+##	between the two halves; note that space only works when you're
+##	originally looking at the top of the display.
+##
+*page.viewPort.resize:True
+*page.viewPort.resizable:True
+*page.viewPort.allowHoriz:True
+*page.viewPort.allowVert:True
+*page.viewPort.vertical.accelerators:\
+  <KeyUp>Up: StartScroll(Backward) NotifyScroll(FullLength) EndScroll() \n\
+  <KeyUp>Down: StartScroll(Forward) NotifyScroll(FullLength) EndScroll() \n\
+  <KeyDown>space: StartScroll(Forward) NotifyScroll(FullLength) EndScroll() \n\
+  <KeyUp>space: StartScroll(Backward) NotifyScroll(FullLength) EndScroll() \n\
+
+
+##
+##	For some reason, these cause texx to coredump in XtFree, so don't
+##	use them yet.
+##
+##Texx2*page.viewPort.horizontal.accelerators:\
+##  <KeyUp>Left: StartScroll(Forward) NotifyScroll(FullLength) EndScroll() \n\
+##  <KeyUp>Right: StartScroll(Backward) NotifyScroll(FullLength) EndScroll()
+##
+
+##
+##	We define keypresses for equivilent functions to the buttons --
+##	this allows us to omit the buttons, giving us a bigger display area.
+##
+*.dviPage.resize: True
+*.dviPage.translations:#replace\n\
+	Shift<Key>x: texx2-quit()\n\
+	Shift<Key>q: texx2-quit()\n\
+	Ctrl<Key>d: texx2-quit()\n\
+	<Key>q: texx2-page-quit()\n\
+	<Key>x: texx2-page-quit()\n\
+\
+	<Key>g: texx2-page-goto() texx2-page-number-reset()\n\
+\
+	<Key>f: texx2-page-foreward() texx2-page-number-reset()\n\
+	<Key>n: texx2-page-foreward() texx2-page-number-reset()\n\
+	Ctrl<Key>n: texx2-page-foreward() texx2-page-number-reset()\n\
+	<Key>Return: texx2-page-foreward() texx2-page-number-reset()\n\
+\
+	<Key>b: texx2-page-backward() texx2-page-number-reset()\n\
+	<Key>p: texx2-page-backward() texx2-page-number-reset()\n\
+	Ctrl<Key>h: texx2-page-backward() texx2-page-number-reset()\n\
+	<Key>BackSpace: texx2-page-backward() texx2-page-number-reset()\n\
+	<Key>Delete: texx2-page-backward() texx2-page-number-reset()\n\
+\
+	<Key>l: texx2-page-large() texx2-page-number-reset()\n\
+	<Key>s: texx2-page-small() texx2-page-number-reset()\n\
+\
+	<Key>t: texx2-page-mark-toggle() texx2-page-number-reset()\n\
+	<Key>m: texx2-page-mark-set() texx2-page-number-reset()\n\
+	<Key>u: texx2-page-mark-unset() texx2-page-number-reset()\n\
+\
+	<Key>F12: texx2-file-reopen() texx2-page-number-reset()\n\
+	<Key>r: texx2-file-reopen() texx2-page-number-reset()\n\
+\
+	Shift<Key>d: texx2-page-duplicate() texx2-page-number-reset()\n\
+	Shift<Key>t: texx2-page-tie() texx2-page-number-reset()\n\
+\
+	<Key>Escape: texx2-page-number-reset()\n\
+	<Key>0: texx2-page-number(0)\n\
+	<Key>1: texx2-page-number(1)\n\
+	<Key>2: texx2-page-number(2)\n\
+	<Key>3: texx2-page-number(3)\n\
+	<Key>4: texx2-page-number(4)\n\
+	<Key>5: texx2-page-number(5)\n\
+	<Key>6: texx2-page-number(6)\n\
+	<Key>7: texx2-page-number(7)\n\
+	<Key>8: texx2-page-number(8)\n\
+	<Key>9: texx2-page-number(9)\n\
+	<Key>-: texx2-page-number-minus()\n

@@ -1,0 +1,49 @@
+\def\@addtobot{\@tempcnta\count\@currbox\divide\@tempcnta4
+\ifodd\@tempcnta \ifnum \@botnum >\z@
+\global\advance\@botnum\m@ne \global\advance\@colnum\m@ne 
+\@tempdima -\ht\@currbox \advance\@tempdima -\ifx\@botlist\@empty \textfloatsep
+ \else\floatsep\fi
+\global\advance\@botroom \@tempdima \global\advance\@colroom \@tempdima
+\@cons\@botlist\@currbox \global\maxdepth\z@ \@inserttrue \fi\fi}
+
+\def\@addtocurcol{\@insertfalse \@textmin \textfraction\@colht
+   \@tempdima\@pageht \advance\@tempdima\@pagedp
+   \ifdim \@textmin > \@tempdima \@tempdima\@textmin \fi
+       \advance\@tempdima\ht\@currbox \advance\@tempdima\@maxsep
+      \ifnum\@colnum >\z@
+         \@currtype\count\@currbox \divide\@currtype\@xxxii
+                \multiply\@currtype\@xxxii
+         \@bitor\@currtype\@deferlist
+         \if@test\else
+            \@bitor\@currtype\@botlist
+            \if@test \@addtobot \else 
+               \ifodd\count\@currbox
+                 \global\advance\@colnum\m@ne
+                 \@cons\@midlist\@currbox
+                 \vskip\intextsep \box\@currbox 
+                 \penalty\interlinepenalty \vskip\intextsep
+                 \ifnum\outputpenalty <-\@Mii \vskip -\parskip\fi
+                 \outputpenalty\z@ 
+                 \@inserttrue
+               \else \@addtotoporbot
+   \fi\fi\fi\fi
+   \if@insert\else\@cons\@deferlist\@currbox\fi}
+
+\def\@addtodblcol{\@insertfalse
+   \@tempcnta\count\@currbox \divide\@tempcnta\tw@
+   \ifodd\@tempcnta
+      \ifnum\@dbltopnum >\z@
+           \@currtype\count\@currbox \divide\@currtype\@xxxii
+               \multiply\@currtype\@xxxii
+           \@bitor\@currtype\@dbldeferlist
+           \if@test\else
+              \global\advance\@dbltopnum\m@ne
+              \@tempdima -\ht\@currbox
+              \advance\@tempdima -\ifx\@dbltoplist\@empty
+                 \dbltextfloatsep\else\dblfloatsep\fi
+              \global\advance\@dbltoproom \@tempdima
+              \global\advance\@colht \@tempdima
+              \@cons\@dbltoplist\@currbox     
+              \@inserttrue
+   \fi\fi\fi
+   \if@insert\else \@cons\@dbldeferlist\@currbox \fi}

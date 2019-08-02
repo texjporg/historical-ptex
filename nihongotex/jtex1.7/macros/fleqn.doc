@@ -1,0 +1,49 @@
+% FLEQN DOCUMENT-STYLE OPTION - released 9 March 1987
+%    for LaTeX version 2.09
+% Copyright (C) 1987 by Leslie Lamport
+
+% The following commands make the displayed math environments flush left,
+% with an indentation of \mathindent from the prevailing left margin.
+
+
+% Defintions of \[ and \] changed 9 Mar 87 to use \begin{trivlist} ...
+% \end{trivlist} instead of simulating it; corrects bug that caused
+% following text always to start new paragraph.
+%
+\def\[{\relax\ifmmode\@badmath\else\begin{trivlist}\item[]\leavevmode
+  \hbox to\linewidth\bgroup$ % $ TO MAKE 'DOLLAR' NESTING OK
+  \displaystyle
+  \hskip\mathindent\bgroup\fi}
+
+\def\]{\relax\ifmmode \egroup $\hfil % $ TO MAKE DOLLAR NESTING IN THIS FILE OK
+       \egroup \end{trivlist}\else \@badmath \fi}
+
+\def\equation{\refstepcounter{equation}\trivlist \item[]\leavevmode
+  \hbox to\linewidth\bgroup $ % $ TO MAKE DOLLAR NESTING OK
+  \displaystyle
+\hskip\mathindent}
+  
+
+\def\endequation{$\hfil % $ TO MAKE DOLLAR NESTING IN THIS FILE OK
+           \displaywidth\linewidth\@eqnnum\egroup \endtrivlist}
+
+\def\eqnarray{\stepcounter{equation}\let\@currentlabel=\theequation
+\global\@eqnswtrue
+\global\@eqcnt\z@\tabskip\mathindent\let\\=\@eqncr
+\abovedisplayskip\topsep\ifvmode\advance\abovedisplayskip\partopsep\fi
+\belowdisplayskip\abovedisplayskip
+\belowdisplayshortskip\abovedisplayskip
+\abovedisplayshortskip\abovedisplayskip
+$$\halign % $$ DOLLAR MATCHING
+to \linewidth\bgroup\@eqnsel\hskip\@centering$\displaystyle\tabskip\z@
+  {##}$&\global\@eqcnt\@ne \hskip 2\arraycolsep \hfil${##}$\hfil
+  &\global\@eqcnt\tw@ \hskip 2\arraycolsep $\displaystyle{##}$\hfil 
+   \tabskip\@centering&\llap{##}\tabskip\z@\cr}
+
+\def\endeqnarray{\@@eqncr\egroup
+      \global\advance\c@equation\m@ne$$\global\@ignoretrue % $$ MATCHING
+      }
+
+\newdimen\mathindent 
+\mathindent = \leftmargini
+  

@@ -1,0 +1,9 @@
+BINDIR=/usr/local/bin
+
+undump: undump.c 
+	cc -O -o undump undump.c
+clean:
+	rm -f *.o undump
+
+install: undump
+	cp undump $(BINDIR)

@@ -1,0 +1,298 @@
+\subsection{The Previewers}
+\texx\ is a {\em previewer} for \dvi\ files which uses the X-11 window system.
+\texsun\ is a previewer for \dvi\ files which uses the SunView window system.
+Both previewers allow you to
+view documents on your workstation before printing them.
+
+Everything in the following
+description applies to both \texx\ and \texsun\ unless
+otherwise stated.
+
+\subsubsection{Painting}
+When you start \texx\ or \texsun , a window will be created on your display
+\footnote{
+	The interaction for this varies with the window manager you're using
+	and between \texx\ and \texsun.
+}
+and your document will be {\em painted} in that window.
+The size of the window corresponds to the size of the tallest and widest
+page of your document.
+If your display is wide enough, the window will have two {\em leaves},
+otherwise it will have a single {\em leaf}.
+Each leaf will be painted with a page from your document.
+
+The previewers take some 
+some pains to provide the most viewable document possible.
+Normally, a \TeX\ document has an inch of margin added at the left and
+top margin.
+If reduction of this white space allows your document to be viewed
+at a more readable size, that margin is reduced.
+If you are using \texx\ or \texsun\ to preview documents you are working
+on, you may find it advantageous to specify a smaller document size
+to \TeX\ or \LaTeX, allowing you to preview your document at a more
+readable size.
+
+\subsubsection{Shrinks}
+Because most workstations do not have a screen resolution approaching that
+of a laser printer,
+sacrifices must be made to provide suitable fonts.
+
+One solution would be to generate the \TeX\ fonts at your workstation
+display resolution.
+This requires at least two sets of fonts, one for your printer and one
+for each workstation display resolution.
+Another approach is to use the high-resolution fonts for the printer
+and {\em shrink} them.
+This is the method used by \texx\ and \texsun,
+because it reduces the number of fonts
+and works with a great number of display resolutions
+while still allowing the option of using workstation-specific fonts.
+
+Fonts are shrunk using a {\em shrink factor},
+which is an integer in the range of 1 to 9.
+As an example, with a shrink factor of 4, a 4 by 4 set of pixels
+is reduced to a single pixel on your display.
+The pixel is turned on if $1/\mbox{\em blackness}$ pixels in the
+original sample were turned on.
+Normally, {\em blackness} is $3$, which was chosen by trial \& error,
+but it can be set using the {\tt -bl} option or by setting the
+{\tt Blackness} option in your defaults file.
+
+A shrink factor of 1 is a direct view of the fonts at the font resolution.
+
+There are usually two goals to previewing documents.
+One is to view the {\em overall structure} of the document, e.g.
+to check if tables, equations and figures appear at the right location.
+Another is to check {\em detail structure}, e.g. to check
+if the spacing around an equation looks right.
+The interface for the previewers provides a {\em normal shrink} and a
+{\em large shrink} view of your document.
+At the normal shrink size, an entire page is visible, providing an
+overall view.
+At the large shrink size, details are more visible, although the entire
+document is not.
+
+\subsubsection{Differences Between \texx\ and \texsun}
+When documents are being painted, the cursor icon for \texx\ changes to a
+clock, indicating that you need to wait for the painting to finish.
+For \texsun, the cursor changes to an hourglass.
+When \texx\ is waiting for input, the cursor changes to a spraycan.
+When \texsun\ is waiting for input, the cursor changes to a bulls-eye.
+
+Unless the \texx\ window is {\em obscured} by another window,
+the image is painted directly to the display.
+If the \texx\ window is {\em obscured} by another window,
+the image is painted to a {\em pixmap}, which is displayed when the
+page is painted.
+{\em You should only obscure the \texx\ window when the cursor is
+a spraycan, not when it is a clock.}
+If the window is covered or obscured while it is being painted, the
+final image will not be correct.
+However, if you obscure the window (e.g. overlay it with a
+window for editing your document) while the spray scan is present,
+the window will be correctly painted when you turn pages.
+\texx\ does not take advantage of resized windows.
+
+\texsun\ allows somewhat more flexibility.
+Pages are painted directly to memory, and displayed when they are painted.
+You can obscure the \texsun\ window at any time.
+You can also enlargen the window.
+While this will not change the amount of visible text for the
+normal shrink size, the entire window is used to display the
+detail view.
+
+\subsubsection{Moving Around}
+In both \texx\ and \texsun,
+you move forward in your document by hitting
+the {\tt RETURN} or {\tt NEWLINE} key.
+If there is a single leaf, it will be erased and painted with the next page.
+If there are two leaves, the right hand page will be put on the left leaf
+and the left leaf will be painted with the next page.
+In other words, hitting return turns the page.
+To move backward in your document, hit the {\tt DELETE} or {\tt BACKSPACE} key.
+If you type a number before hitting a key, you move forward or backward
+that number of pages.
+
+To move to a given page, type the number of the page and the ``{\tt g}''.
+To quit \texx, type ``{\tt q}''.
+
+To view a part of your document at the large shrink size,
+point the cursor at the part you are interested in and hit any mouse button.
+The spray can will change to a clock while the page is painted
+at the larger size.
+Since the entire page will not fit on the display at the larger size,
+only the part you pointed to is displayed.
+If your window has a single leaf, that leaf is overwritten with the
+enlarged image.
+In \texx,
+if your window has two leaves, the enlarged image is painted
+on the leaf which was not pointed to.
+This allows you to see the overall structure and the detail at the same
+time.
+In \texsun, the entire window is always used.
+
+If you move the mouse as you hold down the button,
+the enlarged page will move past the view window, allowing you
+to pan over your document.
+In \texsun, the display is not updated until the mouse is inactive
+for a period called the ``settle time''.
+This time can be specified in seconds using the {\tt -settle} flag;
+the default value is an eighth of a second.
+It is also possible to set the ``significant distance'' for mouse movements
+to avoid a large number of screen updates caused by ``flutter fingers''.
+If the mouse is moved from the last resting point by
+less than the significant distance, the display is not redrawn.
+The significant distance can be set using the {\tt -signif} flag.
+The argument is the percentage of movement in the large document
+which should be considered significant for a redisplay.
+The default value is one percent.
+
+When you release the mouse button, the page which was previously displayed
+on the overwritten leaf is restored.
+If you point to another spot {\em on the same page}, the enlarged page will not
+need to be recomputed.
+The previewers remember the enlarged page as long as the normal sized page
+is visible, i.e. if you turn forward several pages, and then back up,
+you will need to recompute the enlarged page if you want to see the
+detail view.
+
+\subsubsection{Options}
+The previewers
+allow you to control the layout of the window, using either
+the command line your window-system specfic defaults file.
+Table \ref{table:previewer-options} lists the available options.
+Options in {\bf bold-face} apply to both \texx\ and \texsun.
+Options in {\sl slant-face} apply only to \texx,
+and optioned in {\tt type} apply only to \texsun.
+Normally, you invoke \texx\ by simply saying {\tt \texx\ or \texsun  yourfile}.
+You invoke \texsun\ by simply saying {\tt \texsun\ yourfile}.
+If ``{\tt yourfile}'' can not be found, then the suffix ``{\tt .dvi}''
+is appended.
+The previewer make a copy of your file, allowing you to reformat your
+document while viewing other portions.
+%
+\begin{table}[hbt]
+\centering
+    \begin{tabular}{|l|c|c|p{2in}|}
+	\hline
+	XDefault	& Command Line & Argument Type & Meaning \\
+	\hline \hline
+
+	{\bf ReverseVideo}	& -rv
+	& {\em none } & Display document in reverse video \\
+
+	{\sl BorderWidth}	& -bw
+	&  {\em integer } & Change the width of the display border. \\
+
+	{\sl ForeGround}	& -fg
+	& {\em color}	& Change the foreground display color\\ 
+
+	{\sl BackGround}	& -bg
+	& {\em color}	& Change the background display color\\ 
+
+	{\sl HighLight}	& -hl
+	& {\em color}	& Change the highlight color \\
+
+	{\sl Border}		& -bd
+	& {\em color}	& Change the border color \\
+
+	{\sl Mouse}		& -ms
+	& {\em color}	& Change the mouse color \\
+
+	{\bf NormalShrink}	& -ns
+	& {\em integer} & Change the shrink size for the overview display \\
+
+	{\bf LargeShrink}	& -ls
+	& {\em integer} & Change the shrink size for the detail display \\
+
+	{\bf Blackness}		& -bl
+	& {\em integer}	& Change the blackness threshold for shrunken fonts \\
+
+	{\bf Leaves}		& -l
+	& {\em integer} & Change the number of leaves uses (1 or 2) \\
+
+	{\bf TopMargin}	& -tm
+	& {\em float}	& Set the top margin in inches \\
+
+	{\bf SideMargin}	& -sm
+	& {\em float}	& Set the left side margin in inches \\
+
+	{\tt SettleTime}	& -settle
+	& {\em float}	& Set the mouse tracking settle time in seconds \\
+
+	{\tt SignificantDistance}	& -signif
+	& {\em float}	& Set the significant distance for mouse tracking
+			  as a percentage of the large document size \\
+	{\tt AutoReload}		& -autoReload
+	& {\em none}	& Automatically reload the file when the window is
+			  exposed or opened \\
+
+	{\bf Dpi}		& -dpi
+	& {\em integer} & Set the desired font resolution in dots per inch \\
+	\hline
+    \end{tabular}
+\caption{Options For \texx\ and \texsun}
+\label{table:previewer-options}
+\end{table}
+
+\subsubsection{Remembering Where You Were}
+Currently, this section only applies to \texsun.
+
+Since the normal use of \texsun\ involves the repeated viewing of a document
+to fix formatting problems,
+it would be nice to be able to return to the page you were viewing when
+you left \texsun.
+One way to do this is to {\em re-load} the document you're viewing.
+However, if you freak out after too much editing \& run off for some
+crumpets or something, it'd be nice to have \texsun\ remember where you
+left off.
+
+If you define the environment variable ``{\tt TEXSUN\_STATE}'' as the name
+of a file, a {\em viewing state} will be written to that file when you
+exit \texsun. 
+The next time you start \texsun, this state will be added to your list of
+command-line arguments before any other argument.
+This allows you to override the saved state.
+If the first argument is {\tt -new}, the saved state is ignored.
+
+If you choose an absolute path name for {\tt TEXSUN\_STATE},
+you can invoke \texsun\ from a menu, but all your previewer
+sessions will use the same state file.
+Choosing a relative path name (e.g. ``{\tt ./.texsun-state}'') allows
+you to have a state file for each different directory, but it's
+difficult to convince the SunView environment to start a
+tool in a given directory.
+
+\subsubsection{Reloading your document}
+Since the normal editing cycle, crumpets not withstanding, is to edit, format
+view and edit again, you can {\em reload} your document without restarting
+the previewer.
+One way to do this is to hit 'R' while viewing the document.
+If you're using a Sun, you can use the somewhat more civilized 'AGAIN' key.
+Someday, all of this will use menus.
+
+\subsubsection{Odds \& Ends}
+\texsun\ has had a bit more development put into it, mainly because it gets
+more use. \texsun\ undertands the 'OPEN' and 'EXPOSE' buttons.
+The 'AGAIN' button reloads your document.
+The 'DELETE' button removes the window.
+The \texsun\ banner displays the {\em document size} in inches. 
+This is the size of the document you see on your display {\em if it were
+actually printed}.
+
+If you have free time, here's a few things you could add to either of \texsun\ 
+or \texx.
+First, it'd be nice if \texx\ and \texsun had an equivilent user interface.
+This simply involves a little hackery to \texx.
+Other useful widgets would be
+\begin{itemize}
+\item	An optional ruler to the right of the first page and across the bottom
+	of each page. This would make alignments \& tweaking so much easier
+\item	Menus instead of key presses.
+\item	A (menu selected) list of information about your document.
+\item	Support for shaded areas in \texx.
+\item	A font shrinking method which does a bit more anti-aliasing.
+\end{itemize}
+
+If you make improvements, please tell the world \& send the improved code to
+user 'grunwald' at host 'm.cs.uiuc.edu'.

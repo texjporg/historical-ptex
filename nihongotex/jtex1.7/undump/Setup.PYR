@@ -1,0 +1,7 @@
+#!/bin/sh
+# setup the ./undump area for Pyramid
+cp Makefile.PYR Makefile
+cp undump.PYR.c undump.c
+
+
+

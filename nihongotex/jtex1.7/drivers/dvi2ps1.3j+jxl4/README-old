@@ -1,0 +1,51 @@
+dvi2ps (version 2.30, modification of version 2.11)
+	桜井貴文(a87480@tansei.u-tokyo.junet)
+	都立大数学科
+
+１．version 2.11 との違い
+  * pk format、pxl formatの両方のフォントファイルが使用可能。
+    (同じdirectoryに両方があればpkを優先。)
+  * LaserWriter内蔵フォントのサポート。
+  * 256個以下のchar entryを持つpxl formatのフォントファイルが使用可能。
+  * フォントを分散しておいた場合
+	-a /usr/lib/tex/fonts:/usr/lib/tex/jfonts
+    といった様なoption指定ができる。(:で複数のdirectoryをつなげる。
+    もちろん左優先。)
+  * Font substitionの機能は削除。
+
+２．LaserWriter内蔵フォントの使い方
+
+　directory lwfontの下に必要なtfm file及び ナントカ.lw, カントカ.lwtex
+というファイル(以下lw fileとかlwtex fileとか呼ぶ)があります。使う時は
+適当な場所(tfm fileやpk file、pxl fileがある所)に移動して下さい。
+
+　LaserWriter内蔵フォントの文字を使う場合のコード表は２種類用意されています。
+
+　１つはPostScriptのコード表(PostScript Language Reference Manual p.252,253)
+をそのまま使ったもの(例えば \char'175 は } で " ではない)で ナントカ.tfm と
+ナントカ.lw ではこのコード表を使っています。(TeXにはtfm file, dvi2psには
+lw file。) lwfontの下に用意されているのは
+	Courier-Bold Times-Bold Times-Italic Times-Roman Symbol
+でそれぞれLaserWriterの同名のフォント(1pt)に対応します。またligature等は
+組み込まれていません。
+LaserWriterのフォントの文字を１つ使いたい等という場合
+	\font\sym=Symbol at 10pt
+	...
+	{\sym \char'360} % apple
+等とするとよいでしょう。
+
+　もう１つはTeXのコード表(The TeXbook p.427-430)を使ったものです。ただし
+TeXのコード表にある文字すべてがLaserWriterにあるわけではないのでいくつかの
+文字はありません。このコード表を使っているのは カントカ.tfm と カントカ.lwtex
+です。lwfontの下に用意されているのは
+	lwr lwbx lwti lwtt
+でそれぞれ
+	cmr cmbx cmti cmtt
+に対応します。(これも1pt。)ligatureは少しだけ組み込まれています。その他
+パラメターの調節はいいかげんです。
+これらのフォントをcmr等の代わりに使うにはTeX fileの先頭に
+	\font\tenrm=lwr at 10pt
+	\font\twlrm=lwr at 12pt
+	...
+といった行を入れる(plain.texやlfonts.texを参照。plain TeXの時は\rm等の宣言も
+必要)のが最も簡単でしょう。

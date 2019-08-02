@@ -1,0 +1,35 @@
+EPSF対応について(1989年12月7日)		NTTソフト研	風間一洋
+
+  このバージョンのdvi2psは、EPSFの場合は\specialで、psfileのかわりに
+epsfileと指定すると自動的にコメントを読んで配置します。この時、幅や
+高さを指定すると自動的にその大きさに拡大・縮小されます。
+
+これは次のように指定します。（単位は1/72インチです）
+\special{epsfile=foo.ps}
+	or
+\special{epsfile=foo.ps hsize=144}
+	or
+\special{epsfile=foo.ps vsize=288}
+	or
+\special{epsfile=foo.ps hsize=144 vsize=288}
+
+  またepsf.styはpsfigを変更したものです。
+EPSFの次のコメントを読んで、文書中にそれだけの大きさのスペースをあける
+ことができます。
+
+     %%BoundingBox: 18 403 246 706
+
+これは次のように指定します。
+
+\epsfile{file=foo.ps}
+	or
+\epsfile{file=foo.ps,height=3cm}
+	or
+\epsfile{file=foo.ps,width=5cm}
+	or
+\epsfile{file=foo.ps,height=3cm,width=5cm}
+
+注意
+  epsf.styを使う時には、%%BoundingBox:の次に空白が空いている必要があります。
+例えば、Illustrator 88などはここに空白があいていませんので、エディタで
+変更して入れて下さい。

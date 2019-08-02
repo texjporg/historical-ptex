@@ -1,0 +1,74 @@
+\subsection{Iptex}
+\iptex was written by Chris Torek at the University of Maryland.
+The command line for invoking \iptex\ is as follows:\\
+{\tt
+\begin{verbatim}
+iptex [ -c ] [ -d drift ] [-l] [-m mag] [-p] [-r res] [-s]
+      [-X x-offset] [-Y y-offset] filename
+\end{verbatim}
+}
+
+Typically, \iptex\ will be configured for your local installtion,
+and you will only type {\tt verb+iptex file+} to print {\tt file.dvi}
+on your Imagen.
+Options other than the ones listed are passed to the local print
+command, typically called {\tt ipr} or {\tt lpr}.
+The default options can be over ridden by the parameters
+in table \ref{table:iptex}.
+
+\begin{table}[hntb]
+\centering
+\begin{tabular}{|lp{5in}|}
+\hline
+Option & Description \\
+\hline \hline
+-c &
+\iptex\ is actually a shell script which executes {\tt imagen1}, which
+converts your \dvi\ file, and sends the output to the printer.
+Normally, \iptex\ copies the output of {\tt imagen1} to a file before
+sending it to the printer.
+If there is an error while translating the file, the output is not sent
+to the printer, saving paper if there is a problem with your file.
+The -c option forces output to be sent directly to the printer, should
+that prove useful. \\
+
+-d drift &
+This rarely used parameter is used to control the {\em drift} of a document.
+When your document is being converted for the Imagen, attempts are made to
+correct for rounding errors which occur.
+This parameter controls the maximum allowable drift of the final document.
+It is never used in normal practice. You are advised to read the source
+of \iptex\ if you think you need to use this. \\
+
+-l &
+This causes your document to be printed in {\em landscape mode},
+that is, your normal 8.5 by 11 document is rotated to become an 11 by 8.5
+document. \\
+
+-m mag &
+This applies a global magnification to the output.
+You can also use this to {\em reduce} your document.
+The default is {\tt -m 1000}. \\
+
+-s &
+This disables the sequence numbers which are normally printed when
+your document is being processed. \\
+
+-p &
+This disables page-reversal.
+You can use {\tt +p} to force page-reversal.
+The default for this is {\tt -p}, which causes your document to
+be printed in collated order on most Imagen printers. \\
+
+-X offset & \\
+-Y offset &
+These are added to the current border width, i.e. they are
+relative displacements.
+Normally, your document is offset from the border by one inch.
+Offsets are in thousandths of an inch and may be negative. \\
+\hline
+\end{tabular}
+%
+\caption{Options for \iptex}
+\label{table:iptex}
+\end{table}

@@ -1,0 +1,2109 @@
+echo x - dv.c
+sed 's/^X//' >dv.c <<'*-*-END-of-dv.c-*-*'
+X/*
+X * DVI previewer for X.
+X *
+X * Eric Cooper, CMU, September 1985.
+X *
+X * Code derived from dvi-imagen.c.
+X *
+X * Modified for X.10 by Bob Scheifler, MIT LCS, January 1986.
+X * Modified for jxdvi/dvi2nwp by Atsuo Kawaguchi, ISIR,
+X * $Header: dv.c,v 1.4 88/02/29 15:22:57 atsuo Exp $
+X *
+X */
+X#ifndef lint
+Xstatic char *dv_c = "$Header: dv.c,v 1.4 88/02/29 15:22:57 atsuo Exp $";
+X#endif 	lint
+X
+X#include <sys/types.h>
+X#include <X/Xlib.h>
+X#include <stdio.h>
+X#include <ctype.h>
+X#include "jxdvi.h"
+X#include "font.h"
+X#include "dvi.h"
+X#include "pxl.h"
+X
+X#ifdef DVI2NWP
+X#include "add.h"
+X#endif
+X
+X/* These are probably site dependent */
+X#define FONT_SUFFIX	".%dpxl"
+X
+X#define PAPER_WIDTH	ROUNDUP(17*pixels_per_inch,shrink_factor*2)
+X#define PAPER_HEIGHT	ROUNDUP(11*pixels_per_inch,shrink_factor)
+X#define X_PAGE_OFFSET	ROUNDUP(pixels_per_inch,shrink_factor)
+X#define Y_PAGE_OFFSET	ROUNDUP(pixels_per_inch,shrink_factor)
+X
+X#define pixel_round(x)      ((long) (conv * (double) (x) + 0.5))
+X#define dvi_round(x)        ((long) ((double) (x) / conv + 0.5))
+X
+X/* (moved to font.h)
+X typedef unsigned char ubyte;*/
+X
+Xstruct frame {
+X	long pxl_h, dvi_h, pxl_v, dvi_v, w, x, y, z;
+X};
+X
+Xstruct frame *stack;
+Xint stackp;
+X
+X#define PXL_H   stack[stackp].pxl_h
+X#define PXL_V   stack[stackp].pxl_v
+X#define DVI_H   stack[stackp].dvi_h
+X#define DVI_V   stack[stackp].dvi_v
+X#define WW      stack[stackp].w
+X#define XX      stack[stackp].x
+X#define YY      stack[stackp].y
+X#define ZZ      stack[stackp].z
+X
+X/* (moved to font.h)
+X#define DBG_BITMAP	0x1
+X#define DBG_DVI		0x2
+X#define DBG_ALL		(DBG_BITMAP|DBG_DVI)
+X*/
+X
+X#ifdef ACCT
+X/*
+X * Accounting stuff
+X */
+Xchar *loguser = NULL ;
+Xchar *loghost = NULL ;
+Xchar *acctfile = NULL ;
+Xint npages = 0 ;
+X#endif ACCT
+X
+X/*
+X * Command line flags.
+X */
+Xint debug = 0;
+Xint list_fonts = 0;
+Xint	boot_mode = 0;
+Xint	dump_mode = 0;
+X
+Xint pixels_per_inch = 400;
+X#ifdef JXDVI
+Xint shrink_factor = 5;
+X#endif JXDVI
+X#ifdef DVI2NWP
+Xint shrink_factor = 1;
+X#endif DVI2NWP
+X
+XFILE *dvi_file;				/* user's file */
+X
+Xint font_not_found = 0;
+Xstruct font *current_font = NULL;	/* ptr into circular list of fonts */
+X#define MAX_OPEN_FONTS 8
+Xint n_open_fonts = 0;			/* for LRU management of fonts */
+X
+X/*
+X * DVI preamble and postamble information.
+X */
+Xchar job_id[300];
+Xint total_pages, maxstack;
+Xint current_page;
+Xdouble fraction, conv;
+Xlong numerator, denominator, magnification;
+X
+X/*
+X * Offset in DVI file of last page, set in read_postamble().
+X */
+Xlong last_page_offset;
+X
+X/*
+X * Table of page offsets in DVI file, indexed by page number - 1.
+X * Initialized in prepare_pages().
+X */
+Xlong *page_offset;
+X
+X#ifdef JXDVI
+X#define xdvi_width 15
+X#define xdvi_height 15
+X#define xdvi_x_hot 7
+X#define xdvi_y_hot 7
+Xstatic short xdvi_bits[] = {
+X   0x0080, 0x01c0, 0x03e0, 0x06b0,
+X   0x0c98, 0x188c, 0x3086, 0x7fff,
+X   0x3086, 0x188c, 0x0c98, 0x06b0,
+X   0x03e0, 0x01c0, 0x0080};
+X
+XWindow win;
+Xint forepix, backpix, highpix;
+X
+Xextern char reverse_byte[];
+X
+Xint GXfunc;
+X#endif JXDVI
+X
+Xlong screen_w, screen_h, page_w, page_h;
+Xlong min_x, max_x, min_y, max_y, base_x, base_y;
+Xlong smin_x, smax_x, smin_y, smax_y;
+Xint redisplay = 0;
+X
+Xint backwards = 0;
+Xunsigned long num();
+Xlong snum();
+X
+Xchar *malloc(), *calloc(), *index();
+X
+Xmain(argc, argv)
+X	int argc;
+X	char **argv;
+X{
+X	char *prog, *file;
+X	char *option;
+X#ifdef JXDVI
+X	char *display = NULL;
+X	OpaqueFrame frame;
+X	int reverse = 0;
+X	int bwidth = 2;
+X	char *fore_color;
+X	char *back_color;
+X	char *high_color;
+X	char *brdr_color;
+X	char *mous_color;
+X	char *geometry = NULL, def[32];
+X	int backmap, bdrmap, mouspix;
+X	Color cdef;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	extern char *(stdinToTempFile());
+X#endif
+X	int indian = 1;
+X
+X	if (*(char *) &indian) backwards = 0; else backwards = 1;
+X
+X	prog = *argv++;
+X	argc--;
+X
+X#ifdef JXDVI
+X	if ((option = XGetDefault(prog, "ReverseVideo")) &&
+X	    strcmp(option, "on") == 0)
+X		reverse = 1;
+X	if (option = XGetDefault(prog, "BorderWidth"))
+X		bwidth = atoi(option);
+X	fore_color = XGetDefault(prog, "ForeGround");
+X	back_color = XGetDefault(prog, "BackGround");
+X	high_color = XGetDefault(prog, "Highlight");
+X	brdr_color = XGetDefault(prog, "Border");
+X	mous_color = XGetDefault(prog, "Mouse");
+X	file = NULL;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X/* Ignore following Arguments (passed by lpr): 
+X *              -x<n>, -y<n>, -n <name> and -h <machine>.
+X */
+X/* Following new switches are added:
+X *  [-di] [-v] [-ds] [-o] [-e] [-xo bit] [-yo bit] [-bp page] [-ep page]
+X *	[-boot] [-core]
+X *		-di			direct print mode (called from shell)
+X *		-v			verbose mode (print several information)
+X *		-ds			double side mode (even pages are offset to left)
+X *		-o      	odd pages only
+X *		-e      	even pages only
+X *		-bp page	begin printing from 'page'
+X *		-ep page	end printing at 'page'
+X *		-xo bit		offset 'bit' horizontally (+ -> right, - ->left)
+X *		-yo bit		offset 'bit' vertically (+ -> downward, - -> upward)
+X *		-boot		font ladging mode (load font and dump core)
+X *		-core		core dump mode (dump core when exits)
+X *		-noprint	do not produce actual output on nwp533
+X *					(shinoda@cs.titech.junet)
+X */
+X#endif DVI2NWP
+X        while (argc) {
+X		if (strcmp(*argv,"-boot") == 0) {
+X			boot_mode = 1;
+X		} else if (strcmp(*argv,"-core") == 0) {
+X			dump_mode = 1;
+X		} else
+X#ifdef DVI2NWP
+X        if (strcmp(*argv,"-di") == 0) {
+X			direct = 1;
+X        } else if (strcmp(*argv,"-v") == 0) {
+X			verbose = 1;
+X		} else if (strcmp(*argv,"-ds") == 0) {
+X			double_side = 1;
+X		} else if (strcmp(*argv,"-o") == 0) {
+X			odd_pages = 1;
+X		} else if (strcmp(*argv,"-e") == 0) {
+X			even_pages = 1;
+X		} else if (strcmp(*argv, "-xo") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			x_offset = atoi(*argv);
+Xprintf("x_offset:%d\n",x_offset);
+X		} else if (strcmp(*argv, "-yo") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			y_offset = atoi(*argv);
+Xprintf("y_offset:%d\n",y_offset);
+X		} else if (strcmp(*argv, "-bp") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			begin_page_num = atoi(*argv);
+X			begin_page_num--; /* because page counting starts from 0 */
+X		} else if (strcmp(*argv, "-ep") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			end_page_num = atoi(*argv);
+X			end_page_num--;  /* because page counting starts from 0 */
+X		} else if (strncmp(*argv,"-x",2) == 0) {
+X        	argv++; argc--;
+X        } else if (strncmp(*argv,"-noprint", 8) == 0) {
+X            noprint = 1 ;
+X        } else if (strncmp(*argv,"-y",2) == 0) {
+X            argv++; argc--;
+X        } else if (strncmp(*argv,"-n",2) == 0) {
+X#ifdef ACCT
+X	    loguser = argv[1] ;
+X#endif
+X            argv += 2; argc -= 2;
+X        } else if (strncmp(*argv,"-h",2) == 0) {
+X#ifdef ACCT
+X	    loghost = argv[1] ;
+X#endif
+X            argv += 2; argc -= 2;
+X	} else {
+X		if (direct) file = *argv;
+X#ifdef ACCT
+X		else acctfile = *argv;
+X#endif ACCT
+X	}
+X#endif DVI2NWP
+X#ifdef JXDVI
+X		if (strncmp(*argv, "-d", 2) == 0)
+X			debug = isdigit(argv[0][2]) ? atoi(&argv[0][2]) : DBG_ALL;
+X		else if (strcmp(*argv, "-l") == 0)
+X			list_fonts = 1;
+X		else if (strcmp(*argv, "-s") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			shrink_factor = atoi(*argv);
+X			if (shrink_factor <= 0) goto usage;
+X		} else if (strcmp(*argv, "-p") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			pixels_per_inch = atoi(*argv);
+X			if (pixels_per_inch <= 0) goto usage;
+X		} else if (strcmp(*argv, "-rv") == 0) {
+X			reverse = 1;
+X		} else if (strcmp(*argv, "-fg") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			fore_color = *argv;
+X		} else if (strcmp(*argv, "-bg") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			back_color = *argv;
+X		} else if (strcmp(*argv, "-hl") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			high_color = *argv;
+X		} else if (strcmp(*argv, "-bd") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			brdr_color = *argv;
+X		} else if (strcmp(*argv, "-ms") == 0 && argc > 1) {
+X			argv++;
+X			argc--;
+X			mous_color = *argv;
+X		} else if (**argv == '=') {
+X			geometry = *argv;
+X		} else if (**argv != '-') {
+X			if (index(*argv, ':') != NULL)
+X				display = *argv;
+X			else
+X				file = *argv;
+X		} else {
+X		    usage:
+X			fprintf(stderr, "Usage: xdvi [-s <shrink>] [-p <pixels>] [-l] [-rv] [-fg <color>] [-bg <color>] [-hl <color>] [-bd <color>] [-ms <color>] [=<geometry>] [host:display] dvi_file\n");
+X			exit(1);
+X		}
+X#endif JXDVI
+X		argv++;
+X		argc--;
+X	}
+X
+X	if (boot_mode == 1) {
+X		pre_load_font();
+X	}
+X
+X#ifdef JXDVI
+X	if (file == NULL)
+X		goto usage;
+X#endif JXDVI
+X
+X#ifdef JXDVI
+X	if ((dvi_file = fopen(file, "r")) == NULL) {
+X		int n = strlen(file);
+X		char *dvi_name;
+X
+X		if (strcmp(file + n - sizeof(".dvi") + 1, ".dvi") == 0) {
+X			perror(file);
+X			exit(1);
+X		}
+X		dvi_name = malloc((unsigned) n + sizeof(".dvi"));
+X		sprintf(dvi_name, "%s.dvi", file);
+X		if ((dvi_file = fopen(dvi_name, "r")) == NULL) {
+X			perror(dvi_name);
+X			exit(1);
+X		}
+X 	}
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	if ( direct ) {
+X		if ((dvi_file = fopen(file, "r")) == NULL) {
+X			int n = strlen(file);
+X			char *dvi_name;
+X	
+X			if (strcmp(file + n - sizeof(".dvi") + 1, ".dvi") == 0) {
+X				perror(file);
+X				exit(0);
+X			}
+X			dvi_name = malloc((unsigned) n + sizeof(".dvi"));
+X			sprintf(dvi_name, "%s.dvi", file);
+X			if ((dvi_file = fopen(dvi_name, "r")) == NULL) {
+X				perror(dvi_name);
+X				exit(0);
+X			}
+X	 	}
+X	} else {
+X		dvi_file = stdin;
+X	}
+X#endif DVI2NWP
+X
+X	process_preamble();
+X	find_postamble();
+X	read_postamble();
+X	prepare_pages();
+X	init_page();
+X
+X#ifdef JXDVI
+X	if (XOpenDisplay(display) == NULL) {
+X	    fprintf(stderr, "%s: Can't open display '%s'\n",
+X		    prog, XDisplayName(display));
+X	    exit(1);
+X	}
+X	if (reverse) {
+X		forepix = WhitePixel;
+X		highpix = WhitePixel;
+X		backpix = BlackPixel;
+X		backmap = BlackPixmap;
+X		bdrmap = WhitePixmap;
+X		mouspix = WhitePixel;
+X		GXfunc = GXor;
+X	} else {
+X		forepix = BlackPixel;
+X		highpix = BlackPixel;
+X		backpix = WhitePixel;
+X		backmap = WhitePixmap;
+X		bdrmap = BlackPixmap;
+X		mouspix = BlackPixel;
+X		GXfunc = GXand;
+X	}
+X	if (DisplayCells() > 2) {
+X		if (fore_color && XParseColor(fore_color, &cdef) &&
+X			XGetHardwareColor(&cdef))
+X			forepix = cdef.pixel;
+X		if (back_color && XParseColor(back_color, &cdef) &&
+X			XGetHardwareColor(&cdef)) {
+X			backpix = cdef.pixel;
+X			backmap = XMakeTile(backpix);
+X		}
+X		if (high_color && XParseColor(high_color, &cdef) &&
+X			XGetHardwareColor(&cdef))
+X			highpix = cdef.pixel;
+X		if (brdr_color && XParseColor(brdr_color, &cdef) &&
+X			XGetHardwareColor(&cdef))
+X			bdrmap = XMakeTile(cdef.pixel);
+X		if (mous_color && XParseColor(mous_color, &cdef) &&
+X			XGetHardwareColor(&cdef))
+X			mouspix = cdef.pixel;
+X	}
+X	frame.bdrwidth = bwidth;
+X	frame.height = page_h;
+X	if (frame.height + (bwidth << 1) > DisplayHeight())
+X	    frame.height = DisplayHeight() - (bwidth << 1);
+X	frame.width = page_w;
+X	if (frame.width + (bwidth << 1) > DisplayWidth())
+X	    frame.width = DisplayWidth() - (bwidth << 1);
+X	frame.border = bdrmap;
+X	frame.background = backmap;
+X	frame.x = 0;
+X	frame.y = 0;
+X	sprintf(def, "=%dx%d+0+0", frame.width, frame.height);
+X	win = XCreate("DVI Previewer", prog, geometry, def, &frame, 50, 50);
+X	screen_h = frame.height;
+X	screen_w = frame.width;
+X	XMapWindow(win);
+X	XSelectInput(win, KeyPressed|ButtonPressed|ExposeWindow|ExposeRegion);
+X	XDefineCursor(win,
+X	    XCreateCursor(xdvi_width, xdvi_height, xdvi_bits, xdvi_bits,
+X			  xdvi_x_hot, xdvi_y_hot, mouspix, backpix, GXcopy));
+X
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	init_lbp();
+X#endif DVI2NWP
+X
+X	do_pages();
+X	
+X	stop_output(0);
+X}
+X
+X/*
+X * Accounting is added by shinoda@cs.titech.junet
+X */
+X#ifdef ACCT
+Xaccount(user, host, acctfname)
+X	char *user, *host, *acctfname ;
+X{
+X	FILE *af ;
+X
+X	if (user == NULL || acctfname == NULL)
+X		return ;
+X
+X	if ((af = fopen(acctfname, "a")) == NULL)
+X		return ;
+X
+X	fprintf(af, "%6d\t", npages) ;
+X
+X	if (host)
+X		fprintf(af, "%s:", host) ;
+X
+X	fprintf(af, "%s\n", user) ;
+X
+X	fclose(af) ;
+X}
+X#endif ACCT
+X
+X/*
+X**      process_preamble reads the information in the preamble and stores
+X**      it into global variables for later use.
+X*/
+Xprocess_preamble()
+X{
+X	ubyte   k;
+X
+X	if (one(dvi_file) != PRE)
+X		error("xdvi: DVI file doesn't start with preamble");
+X	if (one(dvi_file) != 2)
+X		error("xdvi: Wrong version of DVI output for this program");
+X	numerator     = four(dvi_file);
+X	denominator   = four(dvi_file);
+X	magnification = four(dvi_file);
+X#ifdef DEBUG
+X	printf("pro_pre numerator:%d\n",numerator);
+X	printf("pro_pre denominator:%d\n",denominator);
+X	printf("pro_pre magnification:%d\n",magnification);
+X#endif
+X	define_fraction();
+X	define_conv();
+X	k = one(dvi_file);
+X	fread(job_id, sizeof(char), k, dvi_file);
+X	job_id[k] = '\0';
+X}
+X
+Xdefine_fraction()
+X{
+X	fraction = (((double) numerator * magnification)
+X	                                 / ((double) denominator * 1000.));
+X}
+X
+Xdefine_conv ()
+X{
+X	conv = ((fraction * pixels_per_inch) / 100000) / (2.54 * shrink_factor);
+X}
+X
+X/*
+X**      find_postamble locates the beginning of the postamble
+X**	and leaves the file ready to start reading at that location.
+X*/
+Xfind_postamble()
+X{
+X	ubyte byte;
+X	long offset = -4;        /* At least 4 TRAILERS */
+X
+X	do {
+X		offset -= 1;
+X		fseek(dvi_file, offset, 2);
+X		byte = one(dvi_file);
+X	} while (byte == TRAILER);
+X	if (byte != 2)
+X		error("xdvi: Wrong version of DVI output for this program");
+X	offset -= 4;
+X	fseek(dvi_file, offset, 2);
+X	fseek(dvi_file, sfour(dvi_file), 0);
+X}
+X
+X/*
+X**      read_postamble reads the information in the postamble,
+X**	storing it into global variables.
+X**      It also takes care of reading in all of the PXL files for the fonts
+X**      used in the job.
+X*/
+Xread_postamble()
+X{
+X        ubyte   cmnd;
+X	int page_width, page_height;
+X
+X        if (one(dvi_file) != POST)
+X	    error("xdvi: Postamble doesn't begin with POST");
+X	last_page_offset = four(dvi_file);
+X	if (numerator != four(dvi_file)
+X	          ||  denominator != four(dvi_file)
+X		  ||  magnification != four(dvi_file))
+X	    error("xdvi: Postamble doesn't match preamble");
+X	page_height = pixel_round(four(dvi_file));
+X	page_width = pixel_round(four(dvi_file));
+X	maxstack = two(dvi_file);
+X	total_pages = two(dvi_file);
+X	do {
+X	    switch(cmnd = one(dvi_file)) {
+X	        case FNTDEF1:
+X	        case FNTDEF2:
+X	        case FNTDEF3:
+X	        case FNTDEF4:
+X			{
+X				int	n, cksm, sc, d_sc, len;
+X				char	fn[128];
+X
+X				n = num(dvi_file, cmnd - FNTDEF1 + 1);
+X				cksm = four(dvi_file);
+X				sc = four(dvi_file);
+X				d_sc = four(dvi_file);
+X				len = one(dvi_file) + one(dvi_file);
+X				fread(fn, sizeof(char), len, dvi_file);
+X				fn[len] = '\0';
+X			    font_manager(DEFINE_FONT,(int)cmnd,n,cksm,sc,d_sc,len,fn);
+X			}
+X		    break;
+X		case POSTPOST:
+X		    break;
+X		default:
+X		    error("xdvi: Non-fntdef cmnd found in postamble");
+X	    }
+X	} while (cmnd != POSTPOST);
+X	if (font_not_found)
+X#ifdef JXDVI
+X		error("jxdvi: Not all PXL files were found");
+X#endif
+X#ifdef DVI2NWP
+X		error("dvi2nwp: Not all PXL files were found");
+X#endif
+X	list_fonts = 0;
+X}
+X
+Xprepare_pages()
+X{
+X	int i;
+X
+X        stack = (struct frame *) malloc((unsigned) sizeof(struct frame) * (maxstack+1));
+X        if (stack == NULL)
+X		error("xdvi: Can't allocate stack space (%d frames)", maxstack);
+X	page_offset = (long *) malloc((unsigned) total_pages * sizeof(long));
+X        if (page_offset == NULL)
+X		error("xdvi: Can't allocate page directory (%d pages)", total_pages);
+X	i = total_pages;
+X	page_offset[--i] = last_page_offset;
+X	fseek(dvi_file, last_page_offset, 0);
+X	/*
+X	 * Follow back pointers through pages in the DVI file,
+X	 * storing the offsets in the page_offset table.
+X	 */
+X	while (i > 0) {
+X		num(dvi_file, 1+4+(9*4));
+X		fseek(dvi_file, page_offset[--i] = four(dvi_file), 0);
+X	}
+X}
+X
+X/*
+X**      define_font reads the rest of the fntdef command and then reads in
+X**      the specified PXL file, adding it to the global linked-list holding
+X**      all of the fonts used in the job.
+X*/
+X/* define_font(cmnd) */
+X
+Xopen_pxl_file(font)
+X	struct font *font;
+X{
+X	char filename[300];
+X	extern int errno;
+X
+X	if (font->file == NULL) {
+X		sprintf(filename, "%s/%s",
+X				FONT_DIRECTORY, font->fontname);
+X		if (n_open_fonts == MAX_OPEN_FONTS)
+X			close_lru();
+X		font->file = fopen(filename, "r");
+X		if (font->file == NULL) {
+X			font_not_found = 1;
+X#ifdef JXDVI
+X			printf("%s [not found]\n", font->fontname);
+X#endif
+X#ifdef DVI2NWP
+X			fprintf(stderr,"%s [not found]\n", font->fontname);
+X#endif
+X			return (0);
+X		}
+X		n_open_fonts += 1;
+X	}
+X	if (list_fonts)
+X		printf("%s\n", font->fontname);
+X	return (1);
+X}
+X
+X/* read_pxl_bitmap(ch, g) */
+X
+X/*
+X * Find font #n and move it to the head of the list.
+X */
+X/* change_font(n) */
+X
+X/*
+X * Close the PXL file for the least recently used font.
+X */
+Xclose_lru()
+X{
+X        register struct font *f;
+X
+X	f = current_font->prev;
+X	for (;;) {
+X		if (f->file != NULL)
+X                        break;
+X		f = f->prev;
+X		if (f == current_font->prev)
+X			error("xdvi: Can't find an open PXL file to close");
+X	}
+X	fclose(f->file);
+X	f->file = NULL;
+X	n_open_fonts -= 1;
+X}
+X
+Xreset_fonts()
+X{
+X	register struct font *f;
+X	register struct glyph *g;
+X
+X	f = current_font;
+X	for (;;) {
+X	    open_pxl_file(f);
+X	    for (g = &f->glyph[0]; g < &f->glyph[MAXCHARS]; g += 1) {
+X#	ifdef JXDVI
+X		if (g->bitmap.bits) free(g->bitmap.bits);
+X#	endif JXDVI
+X#	ifdef DVI2NWP
+X		if (g->bitmap.nbits) free(g->bitmap.nbits);
+X#	endif DVI2NWP
+X	    }
+X	    read_glyphs(f);
+X	    f = f->next;
+X	    if (f == current_font) break;
+X	}
+X}
+X
+Xread_glyphs (fontp)
+X        register struct font *fontp;
+X{
+X	register struct glyph *g;
+X	long checksum, magnify, design_size, font_dir_ptr, pxl_id_word;
+X
+X	/* seek to trailer info */
+X	fseek(fontp->file, (long) -(5 * BYTES_PER_LONG), 2);
+X        checksum = four(fontp->file);
+X        magnify = four(fontp->file);
+X        design_size = four(fontp->file);
+X        font_dir_ptr = sfour(fontp->file) * 4;
+X        pxl_id_word = four(fontp->file);
+X#ifdef lint
+X	magnify = design_size = pxl_id_word = magnify;
+X#endif
+X	/* seek to font directory */
+X	fseek(fontp->file, font_dir_ptr, 0);
+X	for (g = &fontp->glyph[0]; g < &fontp->glyph[MAXCHARS]; g += 1) {
+X#	ifdef JXDVI
+X		g->bitmap.bits = NULL;
+X#	endif JXDVI
+X#	ifdef DVI2NWP
+X		g->bitmap.nbits = NULL;
+X#	endif DVI2NWP
+X		g->bitmap.w = two(fontp->file);	/* leave this for shrink_bitmap */
+X		g->bitmap.h = two(fontp->file);	/* leave this for shrink_bitmap */
+X		g->x = stwo(fontp->file) / shrink_factor;
+X		g->y = stwo(fontp->file) / shrink_factor;
+X		g->addr = four(fontp->file) * 4;
+X		/*
+X		**  The TFM-width word is kind of funny in the units
+X		**  it is expressed in.  It works this way:
+X		**
+X		**  If a glyph has width 'w' in a font with design-size
+X		**  'd' (both in same units), the TFM-width word is
+X		**
+X		**                    (w/d) * 2^20
+X		**
+X		**  Therefore, in order to find the glyph width in
+X		**  DVI units (1 / 2^16 points), we take the design-size
+X		**  'd' (in DVI's), the magnification 'm' of the PXL file
+X		**  and the TFM-width word 't' to the width (in DVI's)
+X		**  as follows:
+X		**
+X		**                     dmt
+X		**                w = -----
+X		**                    2^20
+X		**
+X		**  But the magnification of the PXL file is just the
+X		**  scaled size 's' over the design size, so the final
+X		**  expression for the width is
+X		**
+X		**                     st
+X		**                w = ----
+X		**                    2^20
+X		**
+X		*/      
+X		g->dvi_adv =
+X			((double) fontp->scale * four(fontp->file)) / (1 << 20);
+X		g->pxl_adv = pixel_round(g->dvi_adv);
+X	}
+X}
+X
+X#define nope(str)       error("xdvi: %s not implemented", str)
+X#define correct()       (PXL_H = pixel_round(DVI_H))
+X
+Xdo_pages()
+X{
+X    ubyte ch;
+X
+X	min_x = 0;
+X	min_y = 0;
+X	max_x = screen_w;
+X	max_y = screen_h;
+X	base_x = min_x;
+X	base_y = min_y;
+X
+X#ifdef JXDVI
+X	current_page = 0;
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	if ( odd_pages &&  (begin_page_num%2) ) begin_page_num++;
+X	if ( even_pages && !(begin_page_num%2) ) begin_page_num++;
+X	current_page = begin_page_num;
+X	if (0 <= current_page && current_page < total_pages &&
+X			current_page <= end_page_num) {
+X		fseek(dvi_file, page_offset[current_page], 0);
+X	} else {
+X		stop_output(0);
+X	}
+X#endif DVI2NWP
+X	for (;;) {
+X		ch = one(dvi_file);
+X/*printf("%d ", ch); fflush(stdout);*/
+X
+X		if (debug & DBG_DVI)
+X			print_dvi(ch);
+X		if (ch <= SETCHAR0 + 127) {
+X			set_char(ch);
+X			DVI_H += current_font->glyph[ch].dvi_adv;
+X			PXL_H += current_font->glyph[ch].pxl_adv;
+X			correct();
+X		} else if (FNTNUM0 <= ch  &&  ch <= FNTNUM0 + 63) {
+X			font_manager(CHANGE_FONT,(unsigned long) (ch - FNTNUM0),
+X					NULL,NULL,NULL,NULL,NULL,NULL);
+X		} else {
+X			long a, b;
+X
+X			switch (ch) {
+X			    case SET1:
+X				nope("PUT1");
+X				break;
+X
+X				case SET2:
+X				{
+X					unsigned int	code;
+X					long	dvi_adv;
+X					short	pxl_adv;
+X
+X					code = two(dvi_file);
+X					set2_char(code,&dvi_adv,&pxl_adv);
+X					DVI_H += dvi_adv;
+X					PXL_H += pxl_adv;
+X					correct();
+X				}
+X				break;
+X			    case SETRULE:
+X				a = sfour(dvi_file); b = sfour(dvi_file);
+X				if (a > 0  &&  b > 0) {
+X				    correct();
+X				    set_rule(pixel_round(a), pixel_round(b));
+X				}
+X				DVI_H += b;
+X				PXL_H =  pixel_round(DVI_H);
+X				break;
+X
+X			    case PUT1:
+X				nope("PUT1");
+X				break;
+X
+X			    case PUTRULE:
+X				a = sfour(dvi_file); b = sfour(dvi_file);
+X				if (a > 0  &&  b > 0) {
+X				    correct();
+X				    set_rule(pixel_round(a), pixel_round(b));
+X				}
+X				break;
+X
+X			    case NOP:
+X				break;
+X
+X			    case BOP:
+X				num(dvi_file, 11*4);
+X				stackp = 0;
+X				DVI_H = dvi_round(X_PAGE_OFFSET);
+X				PXL_H = X_PAGE_OFFSET;
+X				DVI_V = dvi_round(Y_PAGE_OFFSET);
+X				PXL_V = Y_PAGE_OFFSET;
+X				WW = XX = YY = ZZ = 0;
+X				begin_page();
+X				break;
+X
+X			    case EOP:
+X				if (stackp > 0)
+X				    error("Stack not empty at EOP (%d)",
+X				    	   stackp);
+X				end_page();
+X				if (ftell(dvi_file) > last_page_offset)
+X				    return;
+X				break;
+X
+X			    case PUSH:
+X				stackp++;
+X				if (stackp > maxstack)
+X				    error("xdvi: More PUSHes than were promised");
+X				stack[stackp] = stack[stackp - 1];
+X				break;
+X
+X			    case POP:
+X				stackp--;
+X				if (stackp < 0)
+X				    error("xdvi: More POPs than PUSHes");
+X				break;
+X
+X			    case RIGHT1:
+X			    case RIGHT2:
+X			    case RIGHT3:
+X			    case RIGHT4:
+X				DVI_H += snum(dvi_file, ch - RIGHT1 + 1);
+X				PXL_H = pixel_round(DVI_H);
+X				break;
+X
+X			    case X0:
+X			    case X1:
+X			    case X2:
+X			    case X3:
+X			    case X4:
+X				if (ch != X0)
+X				    XX = snum(dvi_file, ch - X0);
+X				DVI_H += XX;
+X				PXL_H += pixel_round(XX);
+X				correct();
+X				break;
+X
+X			    case W0:
+X			    case W1:
+X			    case W2:
+X			    case W3:
+X			    case W4:
+X				if (ch != W0)
+X				    WW = snum(dvi_file, ch - W0);
+X				DVI_H += WW;
+X				PXL_H = pixel_round(DVI_H);
+X				break;
+X
+X			    case Y0:
+X			    case Y1:
+X			    case Y2:
+X			    case Y3:
+X			    case Y4:
+X				if (ch != Y0)
+X				    YY = snum(dvi_file, ch - Y0);
+X				DVI_V += YY;
+X				PXL_V = pixel_round(DVI_V);
+X				break;
+X
+X			    case Z0:
+X			    case Z1:
+X			    case Z2:
+X			    case Z3:
+X			    case Z4:
+X				if (ch != Z0)
+X				    ZZ = snum(dvi_file, ch - Z0);
+X				DVI_V += ZZ;
+X				PXL_V = pixel_round(DVI_V);
+X				break;
+X
+X			    case DOWN1:
+X			    case DOWN2:
+X			    case DOWN3:
+X			    case DOWN4:
+X				DVI_V += snum(dvi_file, ch - DOWN1 + 1);
+X				PXL_V = pixel_round(DVI_V);
+X				break;
+X
+X			    case FNT1:
+X			    case FNT2:
+X			    case FNT3:
+X			    case FNT4:
+X/*				change_font(num(dvi_file, ch - FNT1 + 1));*/
+X				font_manager(CHANGE_FONT,num(dvi_file, ch - FNT1 + 1),
+X					NULL,NULL,NULL,NULL,NULL,NULL);
+X				break;
+X
+X			    case XXX1:
+X			    case XXX2:
+X			    case XXX3:
+X			    case XXX4:
+X				a = num(dvi_file, ch - XXX1 + 1);
+X				if(a > 0)
+X				    special((unsigned long) a);
+X				break;
+X
+X			    case FNTDEF1:
+X			    case FNTDEF2:
+X			    case FNTDEF3:
+X			    case FNTDEF4:
+X				fseek(dvi_file, (long) (12 + ch - FNTDEF1 + 1), 1);
+X				a = one(dvi_file) + one(dvi_file);
+X				fseek(dvi_file, (long) a, 1);
+X				break;
+X
+X			    case PRE:
+X				error("xdvi: Shouldn't happen: PRE encountered.");
+X				break;
+X
+X			    case POST:
+X				error("xdvi: Shouldn't happen: POST encountered.");
+X				break;
+X
+X			    case POSTPOST:
+X				error("xdvi: Shouldn't happen: POSTPOST encountered.");
+X				break;
+X
+X			    default:
+X				error("xdvi: Unknown op-code %d, offset %d",
+X					ch, ftell(dvi_file));
+X			} /* end switch*/
+X		} /* end else (ch not a SETCHAR or FNTNUM) */
+X	} /* end for */
+X}
+X
+Xset2_char(code, dvi_adv, pxl_adv)
+Xunsigned long code;
+Xlong	*dvi_adv;
+Xshort	*pxl_adv;
+X{
+X	struct glyph *g;
+X
+X	font_manager(GET_GLYPH, (unsigned int)code, &g,
+X			NULL, NULL, NULL, NULL, NULL);
+X
+X#ifdef JXDVI
+X	put_bitmap(&(g->bitmap), (PXL_H - g->x), (PXL_V - g->y), forepix);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	put_bitmap_to_image(&(g->bitmap), (PXL_H - g->x), (PXL_V - g->y));
+X#endif DVI2NWP
+X
+X	*dvi_adv = g->dvi_adv;
+X	*pxl_adv = g->pxl_adv;
+X}
+X
+Xset_char(ch)
+X	ubyte ch;
+X{
+X	struct glyph *g;
+X
+X	font_manager(GET_GLYPH, (unsigned int)ch, &g,
+X			NULL, NULL, NULL, NULL, NULL);
+X
+X#ifdef JXDVI
+X	put_bitmap(&(g->bitmap), (PXL_H - g->x), (PXL_V - g->y), forepix);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	put_bitmap_to_image(&(g->bitmap), (PXL_H - g->x), (PXL_V - g->y));
+X#endif DVI2NWP
+X}
+X
+X#ifdef JXDVI
+Xreverse_bytes(bitmap)
+X 	register struct bitmap *bitmap;
+X{
+X 	register long x, y;
+X 	register char *bp ;
+X 	register char c ;
+X 
+X 	bp = bitmap->bits ;
+X 	for ( y = 0 ; y < bitmap->h ; y++) {
+X 		for ( x = 0 ; x < bitmap->bytes_wide ; x += 2) {
+X 			c = *bp ;
+X 			*bp++ = *(bp + 1) ;
+X 			*bp++ = c ;
+X 		}
+X 	}
+X}
+X#endif JXDVI
+X
+Xset_rule(h, w)
+X	long h, w;
+X{
+X	/* (w,h) specifies lower left corner of rule box */
+X
+X#ifdef JXDVI
+X	if ( h == 0 ) h = 1;
+X	if ( w == 0 ) w = 1;
+X	put_rectangle(PXL_H, PXL_V - h, w, h, forepix);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	put_rectangle_to_image(PXL_H, PXL_V - h, w, h);
+X#endif DVI2NWP
+X}
+X
+Xbegin_page()
+X{
+X	if (debug)
+X		return;
+X#ifdef JXDVI
+X	if (!redisplay)
+X	    clear_page();
+X
+X	put_border(0, 0, page_w, page_h, 1);
+X#endif JXDVI
+X
+X#ifdef DVI2NWP
+X	clear_image_memory();
+X#endif DVI2NWP
+X}
+X
+Xend_page()
+X{
+X	int ch, arg, sign, number, next_page;
+X	char *string;
+X	int nbytes;
+X#ifdef JXDVI
+X	XEvent event;
+X#endif JXDVI
+X
+X#ifdef lint
+X	number = 0;
+X#endif
+X
+X	if (debug) {
+X		if (++current_page == total_pages)
+X			exit(0);
+X		return;
+X	}
+X
+X#ifdef JXDVI
+X	if (redisplay) {
+X	    min_x = smin_x;
+X	    max_x = smax_x;
+X	    min_y = smin_y;
+X	    max_y = smax_y;
+X	    redisplay = 0;
+X	}
+X	arg = 0;
+X	for (;;) {
+X		XNextEvent (&event);
+X		switch (event.type) {
+X		case ExposeWindow:
+X		    screen_h = ((XExposeEvent *)(&event))->height;
+X		    screen_w = ((XExposeEvent *)(&event))->width;
+X		    max_x = min_x + screen_w;
+X		    max_y = min_y + screen_h;
+X		    string = "\f";
+X		    nbytes = 1;
+X		    break;
+X		case ExposeRegion:
+X		    smin_x = min_x;
+X		    smax_x = max_x;
+X		    smin_y = min_y;
+X		    smax_y = max_y;
+X		    min_x = min_x + ((XExposeEvent *)(&event))->x;
+X		    min_y = min_y + ((XExposeEvent *)(&event))->y;
+X		    max_x = min_x + ((XExposeEvent *)(&event))->width;
+X		    max_y = min_y + ((XExposeEvent *)(&event))->height;
+X		    redisplay = 1;
+X		    string = "\f";
+X		    nbytes = 1;
+X		    break;
+X		case ButtonPressed:
+X		    {
+X		    short detail = ((XButtonPressedEvent *) (&event))->detail;
+X		    switch (detail & ValueMask) {
+X		    case LeftButton:
+X			if (detail & ShiftMask)
+X			    string = "l";
+X			else
+X			    string = "b";
+X			nbytes = 1;
+X			break;
+X		    case MiddleButton:
+X			if (detail & ShiftMask)
+X			    string = "u";
+X			else
+X			    string = "d";
+X			nbytes = 1;
+X			break;
+X		    case RightButton:
+X			if (detail & ShiftMask)
+X			    string = "r";
+X			else
+X			    string = "f";
+X			nbytes = 1;
+X			break;
+X		    }
+X		    }
+X		    break;
+X		case KeyPressed:
+X		    string = XLookupMapping (&event, &nbytes);
+X		    break;
+X		}
+X		if (nbytes == 0) continue;
+X		if (nbytes > 1) goto bad;
+X		switch (ch = *string) {
+X		    case 'q':
+X		    case '\003':	/* control-C */
+X		    case '\004':	/* control-D */
+X			stop_output(0);
+X			break;
+X		    case 'n':
+X		    case 'f':
+X		    case ' ':
+X			/* scroll forward */
+X			min_x = 0;
+X			min_y = 0;
+X			max_x = screen_w;
+X			max_y = screen_h;
+X			next_page = current_page + 1;
+X			break;
+X		    case 'p':
+X		    case 'b':
+X		    case '\b':
+X			/* scroll backward */
+X			min_x = 0;
+X			min_y = 0;
+X			max_x = screen_w;
+X			max_y = screen_h;
+X			next_page = current_page - 1;
+X			break;
+X		    case 'u':
+X			if (min_y == 0) goto bad;
+X			min_y -= screen_h;
+X			if (min_y < 0)
+X			    min_y = 0;
+X			base_y = min_y;
+X			max_y = min_y + screen_h;
+X			next_page = current_page;
+X			break;
+X		    case 'd':
+X			if (min_y >= page_h - screen_h) goto bad;
+X			min_y += screen_h;
+X			if (min_y > page_h - screen_h)
+X			    min_y = page_h - screen_h;
+X			if (min_y < 0)
+X			    min_y = 0;
+X			base_y = min_y;
+X			max_y = min_y + screen_h;
+X			next_page = current_page;
+X			break;
+X		    case 'l':
+X			if (min_x == 0) goto bad;
+X			min_x -= screen_w;
+X			if (min_x < 0)
+X			    min_x = 0;
+X			base_x = min_x;
+X			max_x = min_x + screen_w;
+X			next_page = current_page;
+X			break;
+X		    case 'r':
+X			if (min_x >= page_w - screen_w) goto bad;
+X			min_x += screen_w;
+X			if (min_x > page_w - screen_w)
+X			    min_x = page_w - screen_w;
+X			if (min_x < 0)
+X			    min_x = 0;
+X			base_x = min_x;
+X			max_x = min_x + screen_w;
+X			next_page = current_page;
+X			break;
+X		    case 's':
+X			if (!arg) {
+X			    int shrink = shrink_factor;
+X			    long fac1, fac2;
+X			    shrink_factor = 1;
+X			    fac1 = ROUNDUP(PAPER_WIDTH, screen_w);
+X			    fac2 = ROUNDUP(PAPER_HEIGHT, screen_h);
+X			    if (fac1 < fac2)
+X				number = fac2;
+X			    else
+X				number = fac1;
+X			    shrink_factor = shrink;
+X			}
+X			if (number <= 0) goto bad;
+X			if (number != shrink_factor) {
+X			    shrink_factor = number;
+X			    min_x = 0;
+X			    min_y = 0;
+X			    max_x = screen_w;
+X			    max_y = screen_h;
+X			    init_page();
+X			    define_conv();
+X			    reset_fonts();
+X			}
+X		    case '\f':
+X			/* redisplay current page */
+X			next_page = current_page;
+X			break;
+X		    case '\r':
+X		    case '\n':
+X			/* go to relative page */
+X			min_x = 0;
+X			min_y = 0;
+X			max_x = screen_w;
+X			max_y = screen_h;
+X			next_page = current_page + (arg ? number : 1);
+X			break;
+X		    case 'g':
+X			/* go to absolute page */
+X			min_x = 0;
+X			min_y = 0;
+X			max_x = screen_w;
+X			max_y = screen_h;
+X			next_page = (arg ? number : total_pages) - 1;
+X			break;
+X		    case '0': case '1': case '2': case '3': case '4':
+X		    case '5': case '6': case '7': case '8': case '9':
+X			if (! arg) {
+X				arg = 1;
+X				sign = 1;
+X				number = 0;
+X			}
+X			number = 10*number + sign*(ch - '0');
+X			continue;
+X		    case '-':
+X			if (! arg) {
+X				arg = 1;
+X				sign = -1;
+X				number = 0;
+X				continue;
+X			} else
+X				goto bad;
+X		    default:
+X			goto bad;
+X		}
+X		if (0 <= next_page && next_page < total_pages) {
+X			current_page = next_page;
+X			fseek(dvi_file, page_offset[current_page], 0);
+X			break;
+X		}
+X	bad:
+X		XFeep(0);
+X		arg = 0;		/* throw away numeric argument */
+X		continue;
+X	}
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	print_frame(current_page);
+X	if ( odd_pages || even_pages ) {
+X		current_page += 2;
+X	} else {
+X		current_page++;
+X	}
+X	if (0 <= current_page && current_page < total_pages &&
+X		current_page <= end_page_num) {
+X		fseek(dvi_file, page_offset[current_page], 0);
+X	} else {
+X		stop_output(0);
+X	}
+X#endif DVI2NWP
+X}
+X
+Xspecial(nbytes)
+X	unsigned long nbytes;
+X{
+X	char *cmd;
+X	int i;
+X
+X	cmd = malloc((unsigned) nbytes+1);
+X	if (cmd == NULL)
+X		error("xdvi: Can't allocate memory for special (%d bytes)", nbytes);
+X	for (i = 0; i < nbytes; i += 1)
+X		cmd[i] = getc(dvi_file);
+X	cmd[i] = '\0';
+X	fprintf(stderr, "special ``%s'' not implemented\n", cmd);
+X	free(cmd);
+X}
+X
+X/*
+X**
+X**      Read size bytes from the FILE fp, constructing them into a
+X**      signed/unsigned integer.
+X**
+X*/
+Xunsigned long
+Xnum(fp, size)
+X    register FILE *fp;
+X    register int size;
+X{
+X    register int i;
+X    register long x;
+X
+X    x = 0;
+X    for ( i=0; i < size; i += 1)
+X        x = x * 0x100 + (unsigned) getc(fp);
+X    return (x);
+X}
+X
+Xlong
+Xsnum(fp, size)
+X	register FILE *fp;
+X	register int size;
+X{
+X        register int i;
+X	register long x;
+X
+X	x = getc(fp) & 0xff;
+X	if (x & 0x80)
+X        	x -= 0x100;
+X	for (i = 1; i < size; i += 1)
+X	    x = x * 0x100 + (unsigned) getc(fp);
+X	return (x);
+X}
+X
+Xstop_output(sig)
+X{
+X#ifdef STATISTICS
+X#ifdef JXDVI
+X	report_statistics();
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	end_lbp();
+X	if ( direct && verbose )
+X		report_statistics();
+X#endif DVI2NWP
+X#endif
+X#ifdef ACCT
+X	if (direct == 0)
+X		account(loguser, loghost, acctfile) ;
+X#endif
+X
+X	if (dump_mode || boot_mode) {
+X	    font_manager(CLOSE_FONT_FILE, NULL, NULL, NULL, NULL,NULL,NULL,NULL);
+X		dump_mode = 0;
+X		boot_mode = 0;
+X#	ifdef DVI2NWP
+X		direct = 0;
+X#	endif DVI2NWP
+X		abort();
+X	}
+X
+X#ifdef JXDVI
+X	exit(sig);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	exit(0);
+X#endif DVI2NWP
+X}
+X
+X/* VARARGS1 */
+Xerror(message, a, b, c, d, e, f)
+X	char *message;
+X{
+X	fprintf(stderr, message, a, b, c, d, e, f);
+X	putc('\n', stderr);
+X	exit(0);
+X}
+X
+Xinit_page()
+X{
+X	page_h = PAPER_HEIGHT;
+X	page_w = PAPER_WIDTH;
+X}
+X
+X#ifdef JXDVI
+Xclear_page()
+X{
+X	XClear(win);
+X}
+X#endif JXDVI
+X#ifdef JXDVI
+Xput_border(x, y, w, h, t)
+X	long x, y, w, h, t;
+X{
+X	put_rectangle(x, y, w, t, highpix);
+X	put_rectangle(x, y, t, h, highpix);
+X	put_rectangle(x, y + h - t, w, t, highpix);
+X	put_rectangle(x + w - t, y, t, h, highpix);
+X}
+X#endif JXDVI
+X
+Xput_rectangle(x, y, w, h, pix)
+X	long x, y, w, h;
+X	int pix;
+X{
+X#ifdef JXDVI
+X	if (x < max_x && x + w >= min_x && y < max_y && y + h >= min_y)
+X		XPixSet(win, x - base_x, y - base_y, w, h, pix);
+X#endif JXDVI
+X#ifdef DVI2NWP
+X	put_rectangle_to_image(x, y, w, h);
+X#endif DVI2NWP
+X}
+X
+X#ifdef JXDVI
+Xput_bitmap(bitmap, x, y, pix)
+X	register struct bitmap *bitmap;
+X	register long x, y;
+X	int pix;
+X{
+X	if ((bitmap->w == 0) || (bitmap->h == 0)) return;
+X	if (x < max_x && x + bitmap->w >= min_x &&
+X	    y < max_y && y + bitmap->h >= min_y)
+X		XBitmapBitsPut(win, x - base_x, y - base_y,
+X					bitmap->w, bitmap->h, (char *) bitmap->bits,
+X				pix, backpix, NULL, GXfunc, AllPlanes);
+X}
+X#endif JXDVI
+X#ifdef JXDVI
+Xsample(bitmap, x, y, w, h)
+X	register struct bitmap *bitmap;
+X	int x, y, w, h;
+X{
+X	register char *ptr, *endp;
+X	register int b, i, j, m, n;
+X
+X	ptr = bitmap->bits
+X		+ (y * bitmap->bytes_wide)
+X		+ (x / BITS_PER_BYTE);
+X	endp = bitmap->bits + (bitmap->h * bitmap->bytes_wide);
+X	b = (1 << (x % BITS_PER_BYTE));
+X	n = 0;
+X	for (i = 0; i < h && ptr < endp; i += 1, ptr += bitmap->bytes_wide) {
+X		for (m = b, j = 0; j < w; j += 1, m <<= 1) {
+X			if (*ptr & m)
+X				n += 1;
+X		}
+X	}
+X/*      return (n >= (i * w) / 3);*/
+X/* In some cases (for example, 400dpi font shrunk by 2), shrink_bitmap results
+X * underlined font. This is corrected by Atsuo, K. by changing sample() so
+X * that it returns (n>=(h*w)/3) instead (n>=(i*w)/3). 
+X */
+X        return (n >= (h * w) / 3);
+X}
+X
+Xshrink_bitmap(bitmap, x_factor, y_factor)
+X	register struct bitmap *bitmap;
+X	int x_factor, y_factor;
+X{
+X	char *shrunk_bits;
+X	int shrunk_height, shrunk_width, shrunk_bytes_wide;
+X	register char *ptr;
+X	char *cp;
+X	register int x, y, b, m;
+X
+X	shrunk_height = ROUNDUP(bitmap->h, y_factor);
+X	shrunk_width = ROUNDUP(bitmap->w, x_factor);
+X	shrunk_bytes_wide = ROUNDUP(shrunk_width, BITS_PER_SHORT)*BYTES_PER_SHORT;
+X		/* width must be multiple of 16 bits for raster_op */
+X	ptr = shrunk_bits = calloc((unsigned) shrunk_height * shrunk_bytes_wide, 1);
+X	if (ptr == NULL)
+X		error("Can't allocate shrunken bitmap (%d by %d)",
+X			shrunk_height, shrunk_width);
+X	for (y = 0; y < bitmap->h; y += y_factor) {
+X		b = 0;
+X		m = (1 << 0);
+X		cp = ptr;
+X		for (x = 0; x < bitmap->w; x += x_factor) {
+X			if (sample(bitmap, x, y, x_factor, y_factor))
+X				*ptr |= m;
+X			else
+X				*ptr &= ~m;
+X			b += 1;
+X			m <<= 1;
+X			if (b % BITS_PER_BYTE == 0) {
+X				b = 0;
+X				m = (1 << 0);
+X				ptr += 1;
+X			}
+X		}
+X		ptr = cp + shrunk_bytes_wide;
+X	}
+X	free(bitmap->bits);
+X	bitmap->bits = shrunk_bits;
+X	bitmap->h = shrunk_height;
+X	bitmap->w = shrunk_width;
+X	bitmap->bytes_wide = shrunk_bytes_wide;
+X}
+X#endif JXDVI
+X#ifdef JXDVI
+Xprint_char(ch, g)
+X	ubyte ch;
+X	struct glyph *g;
+X{
+X	printf("char %d", ch);
+X	if (isprint(ch))
+X		printf(" (%c)", ch);
+X	putchar('\n');
+X	printf("x = %d, y = %d, pxl = %d, dvi = %d\n",
+X		g->x, g->y, g->pxl_adv, g->dvi_adv);
+X	print_bitmap(&g->bitmap);
+X}
+X#endif JXDVI
+X#ifdef JXDVI
+Xprint_bitmap(bitmap)
+X	register struct bitmap *bitmap;
+X{
+X	register char *ptr;
+X	register int x, y, i;
+X
+X	ptr = bitmap->bits;
+X	if (ptr == NULL)
+X		return;
+X	printf("w = %d, h = %d, bytes wide = %d\n",
+X		bitmap->w, bitmap->h, bitmap->bytes_wide);
+X	for (y = 0; y < bitmap->h; y += 1) {
+X		for (x = 0; x < bitmap->bytes_wide; x += 1) {
+X			for (i = 0; i < BITS_PER_BYTE; i += 1)
+X				if (*ptr & (1 << i))
+X					putchar('@');
+X				else
+X					putchar(' ');
+X			ptr += 1;
+X		}
+X		putchar('\n');
+X	}
+X}
+X#endif JXDVI
+X#ifdef DVI2NWP
+Xprint_nbitmap(bitmap)
+X	register struct bitmap *bitmap;
+X{
+X	register char *ptr;
+X	register int x, y, i;
+X
+X	ptr = bitmap->nbits;
+X	if (ptr == NULL)
+X		return;
+X	printf("w = %d, h = %d, bytes wide = %d\n",
+X		bitmap->w, bitmap->h, bitmap->bytes_wide);
+X	for (y = 0; y < bitmap->h; y += 1) {
+X		for (x = 0; x < bitmap->bytes_wide; x += 1) {
+X			for (i = 0; i < BITS_PER_BYTE; i += 1)
+X				if (*ptr & (1 << i))
+X					putchar('@');
+X				else
+X					putchar(' ');
+X			ptr += 1;
+X		}
+X		putchar('\n');
+X	}
+X}
+X#endif DVI2NWP
+X#ifdef JXDVI
+Xprint_bitmap2(bitmap)
+X	register struct bitmap *bitmap;
+X{
+X	register char *ptr;
+X	register int x, y, i;
+X
+X	ptr = bitmap->bits;
+X	if (ptr == NULL)
+X		return;
+X
+X	for (y = 0; y < bitmap->h; y += 1) {
+X		for (x = 0; x < bitmap->bytes_wide; x += 1) {
+X			for (i = 0; i < BITS_PER_BYTE; i += 1)
+X				if (*ptr & (0x80 >> i))
+X					putchar('@');
+X				else
+X					putchar(' ');
+X			ptr += 1;
+X		}
+X		putchar('\n');
+X	}
+X}
+X#endif JXDVI
+X
+Xprint_dvi(ch)
+X	ubyte ch;
+X{
+X	printf("%4d %4d ", PXL_H, PXL_V);
+X	if (ch <= SETCHAR0 + 127) {
+X		printf("SETCHAR%-3d", ch - SETCHAR0);
+X		if (isprint(ch))
+X			printf(" (%c)", ch);
+X	} else if (FNTNUM0 <= ch  &&  ch <= FNTNUM0 + 63) {
+X		printf("FNTNUM%d", ch - FNTNUM0);
+X	} else {
+X		switch (ch) {
+X		    case SET1:
+X			printf("SET1");
+X			break;
+X		    case SETRULE:
+X			printf("SETRULE");
+X			break;
+X		    case PUT1:
+X			printf("PUT1");
+X			break;
+X		    case PUTRULE:
+X			printf("PUTRULE");
+X			break;
+X		    case NOP:
+X			printf("NOP");
+X			break;
+X		    case BOP:
+X			printf("BOP");
+X			break;
+X		    case EOP:
+X			printf("EOP");
+X			break;
+X		    case PUSH:
+X			printf("PUSH");
+X			break;
+X		    case POP:
+X			printf("POP");
+X			break;
+X		    case RIGHT1:
+X		    case RIGHT2:
+X		    case RIGHT3:
+X		    case RIGHT4:
+X			printf("RIGHT%d", ch - RIGHT1 + 1);
+X			break;
+X		    case X0:
+X		    case X1:
+X		    case X2:
+X		    case X3:
+X		    case X4:
+X			printf("X%d", ch - X0);
+X			break;
+X		    case W0:
+X		    case W1:
+X		    case W2:
+X		    case W3:
+X		    case W4:
+X			printf("W%d", ch - W0);
+X			break;
+X		    case Y0:
+X		    case Y1:
+X		    case Y2:
+X		    case Y3:
+X		    case Y4:
+X			printf("Y%d", ch - Y0);
+X			break;
+X		    case Z0:
+X		    case Z1:
+X		    case Z2:
+X		    case Z3:
+X		    case Z4:
+X			printf("Z%d", ch - Z0);
+X			break;
+X		    case DOWN1:
+X		    case DOWN2:
+X		    case DOWN3:
+X		    case DOWN4:
+X			printf("DOWN%d", ch - DOWN1 + 1);
+X			break;
+X		    case FNT1:
+X		    case FNT2:
+X		    case FNT3:
+X		    case FNT4:
+X			printf("FNT%d", ch - FNT1 + 1);
+X			break;
+X		    case XXX1:
+X		    case XXX2:
+X		    case XXX3:
+X		    case XXX4:
+X			printf("XXX%d", ch - XXX1 + 1);
+X			break;
+X		    case FNTDEF1:
+X		    case FNTDEF2:
+X		    case FNTDEF3:
+X		    case FNTDEF4:
+X			printf("FNTDEF%d", ch - FNTDEF1 + 1);
+X			break;
+X		    case PRE:
+X			printf("PRE");
+X			break;
+X		    case POST:
+X			printf("POST");
+X			break;
+X		    case POSTPOST:
+X			printf("POSTPOST");
+X			break;
+X		    default:
+X			error("xdvi: Unknown op-code %d, offset %d",
+X				ch, ftell(dvi_file));
+X		} /* end switch*/
+X	} /* end else (ch not a SETCHAR or FNTNUM) */
+X	putchar('\n');
+X}
+*-*-END-of-dv.c-*-*
+echo x - font_db.c
+sed 's/^X//' >font_db.c <<'*-*-END-of-font_db.c-*-*'
+X/*
+X *	Kanji Font Database for SONY NEWS/NWF-604
+X *	$Header: font_db.c,v 1.2 88/02/08 01:04:32 atsuo Exp $
+X *		written by Atsuo, K.
+X *		on 27/12/87
+X */
+X
+X#include "atsuo-copyright.h"  
+X
+X#include <stdio.h>
+X#include "font.h"
+X
+Xstruct kanji_font_data kanji_font_db[] = {
+X/*    font name, height, width, byte wides	*/
+X        { "min7.500nwf",  10, 16, 2 },          /* M10   7pt (100dpi) */
+X        { "min8.500nwf",  11, 16, 2 },          /* M11   8pt (100dpi) */
+X        { "min9.500nwf",  12, 16, 2 },          /* M12   9pt (100dpi) */
+X        { "min10.500nwf", 14, 16, 2 },          /* M14  10pt (100dpi) */
+X        { "min10.600nwf", 17, 24, 3 },          /* M17  12pt (100dpi) */
+X	{ "min10.720nwf", 17, 24, 3 },		/* M17	12pt (wrong) */
+X	{ "min10.864nwf", 17, 24, 3 },		/* M17	12pt (wrong) */
+X        { "min12.500nwf", 17, 24, 3 },          /* M17  12pt (100dpi) */
+X
+X	{ "min7.2000nwf", 39, 40, 5 },		/* M39	 7pt */
+X	{ "min8.2000nwf", 44, 48, 6 },		/* M44	 8pt */
+X	{ "min9.2000nwf", 50, 56, 7 },		/* M50	 9pt */
+X
+X	{ "min10.2000nwf", 55, 56, 7 },		/* M55	10pt */
+X	{ "min10.2191nwf", 60, 60, 8 },		/* M60	11pt */ /* made by Nishioka */
+X	{ "min10.2400nwf", 66, 72, 9 },		/* M66	12pt */
+X	{ "min10.2880nwf", 77, 77, 10 },	/* M77	14t (wrong) */
+X	{ "min10.3456nwf", 88, 88, 11 },	/* M88	17pt (wrong) */
+X	{ "min10.4147nwf", 88, 88, 11 },	/* M88	17pt (wrong) */
+X	{ "min10.4977nwf", 88, 88, 11 },	/* M88	17pt (wrong) */
+X
+X	{ "min11.2000nwf", 60, 60, 8 },		/* M60	11pt */ /* made by Nishioka */
+X	{ "min12.2000nwf", 66, 72, 9 },		/* M66	12pt */
+X	{ "min14.2000nwf", 77, 77, 10 },	/* M77	14pt */ /* made by Nishioka */
+X	{ "min16.2000nwf", 88, 88, 11 },	/* M88	16pt */ /* made by Nishioka */
+X
+X        { "goth7.500nwf",  10, 16, 2 },         /* G10   7pt (100dpi) */
+X        { "goth8.500nwf",  11, 16, 2 },         /* G11   8pt (100dpi) */
+X        { "goth9.500nwf",  12, 16, 2 },         /* G12   9pt (100dpi) */
+X        { "goth10.500nwf", 14, 16, 2 },         /* G14  10pt (100dpi) */
+X        { "goth10.600nwf", 17, 24, 3 },         /* G17  12pt (100dpi) */
+X        { "goth10.720nwf", 17, 24, 3 },         /* G17  12pt (wrong) */
+X        { "goth10.864nwf", 17, 24, 3 },         /* G17  12pt (wrong) */
+X        { "goth12.500nwf", 17, 24, 3 },         /* G17  12pt (100dpi) */
+X
+X	{ "goth7.2000nwf", 39, 40, 5 },		/* G39	 7pt */
+X	{ "goth8.2000nwf", 44, 48, 6 },		/* G44	 8pt */
+X	{ "goth9.2000nwf", 50, 56, 7 },		/* G50	 9pt */
+X	{ "goth10.2000nwf", 55, 56, 7 },	/* G55	10pt */
+X	{ "goth10.2400nwf", 66, 72, 9 },	/* G55	12pt */
+X	{ "goth10.2880nwf", 66, 72, 9 },	/* G66	12pt (wrong) */
+X	{ "goth10.3456nwf", 66, 72, 9 },	/* G55	12pt (wrong) */
+X	{ "goth12.2000nwf", 66, 72, 9 },	/* G66	12pt */
+X	{ "goth14.2000nwf", 88, 88, 11 },	/* G88	14pt */ /* Made by Nishioka */
+X	{ (char *)NULL, 0, 0, 0 }
+X};
+*-*-END-of-font_db.c-*-*
+echo x - font_load.c
+sed 's/^X//' >font_load.c <<'*-*-END-of-font_load.c-*-*'
+X/*
+X *	Font Loader for jxdvi/dvi2nwp
+X *	$Header: font_load.c,v 1.1 88/02/06 11:29:11 atsuo Exp $
+X *		written by Atsuo, K.
+X *		on 87/01/12
+X */
+X
+X#include "atsuo-copyright.h"  
+X
+X#include <sys/types.h>
+X#include <stdio.h>
+X#include <ctype.h>
+X#include <strings.h>
+X#include "font.h"
+X#include "font_load.h"
+X
+X#define	LOAD_DEF	"fldtab"	/* font load table */
+X
+Xextern char *calloc();
+X
+Xint preFontNum = (-1);
+X
+Xextern long numerator, denominator, magnification;
+X
+X#define SkipComment(f,sz,b) {	\
+X	do {						\
+X		if (feof((f))) {		\
+X			eof = 1;			\
+X			break;				\
+X		}						\
+X		fgets((b),(sz),(f));	\
+X	} while ( (b)[0] == '#' );	\
+X}
+X
+XFILE *
+Xsetfldent(file,num,deno,mag)
+Xchar	*file;
+Xlong	*num, *deno, *mag;	/* numerator, denominator, magnification */
+X{
+X	FILE	*f;
+X	int		eof=0;
+X	char	buff[128], buff2[16];
+X
+X	f = fopen(file,"r");
+X	if ( f==NULL ) return f;
+X
+X	SkipComment(f,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		return NULL;
+X	}
+X	*num = atoi(buff2);
+X	SkipComment(f,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		return NULL;
+X	}
+X	*deno = atoi(buff2);
+X	SkipComment(f,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		return NULL;
+X	}
+X	*mag = atoi(buff2);
+X	return f;
+X}
+X
+Xstruct fldent *
+Xgetfldent(fld)
+XFILE *fld;
+X{
+X	struct fldent *ent;
+X	int		eof=0;
+X	char	buff[128], buff2[16];
+X	int		s, e;
+X	int		c;
+X	int		i;
+X	short	start, end;
+X	int		count;
+X
+X	while ( (c=fgetc(fld)) == ' ' || c == '\t' || c == '\n')
+X		;
+X	if (feof(fld)) return NULL;
+X	ungetc(c,fld);
+X
+X	SkipComment(fld,127,buff);
+X	if (eof) return NULL;
+X
+X	ent = (struct fldent *) calloc(1,sizeof(struct fldent));
+X	if (ent == NULL) return NULL;
+X
+X	if (sscanf(buff,"%s%*[^\n]",ent->fontname) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		cfree(ent);
+X		return NULL;
+X	}
+X	SkipComment(fld,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		cfree(ent);
+X		return NULL;
+X	}
+X	ent->sc = atoi(buff2);
+X	SkipComment(fld,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		cfree(ent);
+X		return NULL;
+X	}
+X	ent->d_sc = atoi(buff2);
+X	SkipComment(fld,127,buff);
+X	if ( eof || sscanf(buff,"%s%*[^\n]",buff2) != 1) {
+X		fprintf(stderr,"Font Load Table: Format is wrong\n");
+X		cfree(ent);
+X		return NULL;
+X	}
+X	ent->count = atoi(buff2);
+X
+X	ent->ranges = (struct code_range *) calloc(ent->count,
+X											sizeof(struct code_range));
+X
+X	for (i=0; i < ent->count; i++) {
+X		SkipComment(fld,127,buff);
+X		if ( !eof && (sscanf(buff,"%x%[^\\;-]16",&s)==1) ) {
+X			(ent->ranges)[i].start = s;
+X		} else {
+X			fprintf(stderr,"Font Load Table: Format is wrong\n");
+X			cfree(ent->ranges);
+X			cfree(ent);
+X			return NULL;
+X		}
+X		if (sscanf(buff,"%*x%*[-]%x",&e) == 1) {
+X			(ent->ranges)[i].end = e;
+X		} else {
+X			(ent->ranges)[i].start = s;
+X		}
+X	}
+X	return ent;
+X}
+X
+Xendfldent(fld)
+XFILE *fld;
+X{
+X	fclose(fld);
+X}
+X
+X#ifdef DEBUG
+Xmain()
+X{
+X	FILE *fld;
+X	struct fldent *ent;
+X	int	i;
+X
+X	fld = setfldent(LOAD_DEF,&magnification);
+X	printf("magnification:%d\n",magnification);
+X	while ( (ent=getfldent(fld)) != NULL ) {
+X		printf("fontname: %-48s\n",ent->fontname);
+X		printf("scaled size: %d, design size: %d\n",ent->sc, ent->d_sc);
+X		printf("count: %d\n",ent->count);
+X		for (i=0; i < ent->count; i++) {
+X			printf("code %#4x --> %#4x\n", (ent->ranges)[i].start,
+X										   (ent->ranges)[i].end);
+X		}
+X	}
+X	endfldent(fld);
+X}
+X#endif DEBUG
+X
+Xpre_load_font()
+X{
+X	FILE	*def;
+X 	struct fldent *ent;
+X 	int	i;
+X
+X	def = setfldent(LOAD_DEF,&numerator,&denominator,&magnification);
+X	if (def == NULL) {
+X		fprintf(stderr,"Can't open %s.",LOAD_DEF);
+X		exit(1);
+X	}
+X	define_fraction();
+X	define_conv();
+X
+X	printf("magnification:%d\n",magnification);
+X 	while ( (ent=getfldent(def)) != NULL ) {
+X 		printf("fontname: %-48s\n",ent->fontname);
+X		printf("scaled size: %d, design size: %d\n",ent->sc, ent->d_sc);
+X		printf("count: %d\n",ent->count);
+X 		for (i=0; i < ent->count; i++) {
+X 			printf("code %#4x --> %#4x\n", (ent->ranges)[i].start,
+X 										   (ent->ranges)[i].end);
+X 		}
+X
+X		font_manager(PRE_DEFINE_FONT, preFontNum,
+X				ent->sc, ent->d_sc, ent->fontname, NULL,NULL,NULL);
+X		for (i=0; i < ent->count; i++) {
+X			int	cc, s, e, ix;
+X			struct glyph *g;
+X
+X			s = (ent->ranges)[i].start;
+X			e = (ent->ranges)[i].end;
+X			printf("Reading bitmap, code %#4x --> %#4x\n", s,e);
+X			for (cc=s; cc <= e; cc++) {
+X				if ( jis_to_index(cc) != -1) {
+X					printf("%#4x ",cc);
+X					font_manager(GET_GLYPH,cc,&g,NULL,NULL,NULL,NULL,NULL);
+X				}
+X			}
+X			printf("\n");
+X 		}
+X		preFontNum--;	/* preFontNum is always less than 0. */
+X 	}
+X	font_manager(CLOSE_FONT_FILE, NULL, NULL, NULL, NULL,NULL,NULL,NULL);
+X
+X 	endfldent(def);
+X}
+*-*-END-of-font_load.c-*-*
+echo x - table.c
+sed 's/^X//' >table.c <<'*-*-END-of-table.c-*-*'
+Xchar reverse_byte[0x100] = {
+X	0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
+X	0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+X	0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
+X	0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+X	0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
+X	0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+X	0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
+X	0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+X	0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
+X	0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+X	0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
+X	0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+X	0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
+X	0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+X	0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
+X	0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+X	0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
+X	0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+X	0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
+X	0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+X	0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
+X	0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+X	0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
+X	0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+X	0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
+X	0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+X	0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
+X	0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+X	0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
+X	0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+X	0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
+X	0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
+X};
+*-*-END-of-table.c-*-*
+echo x - XDisplayName.c
+sed 's/^X//' >XDisplayName.c <<'*-*-END-of-XDisplayName.c-*-*'
+X/* $Header: XDisplayName.c,v 10.1 86/11/19 18:17:19 jg Rel $ */
+X
+X/* XDisplayName.c */
+X/* 
+X * Returns the name of the display XOpenDisplay would use.  This is better
+X * than just printing the "display" variable in a program because that
+X * could be NULL and/or there could be an environment variable set.
+X * This makes it easier for programmers to provide meaningful error
+X * messages. 
+X *
+X * 
+X * For example, this is used in XOpenDisplay() as
+X *	strncpy( displaybuf, XDisplayName( display ), sizeof(displaybuf) );
+X *      if ( *displaybuf == '\0' ) return( NULL );
+X *  This check is actually unnecessary because the next thing is an index()
+X *  call looking for a ':' which will fail and we'll return(NULL).
+X */
+X/* Written at Waterloo - JMSellens */
+X
+X#include <stdio.h>
+X
+Xchar *getenv();
+X
+X
+Xchar *
+XXDisplayName( display )
+Xchar *display;
+X{
+X    char *d;
+X    if ( display != (char *)NULL && *display != '\0' )
+X	return( display );
+X    if ( (d = getenv( "DISPLAY" )) != (char *)NULL )
+X	return( d );
+X    return( "" );
+X}
+*-*-END-of-XDisplayName.c-*-*
+exit

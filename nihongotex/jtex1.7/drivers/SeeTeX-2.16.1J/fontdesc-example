@@ -1,0 +1,45 @@
+#
+# MC-TeX font configuration
+#
+# N.B.: choose only one of `box' or `blank' TFM fonts
+#
+# If you have a Ricoh write-white engine and a Canon write-black engine,
+# and you use different fonts on each, you might use
+#
+# font	pk	ricoh	2	/usr/local/lib/tex/fonts/ricoh/%f/%f.%mpk
+# font	pk	canon	2	/usr/local/lib/tex/fonts/canon/%f/%f.%mpk
+# font	tfm	TeX	0	/usr/local/lib/tex/fonts/tfm/%f.tfm
+#
+# as your entire fontdesc file (although this would not allow people
+# to have their own directories searched).
+#
+# If you did this, and ran `postscript -e xyzzy', you would get the
+# error `(there are no fonts for the xyzzy engine!)', since no specifier
+# would match.
+#
+# This fontdesc file uses `*' and thus matches every engine.
+
+# Allow the use of `built-in' PostScript fonts,
+# including via $TEXFONTS, for engine `PostScript'.
+font	tfm	PostScript 0	/usr/local/lib/tex/fonts/%f.tfm
+fontenv tfm	PostScript 0	TEXFONTS	%f.tfm
+
+# allow people to override fonts (slows things down)
+#	TYPE	SPEC	SLOP	VARIABLE	NAMEPART
+fontenv	pk	*	2	OVERRIDE_FONTS	%f.%mpk
+fontenv	gf	*	2	OVERRIDE_FONTS	%f.%mgf
+fontenv	invis	*	2	OVERRIDE_FONTS	%f.tfm
+
+# normally, look first in the standard directory (speeds things up)
+#	TYPE	SPEC	SLOP	PATH
+font	pk	*	2	/usr/local/lib/tex/fonts/%f/%f.%mpk
+font	gf	*	2	/usr/local/lib/tex/fonts/%f/%f.%mgf
+font	invis	*	0	/usr/local/lib/tex/slitexfonts/%f.tfm
+
+# then try user's $TEXFONTS, if any
+fontenv	pk	*	2	TEXFONTS	%f.%mpk
+fontenv	gf	*	2	TEXFONTS	%f.%mpk
+
+# box font must come last!
+font	box	*	0	/usr/local/lib/tex/fonts/%f.tfm
+fontenv	box	*	0	TEXFONTS	%f.tfm

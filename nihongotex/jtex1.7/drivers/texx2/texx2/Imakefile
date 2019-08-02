@@ -1,0 +1,27 @@
+TEXFONTS=.:/usr/lib/tex/fonts
+DEFINES = $(JTEX) -DDEFAULT_TFM_PATH=\"$(TEXFONTS)\"
+
+SRCS1 = texx2.c texx2-widgets.c \
+                  texx2-file.c texx2-error.c dvi-simple.c \
+                  texx2-page.c texx2-font.c texx2-mark.c \
+                  DviPage.c DviPage2.c
+OBJS1 = texx2.o texx2-widgets.o \
+                  texx2-file.o texx2-error.o dvi-simple.o \
+                  texx2-page.o texx2-font.o texx2-mark.o \
+                  DviPage.o DviPage2.o
+SRCS2 = mftobdf.c
+OBJS2 = mftobdf.o
+PROGRAMS = mftobdf texx2 builtfonts
+INCLUDES = -I../h
+
+SYS_LIBRARIES = -lXaw -lXt -lXmu -lXext -lX11 
+
+SingleProgramTarget(texx2,$(OBJS1),../lib/lib.a,-lm)
+InstallProgram(texx2, $(BINDIR))
+InstallManPage(texx2, $(MANDIR))
+InstallAppDefaults(Texx2)
+
+SingleProgramTarget(mftobdf,$(OBJS2),../lib/lib.a,-lm)
+InstallProgram(mftobdf, $(BINDIR) )
+
+InstallProgram(buildfonts, $(BINDIR))

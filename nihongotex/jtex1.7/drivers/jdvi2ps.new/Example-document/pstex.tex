@@ -1,0 +1,493 @@
+\documentstyle[postscript,fullpage,leftpar]{article}
+\sloppy
+
+\begin{document}
+
+\title{Including Figures into Typeset Documents}
+
+\author{Neil Hunt \\
+	Teleos Research \\
+	576 Middlefield Road \\
+	Palo Alto \\
+	California 94301}
+\maketitle
+
+\section{Introduction}
+
+While typesetting languages like \TeX\ \cite{Knuth:texbook}
+and \LaTeX\ \cite{Lamport:latex} have
+facilities for making line drawings by describing them in
+words,
+the procedure is very slow and error prone,
+and the quality of the results can be disappointing.
+Such illustrations are more quickly prepared using
+a graphical editor.
+
+An alternative is to prepare the whole document
+using a
+``What You See Is What You Get''
+system such as Macdraw or FrameMaker.
+Unfortunately these have their own limitations --
+typesetting mathematics in these systems is very hard,
+for example.
+
+A lot of users prefer to prepare the {\em text} of documents
+using a typesetting language,
+and the {\em figures} using a graphical editor.
+The cut and paste operation which is then required to put the
+final document together is very undesirable.
+
+In all three of these cases, the problems with incorporating
+figures into a document make authors
+reluctant to add figures when they would be helpful,
+and delay making corrections and changes.
+
+I describe a system
+by which separate figures
+can be incorporated into a typeset document
+at the time of printing.
+The system permits a variety of ways of sizing the illustrations,
+either scaling the illustration to the
+space available in the text,
+or setting the size of the space in the text
+to match the original size of the figure.
+
+Apart from illustrations created on a graphical editor,
+digitised photographs, processed images, screendumps, and a variety
+of other types of figures can be merged into
+a document by this system.
+
+The main issues to be addressed by such a system are:
+\begin{itemize}
+\item	The size of the figure and the space left in the flow of
+	text must be the same.
+\item	When the figure is updated, its size may change;
+	the size of the space left in the text must change to match.
+\item	If the author is responsible for measuring the size of the
+	illustration and typing it into the typesetter source text,
+	most of the figures will {\em not} fit in the spaces left for them.
+\item	When a user creates a figure in a graphical editor,
+	he draws it with a particular size.
+	Usually, this will be the size it should have in the final document.
+	Sometimes it is appropriate to scale figures,
+	either by a fixed amount, or perhaps
+	to make all the figures as wide as the width of the column of text.
+	A useful system {\em must} provide for the size of the illustration
+	to be set in a variety of ways.
+\end{itemize}
+
+The problem breaks down into two parts:
+First, there is the problem of merging the figure description
+and the textual description into a single stream sent to the printer.
+Second, there is the problem of communicating the size and scaling
+information between the systems used to prepare the illustrations,
+and the typesetter.
+
+Fortunately, much of the problem is solved automatically
+by the use of PostScript \cite{Adobe:postscript} as a page description language
+for both the text and the illustrations.
+It is relatively easy to merge the PostScript streams,
+and the PostScript itself provides the medium for
+communicating the document sizes,
+by means of the meta comment
+\verb|%%BoundingBox|.
+We shall now examine how to put the various pieces together
+to make a useful system.
+
+\section{Merging PostScript Figures into \TeX\ and \LaTeX}
+
+The \TeX\ typesetter
+generates device independent {\tt DVI} output,
+which is subsequently converted into a printer language.
+By focusing on PostScript as the printer language,
+we lose the device independence;
+however, with the proliferation of PostScript printers,
+this is becoming less of an issue.
+
+The \verb|\special| command of \TeX\
+allows an arbitrary string to be passed from the
+document source language into the {\tt DVI} file,
+where it can be interpreted as a command to merge in a separate file.
+The focus of the merging operation is thus the {\tt dvips} postprocessor
+which performs the conversion from {\tt DVI} to PostScript.
+I defined a \verb|\special| command
+which conveys a filename, a width, and a height to the {\tt dvips}
+program.
+{\tt DVI} has the notion of a {\em current position}
+on the page; this supplies the position at which the figure is to
+be placed, which the width and height from the
+\verb|\special|
+command used to control the size of the figure.
+
+For the figures to be included,
+I chose to use a standard called Encapsulated PostScript (EPS),
+which is a set of guidelines on how to structure a PostScript
+program to facilitate this kind of merging.
+The most important feature of EPS in this application
+is the meta comment
+``\verb|%%BoundingBox:| $x1$ $y1$ $x2$ $y2$''
+which delimits the rectangle on the page within which all marks
+made by the program will lie,
+expressed in the coordinate system in effect when the program
+is executed.
+By inserting appropriate {\tt translate} and {\tt scale} commands
+into the PostScript ahead of the program,
+the figure may be fitted into any part of the page.
+The other requirement for merging is to cancel the
+command {\tt showpage} of the merged document,
+which would otherwise cause the page to be printed
+prematurely,
+before all the required marks had been made upon it.
+
+Sadly, the bounding box meta comment is not required for a conforming
+EPS program, and many programs do not produce one.
+Without some way of knowing the region of the page covered by
+the figure, it is impossible to meet the goals stated above
+for including figures in documents.
+For figures produced by FrameMaker,
+which do not include a bounding box comment,
+the size can be deduced by scanning the PostScript
+for a command sequence defining a ``frame'' within which the
+figure can be drawn.
+If the user adopts the convention of always drawing within a frame,
+this works satisfactorily.
+Another sad example is MacDraw,
+which produces PostScript which is far from conforming to EPS conventions,
+and so far all attempts to include Macdraw diagrams have failed.
+Fortunately Adobe Illustrate is a better program which generates
+conforming EPS, with a bounding box comment.
+
+I added code to {\tt dvips} which responds to a
+\verb|\special|
+command.
+The indicated PostScript file is opened,
+the
+\verb|%%BoundingBox|
+comment is located and read,
+the translation and scaling required to cause
+the corners of the bounding box to match the position and size
+is determined.
+PostScript is then emitted which redefines the {\tt showpage}
+command as null and performs the transformations,
+and the included PostScript program is copied to the output.
+
+I then created a macro\\
+\verb|\postscriptbox{width}{height}{filename}|
+which creates a \TeX\ ``box'' of the indicated width and height,
+with the current point set to the bottom left corner.
+A box is a primitive in \TeX\ which may be used exactly
+like a character; it can be included in a line of text,
+stacked in an equation or array,
+or included within a
+\verb|\center| and a \verb|\figure|
+environment to make a centred, floating figure.
+
+This solves the first part of the problem: merging figures
+into the \TeX\ or \LaTeX\ document.
+It also ensures that the figure is always scaled
+to the size of the space left in the flow of text in the document
+(the size of the box).
+However, the communication of size which it affords is one directional;
+there is no way for the user to include a figure
+at its natural or designed size.
+Of course, this missing capability is the one most required
+for including figures.
+
+\def\mug{\raisebox{-0.5ex}{\postscriptbox{2ex}{2.5ex}{pstex-figs/coffee}}}
+
+The \verb|\postscriptbox| macro on its own is useful for defining new
+symbols or characters without going to {\sc METAFONT}
+\cite{Knuth:tex-metafont}.
+For example, the macro
+\verb|\def\mug{\postscriptbox{2ex}{2.5ex}{coffee}}|
+defines a coffee mug character (\,\mug) which tracks the size of
+the current font:
+{\tiny tiny mug \mug}
+{\small small mug \mug}
+{\normalsize normal mug \mug}
+{\Large large mug \mug}.
+
+\section{Communicating Size from Figure to \TeX\ or \LaTeX}
+
+\begin{figure*}
+  \begin{center}
+    \psbox[width=0.95\textwidth]{pstex-figs/flow}
+  \end{center}
+  \caption{The process of typesetting a \LaTeX\ document with PostScript
+    figures.
+    This figure was included at 95\% of the width of the text.}
+  \label{fig:flow}
+\end{figure*}
+The second part of the problem is communicating
+the original design size of the figure from the system
+on which it was created into \TeX.
+Clearly this information is carried in the PostScript
+as the bounding box;
+however, there is no way to get \TeX\ or \LaTeX\ to parse
+the PostScript to obtain this data
+without making significant extensions
+to the typesetter program itself,
+which is not practical.
+
+The use of a preprocessor is the obvious solution.
+Such a tool could parse the typesetter source text
+to detect a meta-command indicating the inclusion of a figure,
+read the figure file to obtain its size,
+and replace the meta command in the source text stream
+with a
+\verb|\postscriptbox| command.
+
+There are a few problems with this approach.
+First, it is not easy to convince \TeX\ or \LaTeX\ to
+operate in a pipeline appropriate for a preprocessor.
+If this could be solved, the preprocessor would
+have to understand not only its own meta command,
+but also recognise and act upon
+\verb|\input|, \verb|\include|, and \verb|\includeonly|
+commands.
+It would also have to understand conditional commands
+and indeed the full syntax of defining new macros,
+in case some other command of interest is buried within another macro.
+
+Fortunately, an alternative mechanism exists,
+as exploited by other facilities such as
+BiB\TeX.
+The procedure is to use the {\tt .aux} file to drive the
+processor.
+This file is created by \LaTeX\ as it processes the document;
+there is no hierarchy (commands are not buried within other macros)
+and all conditional expressions are resolved.
+The job of the processor is now much simpler,
+as it only has to recognise the figure inclusion meta command,
+and the the \verb|\input| command.
+(\TeX\ does not automatically generate such a file;
+however it is easy to add the macros required to make
+it behave in a similar way as \LaTeX,
+and enable the same figure facilities to be used.)
+
+I have created a program called {\tt pstex}
+which scans the {\.aux} file created by \LaTeX,
+locating figure inclusion meta commands.
+When it finds a figure to be included,
+it reads the PostScript of the figure
+to determine its size,
+and writes an additional file
+called the {\tt .tps} file,
+which contains just a \verb|\postscriptbox| command,
+with the size filled in according to the size read from the PostScript.
+
+To go with this, there is an additional \LaTeX\ macro,
+called \verb|\psbox[options]{filename}|
+This macro performs two tasks;
+first it causes an entry to be made in the
+{\tt .aux} file containing the options string and the filename,
+and then it searches for the {\tt .tps} file with a name corresponding
+to that in the argument.
+On the first run of \LaTeX, there will be no such file,
+and the \verb|\psbox| macro will generate an \verb|\fbox|
+(a framed box) as a placeholder.
+After {\tt pstex} has been run over the {\tt .aux} file,
+in subsequent passes of \LaTeX\ the \verb|\psbox|
+macro {\em will} find the {\tt .tps} file,
+containing the primitive \verb|\postscriptbox|
+command with the sizes as derived from the PostScript,
+which it then executes.
+
+This mechanism allows an author to include a figure file
+at the size at which it was designed,
+without having to type that size into the source text
+for the typesetter at any time.
+Furthermore,
+whenever the figure is altered,
+any size change is reflected in the document simply
+by making one pass with {\tt pstex} and one pass with \LaTeX.
+
+\subsection{The Options String}
+
+\begin{figure*}
+  \begin{center}
+    \psbox[scale=0.5]{pstex-figs/screen}
+  \end{center}
+  \caption{Example screendump, included at 0.5 $\times$ nominal scale.}
+  \label{fig:screen}
+\end{figure*}
+
+The \verb|\psbox| command accepts an optional argument,
+which is passed on directly to {\tt pstex}.
+This argument is used to control how {\tt pstex}
+converts the size obtained from the PostScript
+into the width and height in the \verb|\postscriptbox| command.
+Currently {\tt pstex} understands options
+{\tt width=X},
+{\tt height=X},
+{\tt scale=Y},
+and {\tt aspect=Y},
+where {\tt X} is a string or macro which expands into any length
+command valid
+within a \verb|\setlength| command
+(such as \verb|2in| or \verb|0.9\columnwidth|),
+and {\tt Y} is a floating point number or a macro which expands into
+a floating pointer number.
+The {\tt width} and {\tt height} options override the
+natural width and height obtained from the PostScript file;
+if only one is specified,
+then the natural aspect ratio of the PostScript is preserved,
+unless overridden by an {\tt aspect} option.
+The {\tt scale} option scales both dimensions whether obtained
+from the PostScript, or overridden by one of the other options.
+
+Since the options string is passed unchanged to {\tt pstex},
+new capabilities can be added very easily;
+for example an option could be made which adds a fixed amount of
+additional margin around each figure.
+A more elaborate option could cause {\tt pstex}
+to include a conditional in flagged {\tt .tps}
+files so that large time consuming figures
+could be omitted from the printing process on draft printings.
+
+An advantage of having the width and height be arbitrary
+\TeX\ length specifications is that they may contain
+{\em glue}, or stretchable dimensions,
+allowing \TeX\ to vary the lengths to fit optimally
+into the page layout.
+An additional type of option which might be implemented in {\tt pstex}
+could allow a degree of stretch to be added to the natural
+size of the figure.
+
+\subsection{Examples}
+
+Figure \ref{fig:flow} shows the complete process
+of typesetting a document starting from
+\LaTeX\ source text and PostScript source figures,
+producing a final printed output.
+Heavy lines show the major iteration which is repeated
+as the document is modified and refined.
+This figure was created using FrameMaker,
+and included with the command
+\verb|\psbox[width=0.95\textwidth]{pstex-figs/flow}|.
+
+Figure \ref{fig:screen} is a portion of a screendump from a Sun
+showing the same process,
+included with the command \verb|\psbox[scale=3]{pstex-figs/screen}|,
+making each pixel of the display screen appear
+as a block of $3 \times 3$ pixels on
+the final output.
+
+\begin{table*}[p]
+  \begin{center}
+    \begin{tabular}{lp{3.5in}}
+      \hline
+      \\
+      \multicolumn{2}{c}{\Large\bf Quick Reference Chart} \\
+      \\
+      \hline
+      \\
+      \verb|\postscriptbox{1.2in}{2in}{file}| &
+	 Incorporates figure {\tt file.ps} into the document as a box
+	(character-like object) with size 1.2 inches $\times$ 2 inches. \\
+      \\
+      \verb|\psbox{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	with its natural or design size. \\
+      \\
+      \verb|\psbox[scale=0.7]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	with its natural or design size scaled by 0.7. \\
+      \\
+      \verb|\psbox[scale=2]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	with its natural or design size scaled by 2;
+	integer scale factors are useful for bitmaps which don't scale
+	well with factional scales. \\
+      \\
+      \verb|\psbox[width=3cm]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	with width 3cm, and height in accordance
+	with its aspect ratio. \\
+      \\
+      \verb|\psbox[width=\columnwidth]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	stretched as wide as the column,
+	and with its natural aspect ratio;
+	useful for single column figures. \\
+      \\
+      \verb|\psbox[width=\textwidth]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	stretched as wide as the page,
+	and with its natural aspect ratio;
+	useful for double column figures. \\
+      \\
+      \verb|\psbox[width=\textwidth,scale=.9]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	stretched as wide as the page, and then scaled by 0.9. \\
+      \\
+      \verb|\psbox[height=\textheight]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	stretched as high as the page, with its natural aspect
+	ratio.  Useful for tall thin figures. \\
+      \\
+      \verb|\psbox[width=\textwidth,aspect=1.0]{file}| &
+	Incorporates figure {file.ps} into the document as a box
+	stretched as wide as the page, with unity aspect ratio. \\
+      \\
+      \hline
+      \\
+	\verb|\begin{figure}| \\
+        \verb|  \begin{center}| \\
+        \verb|    \psbox{file}| \\
+        \verb|    \caption{Title of figure}|
+	  & Macros for a floating centered figure. \\
+        \verb|    \label{fig:file}| \\
+        \verb|  \end{center}| \\
+        \verb|\end{figure}| \\
+      \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{table*}
+
+\section{Conclusions}
+
+I have described a system for merging PostScript figures into
+documents prepared under \LaTeX\ and \TeX.
+The author has a great deal of flexibility in
+specifying how the figures are to be sized,
+and in particular can specify that a figure be included
+at its natural or design size, or some scale multiple thereof.
+The figure always fits the space left in the flow of text,
+without any need for the user to copy sizes from
+the program used to generate the figure into the document source text,
+and changes to the figure which alter its size
+are reflected in the document automatically when it is next typeset.
+
+These facilities are in use at SPAR,
+and are available immediately for distribution to other Schlumberger sites.
+Also available are some programs for converting digitised photographs,
+screendumps, and other images into EPS style PostScript programs
+with suitable bounding box comments.
+
+\begin{thebibliography}{xx}
+
+\bibitem[Adobe Systems Inc., 1985]{Adobe:postscript}
+Adobe Systems Inc.
+{\it PostScript Language Reference Manual}.
+Addison Wesley, 1985.
+
+\bibitem[Knuth, 1979]{Knuth:tex-metafont}
+Donald~E.~Knuth.
+{\it \TeX\ and METAFONT}.
+Digital Press, 1979.
+
+\bibitem[Knuth, 1984]{Knuth:texbook}
+Donald~E.~Knuth.
+{\it The \TeX\ book}.
+American Mathematical Society, 1984.
+
+\bibitem[Lamport, 1986]{Lamport:latex}
+Leslie~Lamport.
+{\it \LaTeX: A Document Preparation System}.
+Addison Wesley, 1986.
+
+\end{thebibliography}
+
+\end{document}

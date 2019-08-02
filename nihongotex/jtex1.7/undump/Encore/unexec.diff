@@ -1,0 +1,91 @@
+*** unexec.c-dist	Tue Sep 29 15:20:15 1987
+--- unexec.c	Tue Sep 29 17:50:03 1987
+***************
+*** 428,433
+    register int scns;
+  #endif /* COFF */
+    unsigned int bss_end;
+  
+    pagemask = getpagesize () - 1;
+  
+
+--- 428,436 -----
+    register int scns;
+  #endif /* COFF */
+    unsigned int bss_end;
++ #ifdef UMAX
++   extern etext;
++ #endif
+  
+    pagemask = getpagesize () - 1;
+  
+***************
+*** 435,440
+  #ifdef NO_REMAP
+    data_start = (int) start_of_data ();
+  #else /* not NO_REMAP */
+    if (!data_start)
+      data_start = (int) start_of_data ();
+  #endif /* not NO_REMAP */
+
+--- 438,444 -----
+  #ifdef NO_REMAP
+    data_start = (int) start_of_data ();
+  #else /* not NO_REMAP */
++ #ifndef UMAX
+    if (!data_start)
+  #endif
+      data_start = (int) start_of_data ();
+***************
+*** 436,441
+    data_start = (int) start_of_data ();
+  #else /* not NO_REMAP */
+    if (!data_start)
+      data_start = (int) start_of_data ();
+  #endif /* not NO_REMAP */
+    data_start = ADDR_CORRECT (data_start);
+
+--- 440,446 -----
+  #else /* not NO_REMAP */
+  #ifndef UMAX
+    if (!data_start)
++ #endif
+      data_start = (int) start_of_data ();
+  #endif /* not NO_REMAP */
+    data_start = ADDR_CORRECT (data_start);
+***************
+*** 526,531
+  #endif
+  #ifndef NO_REMAP
+    f_ohdr.text_start = (long) start_of_text ();
+    f_ohdr.tsize = data_start - f_ohdr.text_start;
+    f_ohdr.data_start = data_start;
+  #endif /* NO_REMAP */
+
+--- 531,539 -----
+  #endif
+  #ifndef NO_REMAP
+    f_ohdr.text_start = (long) start_of_text ();
++ #ifdef UMAX
++   f_ohdr.tsize = (long) &etext;
++ #else
+    f_ohdr.tsize = data_start - f_ohdr.text_start;
+  #endif
+    f_ohdr.data_start = data_start;
+***************
+*** 527,532
+  #ifndef NO_REMAP
+    f_ohdr.text_start = (long) start_of_text ();
+    f_ohdr.tsize = data_start - f_ohdr.text_start;
+    f_ohdr.data_start = data_start;
+  #endif /* NO_REMAP */
+    f_ohdr.dsize = bss_start - f_ohdr.data_start;
+
+--- 535,541 -----
+    f_ohdr.tsize = (long) &etext;
+  #else
+    f_ohdr.tsize = data_start - f_ohdr.text_start;
++ #endif
+    f_ohdr.data_start = data_start;
+  #endif /* NO_REMAP */
+    f_ohdr.dsize = bss_start - f_ohdr.data_start;

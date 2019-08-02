@@ -1,0 +1,102 @@
+
+  -------------------「この版の内容」------------------------
+
+この版は、元阪大（現日立製作所）の川口さんが作った SONY NEWS 用
+ASCII版JTeX の previewer/printer_driver である、jxdvi/dvi2nwp で、
+大日本漢字Font (400 dpi ASCII版用)が使えるようにしたものです。
+
+尚、以前付け加えた landscape mode, B4 mode と、SONY CSL の河野さん
+の PicTeX の patch を含んでいます。
+
+ASCII版JTeX の前配布テープ ( TeX 2.95 j 1.3 ) で言えば、
+jtex/ASCII-JTeX/drivers/dvi2nwp.ls の Super Set です。
+ですので、SONY [基本｜拡張] font は、このままで使うことが出来ます。
+
+まず、最初に川口さんがお書きになって、河野さんが加筆なさった README.jis
+を先にお読みください。
+
+  -------------------「Configration」---------------------------
+
+config.h の中に #define DNF を定義すると、最初に大日本Fontを捜します。
+NWF_605 が同時に define されていれば、min20, あるいは min10 magstep7
+を超える font は（つまり大日本FONTに見つからなかったものは）、SONY の
+拡張 Font Bitmap から捜し、それでも見つからないと、拡張Font Set ( Vector
+font ) から動的に展開します。
+
+私がしたのは、大日本版を先に捜して、jxdvi/dvi2nwp 型の font管理struct に
+擦り合わせた部分だけで、動的展開は川口さんの元々の仕事です。
+
+config.h の他の記述と同様に、
+#define DNF
+#define	DNF_FONT_DIR	"/usr/lib/tex/fonts"
+
+を指定すれば大日本Font版が生成できます。
+
+DNF_FONT_DIR に大日本FONT Set を置いてください。
+もちろん、symbolic link で構いません。拡張子は pxl です。
+( min10.2000pxl 等など) こんな感じです。
+
+lrwxrwxrwx  1 root  44 Jan 22 15:31 min10.2000pxl ->
+			/usr/lib/font/dnfont/=400/min10.2000pxl
+
+大日本版Font だけを使うなら min10.nwfadj 等の adjust file は必要
+ありません。漢字Font から文字ごとに offset の価を読んでいます。
+SONY 基本｜拡張 Font Set を共用する場合は adjust file が必要です。
+
+DNF を #define しなければ、SONY 基本｜拡張 font だけを使う版を生成します。
+
+（蛇足） 私は Previewer は拡張 Font 版を使っています。大日本 Font は
+Previewer 用にはちょっと細いようですね。
+
+
+  --------------------「おまけ」---------------------------
+
+jx11dvi/jxdvi には -page の option が付けられています。
+jx11dvi -page page_# dvi_file で、任意の page から preview できます。
+当然前へ戻ることもできます。
+
+jxdvi のオプション -l は list font から landscale mode に変更しました。
+-list で list font になります。 
+
+以前までの版は 200 pt を超える文字を出力しようとすると core dump しまし
+たが、今回の版では足りなければ malloc() するように変えました。
+
+dvi2nwp.man が付いています。これは、いわき明星大学の榊原進さんが書いた
+ものです。
+
+  ----------------「 Copy Right の扱い」----------------------
+
+Copy Right に関しては、ORIGINAL 作者の川口さんに従います。
+私が書いた部分については、どのような使用、変更、配布もご自由です。
+
+大日本FONT の bitmap への展開は、ASCII JTeX TeX 2.95, J 1.3 の配布
+テープに含まれていた drivers/IMAGEN/fontglyph.c, jxl4.c の関数を改造
+して用いました。
+  この部分の Copy Right について dit Co. に問い合わせましたら、dit Co.
+の方から e-mail を頂いて、ASCII と協議の上 dit, ASCII の Copy Right
+宣言が残っていれば、配布して構わないと言うご返事を頂きました。
+
+ASCII Co.、dit Co., Ltd. の Copy Right Notice は、read_dnf.c の
+冒頭に記述されてています。再配布なさる時は、このことを守って下さい。
+
+
+  ---------「大日本漢字 font の previewer での使用について」----
+
+大日本Font の使用契約によりますと、プリンター１台ごとの契約になって
+います。この版を用いますと、previewer についても、大日本 font 版が生成
+されます。
+
+大日本印刷の CTS DIVISION ( Computerized Total Information System )へ
+電話で問い合わせたところ、
+
+  ”契約書には Previewer について何も明記されていないが、画面上に表示さ
+    れるだけですから構わないでしょう。”
+
+と言う返事を頂きました。
+文書の形で返事を貰った訳ではありませんが、junet に投稿することを含めて
+相談しましたので、ご利用になることに問題はないと思います。
+
+
+	鈴木摂＠応用材料研究所
+	setsu@aml.co.jp
+

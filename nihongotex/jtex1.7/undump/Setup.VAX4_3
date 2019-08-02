@@ -1,0 +1,4 @@
+#!/bin/sh
+# setup the ./undump area for Vax running BSD 4.3
+cp Makefile.VAX4_3 Makefile
+cp undump.VAX4_3.c undump.c
