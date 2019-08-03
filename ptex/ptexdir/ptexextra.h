@@ -42,11 +42,11 @@ const_string PTEXHELP[] = {
   NULL
 };
 
-#define BANNER "This is pTeX, Version 3.141592-p3.1.10"
+#define BANNER "This is pTeX, Version 3.141592-p3.1.11"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP PTEXHELP
-#define BUG_ADDRESS "www-ptex@ascii.co.jp"
+#define BUG_ADDRESS "ptex-staff@ml.asciimw.jp"
 #define DUMP_VAR TEXformatdefault
 #define DUMP_LENGTH_VAR formatdefaultlength
 #define DUMP_OPTION "fmt"

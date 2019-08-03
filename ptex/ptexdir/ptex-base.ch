@@ -1,6 +1,5 @@
-% This is a change file for pTeX 3.1.10
-% By Sadayuki Tanaka (sada-t@ascii.co.jp), Ken Nakano (ken-na@ascii.co.jp)
-% and ASCII Corporation.
+% This is a change file for pTeX 3.1.11
+% By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
 %    Ryoichi Kurasawa (us009185@interramp.com),
@@ -42,13 +41,14 @@
 % (12/13/2004) KN  pTeX p3.1.8
 % (10/17/2005) ST  pTeX p3.1.9
 % (07/18/2006) ST  pTeX p3.1.10
+% (08/17/2009) ST  pTeX p3.1.11
 %
 @x [1.2] l.195 - pTeX:
 @d TeX_banner_k=='This is TeXk, Version 3.141592' {printed when \TeX\ starts}
 @d TeX_banner=='This is TeX, Version 3.141592' {printed when \TeX\ starts}
 @y
-@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.10' {printed when p\TeX\ starts}
-@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.10' {printed when p\TeX\ starts}
+@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.11' {printed when p\TeX\ starts}
+@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.11' {printed when p\TeX\ starts}
 @z
 
 @x [2.??] l.586 - pTeX:
@@ -3847,7 +3847,7 @@ label restart,exit;
 var a:integer; {address of lig/kern instruction}
 @!gp,@!gq,@!p,@!r:pointer; {temporary registers for list manipulation}
 @!rr:halfword;
-begin r:=min_halfword; restart:@t@>@;@/
+begin restart:@t@>@;@/
 if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
 ((math_type(nucleus(q))=math_char)or(math_type(nucleus(q))=math_jchar)) then
   begin p:=link(q);
@@ -3887,7 +3887,7 @@ if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
          if op_byte(cur_i)<kern_flag then
            begin gp:=font_glue[cur_f]; rr:=rem_byte(cur_i);
            if gp<>null then begin
-             while((type(gp)<>r)and(link(gp)<>null)) do begin gp:=link(gp);
+             while((type(gp)<>rr)and(link(gp)<>null)) do begin gp:=link(gp);
                end;
              gq:=glue_ptr(gp);
              end
@@ -3895,7 +3895,7 @@ if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
              font_glue[cur_f]:=gp; gq:=null;
              end;
            if gq=null then
-             begin type(gp):=r; gq:=new_spec(zero_glue); glue_ptr(gp):=gq;
+             begin type(gp):=rr; gq:=new_spec(zero_glue); glue_ptr(gp):=gq;
              a:=exten_base[cur_f]+qi((qo(rr))*3); width(gq):=font_info[a].sc;
              stretch(gq):=font_info[a+1].sc; shrink(gq):=font_info[a+2].sc;
              add_glue_ref(gq); link(gp):=get_node(small_node_size);
@@ -5757,7 +5757,8 @@ tail_append(new_math(math_surround,after));
 space_factor:=1000; unsave;
 end
 @y
-begin if direction=dir_tate then disp:=axis_height(text_size) else disp:=0;
+begin if direction=dir_tate then disp:=t_baseline_shift
+      else disp:=y_baseline_shift;
 @<Append |disp_node| at begin of displace area@>;
 tail_append(new_math(math_surround,before));
 cur_mlist:=p; cur_style:=text_style; mlist_penalties:=(mode>0); mlist_to_hlist;

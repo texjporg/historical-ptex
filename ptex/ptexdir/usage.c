@@ -18,7 +18,7 @@ void
 usagehelp P2C(const_string*, message, const_string, bug_email)
 {
   if (!bug_email)
-    bug_email = "www-ptex@ascii.co.jp";
+    bug_email = "ptex-staff@ml.asciimw.jp";
   while (*message) {
     fprintf(stdout, "%s\n", *message);
     ++message;
