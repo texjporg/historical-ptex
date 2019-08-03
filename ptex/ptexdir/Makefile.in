@@ -79,7 +79,7 @@ texini.o: texini.c texcoerce.h texd.h kanji.h maintain.h
 tex0.o: tex0.c texcoerce.h texd.h kanji.h maintain.h
 tex1.o: tex1.c texcoerce.h texd.h kanji.h maintain.h
 tex2.o: tex2.c texcoerce.h texd.h kanji.h maintain.h
-ptexextra.o: ptexextra.c texcoerce.h texd.h kanji.h maintain.h
+ptexextra.o: ptexextra.c texcoerce.h texd.h kanji.h maintain.h ptexhelp.h
 
 $(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_aux) $(web2c_programs)
 	$(web2c) ptex
@@ -90,11 +90,11 @@ ptex.web: $(srcdir)/tex.web $(srcdir)/tex.ch
 	$(srcdir)/tie -m ptex.web $(srcdir)/tex.web $(srcdir)/tex.ch
 
 srcsp=$(srcdir)/tex-src-special.ch $(srcdir)/tex-c-style.ch
-ptex.ch: $(srcdir)/tie ptex.web ptex219.ch
+ptex.ch: $(srcdir)/tie ptex.web ptex-base.ch
 	if [ -f $(srcdir)/tex-src-special.ch ]; then \
-		$(srcdir)/tie -c ptex.ch ptex.web ptex219.ch $(srcsp) ;\
+		$(srcdir)/tie -c ptex.ch ptex.web ptex-base.ch $(srcsp) ;\
 	else \
-		$(srcdir)/tie -c ptex.ch ptex.web ptex219.ch ;\
+		$(srcdir)/tie -c ptex.ch ptex.web ptex-base.ch ;\
 	fi
 
 ptexextra.c:
@@ -107,7 +107,7 @@ ptexextra.c:
 ### TFtoPL
 tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) tftopl.o $(plib_o) $(LOADLIBES)
-tftopl.o: tftopl.c kanji.h maintain.h
+tftopl.o: tftopl.c kanji.h maintain.h ptexhelp.h
 tftopl.c: tftopl.p $(web2c_aux)
 tftopl.p: tftopl.web tftopl.ch
 tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
@@ -117,7 +117,7 @@ tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
 ### PLtoTF
 pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) pltotf.o $(plib_o) $(LOADLIBES)
-pltotf.o: pltotf.c kanji.h maintain.h
+pltotf.o: pltotf.c kanji.h maintain.h ptexhelp.h
 pltotf.c: pltotf.p $(web2c_aux)
 pltotf.p: pltotf.web pltotf.ch
 pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
@@ -127,7 +127,7 @@ pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
 ### pDVItype
 pdvitype: pdvitype.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) pdvitype.o $(plib_o) $(LOADLIBES)
-pdvitype.o: pdvitype.c kanji.h maintain.h
+pdvitype.o: pdvitype.c kanji.h maintain.h ptexhelp.h
 	$(compile) -DDVITYPE -DHEX_CHAR_CODE $<
 pdvitype.c: pdvitype.p $(web2c_aux)
 pdvitype.p: pdvitype.web pdvitype.ch
@@ -137,7 +137,7 @@ pdvitype.web:
 ### jBibTeX
 jbibtex: jbibtex.o jbibextra.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) jbibtex.o jbibextra.o $(plib_o) $(LOADLIBES)
-jbibtex.o: jbibtex.c kanji.h maintain.h jbibextra.h
+jbibtex.o: jbibtex.c jbibextra.h kanji.h maintain.h ptexhelp.h
 	$(compile) -DBIBTEX $<
 jbibtex.c jbibd.h: jbibtex.p $(web2c_aux) jbibd.sed
 jbibtex.p: jbibtex.web jbibtex.ch
@@ -319,7 +319,8 @@ clean:: mostryclean
 	rm -f jbibtex.c jbibtex.o jbibextra.o
 distclean:: clean
 	rm -fr failure
-	rm -f ptex.web ptex.ch ptex.p ptex.pool
+	rm -f ptex.web ptex.ch ptex.p ptex.pool ptex.log ptex.fmt
+	rm -f platex.log platex.fmt texsys.aux
 	rm -f tftopl.web tftopl.p
 	rm -f pltotf.web pltotf.p
 	rm -f pdvitype.web pdvitype.p
@@ -334,11 +335,6 @@ extraclean:: distclean
 	rm -f trip.* tripin.* tripos.tex 8terminal.tex
 	rm -f trap.* mftrap.* mftrapin.* mptrap.* mptrapin.*
 	rm -f trapf.* mtrap.* writeo* missfont.log
-
-ptex-src-2.1.9.tar.gz:: Files
-	sed -e 's!^!ptex-src-2.1.9/!' Files > /tmp/pfile
-	(cd .. ; tar zcvf ptex-src-2.1.9.tar.gz -T /tmp/pfile) && rm -f /tmp/pfile
-	mv ../ptex-src-2.1.9.tar.gz .
 
 # Makefile.
 Makefile: configure $(srcdir)/config.status $(thisdir)/Makefile.in

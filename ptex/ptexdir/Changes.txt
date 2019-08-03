@@ -1,3 +1,25 @@
+2001/02/13:
+	version.c: typo (l.89, build -> build)
+	ptexhelp.h: typo (l.56, versobe -> verbose)
+	Changes.txt: typo (20001/02/09 -> 2001/02/09)
+
+2001/02/09:
+	REAMDE.txt: rewrite for 2.1.10
+	version.c: rewrite the copyright message.  enable usage() function.
+	ptexhelp.h: newfile
+	help.h: removed
+	kanji.h.in: include "ptexhelp.h"
+	ptexextra-plain.c: rename TEXHELP to PTEXHELP.
+	ptexextra-src-special.c rename TEXHELP to PTEXHELP.
+	Makefile.in: depend on ptexhelp.h
+
+2000/11/13: (p2.1.10)
+2000/11/10:
+	ptex.ch: can't load JFM which the number of char_type less than
+			the glue types.
+	pltotf.ch: can't convert property list which has fullwidth space
+			'0x2121(JIS)' in charsintype.
+
 2000/08/17
 	mkconf: modify path separator to semicolon(;)
 

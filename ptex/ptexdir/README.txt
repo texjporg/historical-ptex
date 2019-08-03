@@ -1,21 +1,18 @@
 ===========================================================================
-                   日本語 TeX バージョン 3.14159, p2.1.9
-
-                 Copyright (C) 1998,2000 ASCII Corporation
+日本語 TeX バージョン 3.14159, p2.1.10
 ===========================================================================
-※ インストール作業をする前に、旧バージョンの TeX システムのバックアップを
-   取ってください。
-
-※ pTeX をインストールする前に、teTeX システムを構築しておいてください。
+※ 必要ならば、インストール作業をする前に、
+   旧バージョンの TeX システムのバックアップをしてください。
 
 ---------------------------------------------------------------------------
 ● ソースファイル
 ---------------------------------------------------------------------------
 pTeX のインストールには、つぎのファイルが必要です。
 
- * ptex-src-2.1.9-1.tar.gz    (pTeX ソースファイル)
- * ptex-texmf-1.5.tar.gz      (pTeX ライブラリファイル)
+ * ptex-src-2.1.10.tar.gz     (pTeX ソースファイル)
+ * ptex-texmf-1.8.tar.gz      (pTeX ライブラリファイル)
  * teTeX-src-1.0.7.tar.gz     (teTeX ソースファイル)
+ * teTeX-texmf-1.0.2.tar.gz   (teTeX ライブラリファイル)
 
 これらは、以下のサイトなどから入手可能です。
 
@@ -47,41 +44,41 @@ pTeX のインストールには、つぎのファイルが必要です。
 ---------------------------------------------------------------------------
 ● インストール
 ---------------------------------------------------------------------------
-1. ptex-texmf-1.5.tar.gz ファイルを展開します。展開先は teTeX ライブラリの
-   場所です。
+1. teTeX のライブラリファイルを展開します。
 
-      tar zxvf ptex-texmf-1.5.tar.gz -C /usr/local/teTeX/share/texmf
+     mkdir -p /usr/local/teTeX/share/texmf
+     tar zxf teTeX-texmf-1.0.2.tar.gz -C /usr/local/teTeX/share/texmf
 
-2. ls-R ファイルを更新します。
+2. ptex のライブラリファイルを展開します。
 
-      mktexlsr /usr/local/teTeX/share/texmf
+     tar zxf ptex-texmf-1.8.tar.gz -C /usr/local/teTeX/share/texmf
 
-3. teTeX ソースファイルを展開します。
+3. teTeX のソースファイルを展開します。
 
-      tar zxvf teTeX-src-1.0.7.tar.gz -C /usr/src
+     tar zxf teTeX-src-1.0.7.tar.gz -C /usr/src
 
-4. teTeX-1.0 ディレクトリに移動し、configure コマンドを実行します。
-   prefix オプションで teTeX がインストールされているディレクトリを
-   指定してください。
+4. ptex のソースファイルを展開します。
 
-      cd /usr/src/teTeX-1.0
-      ./configure --prefix=/usr/local/teTeX
+     tar zxvf ptex-src-2.1.9-1.tar.gz -C /usr/src/teTeX-1.0/texk/web2c
 
-5. ptex-src-2.1.9-1.tar.gz ファイルを展開します。
+5. ソースファイルを展開したディレクトリに移動し、configure コマンドを
+   実行します。prefix オプションには、teTeX ライブラリをインストール
+   したディレクトリを指定します。
 
-      tar zxvf ptex-src-2.1.9-1.tar.gz -C /usr/src/teTeX-1.0/texk/web2c
+     cd /usr/src/teTeX-1.0
+     ./configure --prefix=/usr/local/teTeX
+	 make
+	 make install
 
-6. ptex-2.1.9 ディレクトリに移動し、configure コマンドを実行します。
+6. ptex のソースディレクトリに移動し、configure コマンドを実行します。
    このとき、端末に出力する漢字コードを指定してください。
 
-      cd /usr/src/teTeX-1.0/texk/web2c/ptex-2.1.9
-      ./configure EUC     (EUCコードの場合)
-      ./configure JIS     (JISコードの場合)
-      ./configure SJIS    (シフトJISコードの場合)
-
-7. make を実行します。
-
-8. make install を実行します。
+     cd /usr/src/teTeX-1.0/texk/web2c/ptex-2.1.10
+     ./configure EUC     (EUCコードの場合)
+     ./configure JIS     (JISコードの場合)
+     ./configure SJIS    (シフトJISコードの場合)
+	 make
+	 make install
 
 ---------------------------------------------------------------------------
 自動生成される ascgrp, ascii10, ascii36 の pk ファイルを
@@ -97,11 +94,11 @@ $TEXMF/fontname/special.map につぎの二行を加えます。
 pTeX についてのお問い合わせは、電子メールで www-ptex@ascii.co.jp 宛て
 にお願いします。
 
-pTeX のホームページ（http://www.ascii.co.jp/pb/ptex）では、バグ情報や
+pTeX の WEB ページ（http://www.ascii.co.jp/pb/ptex/）では、バグ情報や
 インストールのヒント、pTeX で追加されたプリミティブ一覧などを掲載して
 います。こちらもご覧ください。
 
 -------------------------------------
 中野 賢 (ken-na@ascii.co.jp)
-株式会社 アスキー テクニカルセンター
+株式会社 アスキー 出版技術部
 =============================================================== EOT =====

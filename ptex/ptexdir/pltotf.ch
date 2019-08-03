@@ -1,5 +1,6 @@
 % This is a change file for TFtoPL
 %
+% (11/13/2000) KN PLtoTF p1.4 (3.5, Web2c 7.2)
 % (03/27/1998) KN PLtoTF p1.3 (3.5, Web2c 7.2)
 %
 @x [0] l.52 - pTeX:
@@ -11,7 +12,7 @@
 @x [2] l.69 - pTeX:
 @d banner=='This is PLtoTF, Version 3.5' {printed when the program starts}
 @y
-@d banner=='This is Nihongo PLtoTF, Version p1.3, based on PLtoTF, Version 3.5'
+@d banner=='This is Nihongo PLtoTF, Version p1.4, based on PLtoTF, Version 3.5'
   {printed when the program starts}
 @z
 
@@ -604,7 +605,7 @@ end
 
 @<Output the kanji character type info@>=
 begin out_size(0); out_size(0); { the default }
-for kanji_type_index:=1 to max_kanji do
+for kanji_type_index:=0 to max_kanji do
   begin if kanji_type[kanji_type_index]>0 then
     begin out_size(index_to_jis(kanji_type_index));
     out_size(kanji_type[kanji_type_index]);

@@ -17,8 +17,9 @@ mkconf
 pconvert
 pdvitype.ch
 pltotf.ch
-ptex219.ch
-ptexextra-src-special.c
+ptex-base.ch
 ptexextra-plain.c
+ptexextra-src-special.c
+ptexhelp.h
 tftopl.ch
 version.c

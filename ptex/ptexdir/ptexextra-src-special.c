@@ -48,13 +48,13 @@ extern struct tm *localtime ();
 #ifdef KANJI
 const string local_maintainer="Ken Nakano";
 const_string this_bug_address="www-ptex@ascii.co.jp";
-#define BANNER "This is pTeX, Version p2.1.9, based on TeX, Version 3.14159"
+#define BANNER "This is pTeX, Version p2.1.10, based on TeX, Version 3.14159"
 #else /* KANJI */
 #define BANNER "This is TeX, Version 3.14159"
 #endif /* KANJI */
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
-#define PROGRAM_HELP TEXHELP
+#define PROGRAM_HELP PTEXHELP
 #define DUMP_VAR TEXformatdefault
 #define DUMP_LENGTH_VAR formatdefaultlength
 #define DUMP_OPTION "fmt"

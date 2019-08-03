@@ -2,12 +2,11 @@
 #include "kanji.h"
 
 /*** lib/usage.c:  Output a help message (from help.h). ***/
-#if 0
 void
 usage P2C(int, status,  const_string, str)
 {
-  extern string this_bug_address;  /* from maintain.h */
   if (status == 0) {
+    extern KPSEDLL char *this_bug_address;  /* from maintain.h */
     fputs (str, stdout);
     putchar ('\n');
     printf("Email bug reports to %s.\n", this_bug_address);
@@ -16,7 +15,6 @@ usage P2C(int, status,  const_string, str)
   }
   uexit (status);
 }
-#endif
 
 /*** lib/printversion.c:  Output for the option --version. ***/
 void
@@ -85,15 +83,13 @@ printversionandexit P3C(const_string, banner,
   }
 
   puts ("There is NO warranty.  You may redistribute this software");
-  fputs ("under the terms of the GNU General Public License", stdout);
-  /* DVIcopy is GPL'd, so no additional words needed. */
-  if (copyright_holder && !STREQ (based_prog_name, "DVIcopy")) {
-    printf ("\nand the %s copyright", prog_name);
-  }
-  puts (".");
-  puts ("For more information about these matters, see the files");
-  printf ("named COPYING and the %s source.\n", prog_name);
-  printf ("Nihongo l10n maintainer: %s.\n", local_maintainer);
+  puts ("under the terms of the pTeX copyright.  For more information");
+  puts ("about these matters, see the file named COPYING of pTeX.");
+  putchar ('\n');
+  printf ("Note: %s is built using Web2C, and Web2C is licensed\n", prog_name);
+  puts ("under the GNU General Public Licence.  For more information,");
+  puts ("see the file named COPYING of Web2C");
+  putchar ('\n');
 
   uexit (0);
 }

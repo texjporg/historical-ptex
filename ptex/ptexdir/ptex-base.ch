@@ -32,11 +32,12 @@
 % (03/19/98) KN  pTeX p2.1.7
 % (03/26/98) KN  pTeX p2.1.8 (Web2c 7.2)
 % (02/21/2000) KN  pTeX p2.1.9 (Web2c 7.3.1)
+% (11/13/2000) KN  pTeX p2.1.10
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.9, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p2.1.10, based on TeX, Version 3.14159'
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -2260,6 +2261,33 @@ for k:=char_base[f]+bc to width_base[f]-1 do
 @y
 @d current_character_being_worked_on==k-char_base[f]
 @z
+
+@x [30.573] l.11129 - pTeX: jfm
+    if a>128 then
+      begin if 256*c+d>=nl then abort;
+      if a=255 then if k=lig_kern_base[f] then bchar:=b;
+      end
+    else begin if b<>bchar then check_existence(b);
+      if c<128 then check_existence(d) {check ligature}
+      else if 256*(c-128)+d>=nk then abort; {check kern}
+      if a<128 then if k-lig_kern_base[f]+a+1>=nl then abort;
+      end;
+    end;
+@y
+    if a>128 then
+      begin if 256*c+d>=nl then abort;
+      if a=255 then if k=lig_kern_base[f] then bchar:=b;
+      end
+    else begin if b<>bchar then check_existence(b);
+      if c<128 then begin
+          if jfm_flag<>dir_default then begin if d>=ne then abort; end
+        else check_existence(d); {check ligature}
+      end else if 256*(c-128)+d>=nk then abort; {check kern}
+      if a<128 then if k-lig_kern_base[f]+a+1>=nl then abort;
+      end;
+    end;
+@z
+
 
 @x [30.574] l.11141 - pTeX: read jfm exten
 for k:=exten_base[f] to param_base[f]-1 do
