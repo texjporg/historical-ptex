@@ -1,5 +1,5 @@
 #ifdef JPN
-% This is a change file for pTeX 2.1.5.
+% This is a change file for pTeX 2.1.7.
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -28,6 +28,7 @@
 % (11/21/95) KN  pTeX p2.1.4
 % (08/27/97) KN  pTeX p2.1.5 (based on 3.14159)
 % (02/26/98) KN  pTeX p2.1.6
+% (03/19/98) KN  pTeX p2.1.7
 %
 #endif JPN
 % tex.ch for C compilation with web2c, derived from various other change files.
@@ -100,7 +101,7 @@ a modified \TeX{} version.
 @x [2] l.187 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.6, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p2.1.7, based on TeX, Version 3.14159'
 #endif JPN
 @z
 
@@ -4321,9 +4322,9 @@ continue:
     p:=link(p);
     @!ifdef('EUCPTEX') jc:=EUCtoJIS(KANJI(info(p))); endif('EUCPTEX');@/
     @!ifdef('SJISPTEX') jc:=SJIStoJIS(KANJI(info(p))); endif('SJISPTEX');@/
-    dvi_out(set2); dvi_out(Hi(jc)); dvi_out(Lo(jc))
+    dvi_out(set2); dvi_out(Hi(jc)); dvi_out(Lo(jc));
+    cur_h:=cur_h+char_width(f)(orig_char_info(f)(c)); {not |jc|}
     end;
-  cur_h:=cur_h+char_width(f)(orig_char_info(f)(c));
   dvi_h:=cur_h; p:=link(p);
   until not is_char_node(p);
   chain:=false;

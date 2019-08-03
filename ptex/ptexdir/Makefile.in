@@ -83,9 +83,9 @@ $(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_texmf)
 
 ptex.p: ptex.web ptex.ch
 
-ptex.ch: ptex.chg.2.1.5
+ptex.ch: ptex.chg.2.1.7
 	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
-			/^#ifdef JPN/d; /^#endif JPN/d;" ptex.chg.2.1.5 > $@
+			/^#ifdef JPN/d; /^#endif JPN/d;" ptex.chg.2.1.7 > $@
 
 ptex.web:
 	$(LN) ../tex.web ptex.web

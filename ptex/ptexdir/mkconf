@@ -46,6 +46,7 @@ TEXINPUTS.ptex = $ptex_inputs\
 TEXINPUTS.iniptex = $ptex_inputs
 /^% BibTeX bibliographies and style files./ a\
 BIBINPUTS.jbibtex = .:$TEXMF/jbibtex/bib//:$TEXMF/bibtex/bib//\
-BSTINPUTS.jbibtex = .:$TEXMF/jbibtex/bst//:$TEXMF/bibtex/bst//' > ${cnffile}
+BSTINPUTS.jbibtex = .:$TEXMF/jbibtex/bst//:$TEXMF/bibtex/bst//\
+' > ${cnffile}
 
 ### EOT ###
