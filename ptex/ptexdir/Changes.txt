@@ -1,3 +1,24 @@
+2002/01/15:
+	ptex-base.ch: fix hyphenation.
+
+2001/10/03: (p3.0)
+    README.txt: rewrite
+    INSTALL.txt: rewrite
+    ptex-base.ch: version 3.0
+	ptexextra-plain.c: removed local_maintainer and this_bug_address
+	ptexextra-src-special.c: removed local_maintainer and this_bug_address
+	jbibextra.c: removed local_maintainer and this_bug_address
+	maintain.h: removed local_maintainer and this_bug_address
+	version.c: modified message
+
+2001/07/26:
+	Change Licence to modified BSD license
+	COPYRIGHT: new file
+	COPYRIGHT.jis: new file
+	INSTALL.txt: new file
+	README.txt: cut short and move to INSTALL.txt
+	version.c: change licence filename (l.87,91, COPYING -> COPYRIGHT)
+
 2001/02/13:
 	version.c: typo (l.89, build -> build)
 	ptexhelp.h: typo (l.56, versobe -> verbose)

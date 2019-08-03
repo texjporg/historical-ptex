@@ -50,8 +50,6 @@
    const_string based_prog_name="BibTeX";
    const_string based_prog_version="0.99c";
    */
-const_string local_maintainer="Kazunori Asayama";
-const_string this_bug_address="www-ptex@ascii.co.jp";
 
 #ifdef OUTJIS
 #  define DEFAULT_FILE_CODE  6     /* JIS */

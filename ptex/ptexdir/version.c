@@ -6,10 +6,9 @@ void
 usage P2C(int, status,  const_string, str)
 {
   if (status == 0) {
-    extern KPSEDLL char *this_bug_address;  /* from maintain.h */
     fputs (str, stdout);
     putchar ('\n');
-    printf("Email bug reports to %s.\n", this_bug_address);
+    puts("Email bug reports to www-ptex@ascii.co.jp");
   } else {
     fprintf (stderr, "Try `%s --help' for more information.\n", str);
   }
@@ -21,7 +20,6 @@ void
 printversionandexit P3C(const_string, banner,
                         const_string, copyright_holder,  const_string, author)
 {
-  extern const_string local_maintainer;   /* from maintain.h */
   extern string versionstring;  /* from web2c/lib/version.c */
   extern KPSEDLL string kpathsea_version_string;/* from kpathsea/version.c */
   string prog_name, prog_version;
@@ -77,19 +75,24 @@ printversionandexit P3C(const_string, banner,
   puts (kpathsea_version_string);
 
   if (copyright_holder) {
-    printf ("Copyright (C) 1997 %s.\n", copyright_holder);
+    printf ("Copyright (C) 1999 %s.\n", copyright_holder);
     if (!author)
       author = copyright_holder;
   }
 
-  puts ("There is NO warranty.  You may redistribute this software");
-  puts ("under the terms of the pTeX copyright.  For more information");
-  puts ("about these matters, see the file named COPYING of pTeX.");
-  putchar ('\n');
-  printf ("Note: %s is built using Web2C, and Web2C is licensed\n", prog_name);
-  puts ("under the GNU General Public Licence.  For more information,");
-  puts ("see the file named COPYING of Web2C");
-  putchar ('\n');
+  puts ("Kpathsea is copyright (C) 1999 Free Software Foundation, Inc.");
+
+  puts ("There is NO warranty.  Redistribution of this software is");
+  fputs ("covered by the terms of ", stdout);
+  /* DVIcopy is GPL'd, so no additional words needed. */
+  if (/*copyright_holder && */!STREQ (prog_name, "DVIcopy")) {
+    printf ("both the %s copyright and\n", prog_name);
+  }
+  puts ("the GNU General Public License.");
+  puts ("For more information about these matters, see the files");
+  printf ("named COPYING and the %s source.\n", prog_name);
+  printf ("Primary author of %s: %s.\n", based_prog_name, author);
+  puts ("Kpathsea written by Karl Berry and others.");
 
   uexit (0);
 }

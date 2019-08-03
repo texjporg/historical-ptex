@@ -1,4 +1,4 @@
-# Makefile for ptex -- ken-na@ascii.co.jp, Public domain.
+# Makefile for ptex
 version = @WEB2CVERSION@
 kanjicode = @kanjicode@
 
@@ -18,8 +18,7 @@ ac_include ../../make/common.mk
 ac_include ../../make/programs.mk
 
 @MAINT@ifeq ($(CC), gcc)
-@MAINT@XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat \
-	-D__USE_FIXED_PROTOTYPES__
+@MAINT@XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat -D__USE_FIXED_PROTOTYPES__
 @MAINT@endif
 
 # With --enable-ipc, TeX may need to link with -lsocket.

@@ -1,4 +1,4 @@
-% This is a change file for pTeX 2.1.9.
+% This is a change file for pTeX 3.0
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -34,11 +34,12 @@
 % (02/21/2000) KN  pTeX p2.1.9 (Web2c 7.3.1)
 % (11/13/2000) KN  pTeX p2.1.10
 % (05/22/2001) KN  pTeX p2.1.11
+% (10/03/2001) KN  pTeX p3.0 (modified BSD licence)
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.11, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p3.0, based on TeX, Version 3.14159'
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -3691,9 +3692,12 @@ loop@+  begin if is_char_node(s) then
 @y
 loop@+  begin if is_char_node(s) then
     begin hf:=font(s);
-    if font_dir[hf]<>dir_default then goto done1 else c:=qo(character(s));
+    if font_dir[hf]<>dir_default then
+      begin prev_s:=s; s:=link(prev_s); c:=info(s); goto continue;
+      end else c:=qo(character(s));
     end
   else if type(s)=disp_node then goto continue
+  else if (type(s)=penalty_node)and(not subtype(s)=normal) then goto continue
 @z
 
 @x [40.899] l.17587 - pTeX: disp_node
