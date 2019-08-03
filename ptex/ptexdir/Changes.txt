@@ -1,3 +1,7 @@
+2003/02/14: (p3.1.1)
+    ptex: 漢字が ^^ 形式でコンソールに表示されるのを修正。
+	ptex: \uppercase, \lowercase で core を出す場合があるのを修正。
+
 2003/02/13: (p3.1)
 	ptex: main_memory、hash_extra を大きくし、膨大なマクロ定義をすると、
 	  「!Missing control sequence inserted.」のエラーになるのを修正。

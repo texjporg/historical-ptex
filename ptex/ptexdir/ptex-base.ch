@@ -40,8 +40,8 @@
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.1' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.1' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1.1' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1.1' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -234,6 +234,17 @@ pseudo: if tally<trick_count then
   begin trick_buf[tally mod error_line]:=s;
   trick_buf2[tally mod error_line]:=kcode_pos;
   end;
+@z
+
+@x
+k:=s;
+if ((selector<=no_print)and(@<Character |k| cannot be printed@>))
+   or((selector>no_print)and(not isprint(k)))
+then begin print_visible_char("^"); print_visible_char("^");
+@y
+k:=s;
+if @<Character |k| cannot be printed@>
+then begin print_visible_char("^"); print_visible_char("^");
 @z
 
 @x [5.61] l.1570 - pTeX:
@@ -5432,11 +5443,10 @@ if t<cs_token_flag+single_base then
 @y
 @<Change the case of the token in |p|, if a change is appropriate@>=
 t:=info(p);
-if t<cs_token_flag+single_base then
-  if check_kanji(t) then p:=link(p) {wchar_token}
-  else begin c:=t mod 256;
-    if equiv(b+c)<>0 then info(p):=t-c+equiv(b+c);
-    end
+if (t<cs_token_flag+single_base)and(not check_kanji(t)) then
+  begin c:=t mod 256;
+  if equiv(b+c)<>0 then info(p):=t-c+equiv(b+c);
+  end
 @z
 
 @x [49.1291] l.23565 - pTeX: show_mode
