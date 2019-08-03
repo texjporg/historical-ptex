@@ -7,24 +7,20 @@
 #include "ptexhelp.h"
 
 #define KANJI
-#define JIS   1
+#define JIS   0
+#define EUC   1
 #define SJIS  2
-#define EUC   3
 
 /* 端末に出力する漢字コードを EUC, JIS, SJIS のいずれかで指定する。*/
 #define TERM_CODE @kanjicode@
 
 /* OUTJIS, OUTSJIS, OUTEUC は端末とログファイルへの出力コードを示す。*/
-/* EUCPTEX, SJISPTEX は、pTeX の内部処理コードを示す。*/
 #if TERM_CODE == JIS
 #define OUTJIS
-#define EUCPTEX
 #elif TERM_CODE == SJIS
 #define OUTSJIS
-#define SJISPTEX
 #else
 #define OUTEUC
-#define EUCPTEX
 #endif
 
 /* functions */
@@ -33,6 +29,7 @@
 #define PutHi(X,Y) X &= 0xff; (X |= (Y << 8))
 #define PutLo(X,Y) X &= 0xff00; (X |= (Y & 0xff))
 
+extern char prockanjicode;
 extern boolean iskanji1(unsigned char);
 extern boolean iskanji2(unsigned char);
 extern boolean checkkanji(integer);
@@ -47,15 +44,19 @@ extern integer EUCtoSJIS(integer);
 extern integer KUTENtoEUC(integer);
 extern integer KUTENtoSJIS(integer);
 
-/* JIS 端末に出力するとき、putc の定義を変える */
-#if defined(OUTJIS) && !defined(KANJI_C)
+/* kanji.c *以外* をコンパイルするとき、putc の定義を変える */
+#if !defined(KANJI_C)
 #undef putc
 #define putc(c,fp) putc2(c,fp)
-#endif /* JIS or *not* KANJI_C */
+#endif /* *not* KANJI_C */
 
-#ifdef TeX
-#undef TEXPOOLNAME
-#define TEXPOOLNAME "ptex.pool"
-#endif /* TeX */
+#ifdef HAVE_SYS_PARAM_H
+#  include <sys/param.h>
+#else
+#  include <limits.h>
+#endif
+#ifndef NOFILE
+#  define NOFILE OPEN_MAX
+#endif
 
 #endif /* not KANJI_H */

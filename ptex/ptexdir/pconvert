@@ -2,8 +2,6 @@
 # Convert WEB programs not needing special treatment to C.
 # $1 is the Pascal file to be converted.
 #
-# author: Ken Nakano (ken-na@ascii.co.jp)
-#
 web2cdir=../web2c
 target=$1
 
@@ -19,7 +17,7 @@ convert_ptex () {
 		./kanji.defines ./ptex.p \
 	| $web2cdir/web2c -t -h../texmfmp.h -ctexcoerce \
 	| $web2cdir/fixwrites tex \
-	| $web2cdir/splitup tex
+	| $web2cdir/splitup -i -l 10000 tex
 	sleep 2
 	cat texcoerce.h $web2cdir/coerce.h > xtexcoerce.h
 	echo '#include "kanji.h"' >> xtexcoerce.h
@@ -65,9 +63,7 @@ if test ! -s $cfile || grep @error@ $output_files >/dev/null; then
   # Don't just delete it, since it may be useful for debugging.
   echo "$0: conversion of $pascalfile failed, moving dregs:" >&2
   cmd="mv $output_files $TMPDIR"
-  if test ! -d $TMPDIR ; then
-     mkdir $TMPDIR
-  fi
+  test -d $TMPDIR || mkdir $TMPDIR
   (cd $TMPDIR && rm -f $output_files)
   echo "$0:   $cmd" >&2
   $cmd

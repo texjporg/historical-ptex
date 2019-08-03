@@ -7,57 +7,27 @@ printversionandexit P3C(const_string, banner,
                         const_string, copyright_holder,  const_string, author)
 {
   extern string versionstring;  /* from web2c/lib/version.c */
+  extern string based_prog_name;
   extern KPSEDLL string kpathsea_version_string;/* from kpathsea/version.c */
   string prog_name, prog_version;
-  string based_prog_name, based_prog_version;
-  string work_banner, token_start, token_end;
+  string work_banner;
   unsigned len;
 
 #if TERM_CODE == JIS
-  string term_code="JIS";
+  string term_code=" (JIS)";
 #elif TERM_CODE == SJIS
-  string term_code="SJIS";
+  string term_code=" (SJIS)";
 #else
-  string term_code="EUC";
+  string term_code=" (EUC)";
 #endif
 
-  len = strlen(banner);
-  work_banner = xmalloc(len + 1);
-  strcpy(work_banner, banner);
-  work_banner[len+1] = 0;
-
-  token_start = work_banner;
-  token_end = strchr(token_start, ',');
-  len = token_end - token_start - sizeof("This is");
-  prog_name = xmalloc(len + 1);
-  strncpy(prog_name, token_start + sizeof("This is"), len);
-  prog_name[len] = 0;
-
-  token_start = token_end + sizeof(" ");
-  token_end = strchr(token_start, ',');
-  len = token_end - token_start - sizeof("Version");
-  prog_version = xmalloc(len + 1);
-  strncpy(prog_version, token_start + sizeof("Version"), len);
-  prog_version[len] = 0;
-
-  token_start = token_end + sizeof(" ");
-  token_end = strchr(token_start, ',');
-  len = token_end - token_start - sizeof("based on");
-  based_prog_name = xmalloc(len + 1);
-  strncpy(based_prog_name, token_start + sizeof("based on"), len);
-  based_prog_name[len] = 0;
-
-  token_start = token_end + sizeof(" ");
-  token_end = strrchr(token_start, 0);
-  len = token_end - token_start - sizeof("Version");
-  based_prog_version = xmalloc(len + 1);
-  strncpy(based_prog_version, token_start + sizeof("Version"), len);
-  based_prog_version[len] = 0;
+  work_banner = xstrdup(banner);
+                         /* attention!:  sizeof(s) = strlen(s) + 1 */
+  prog_name = strtok(work_banner, ",") + sizeof("This is ") - 1;
+  prog_version = strtok(NULL, ",") + sizeof(" Version ") - 1;
 
   /* The Web2c version string starts with a space.  */
-  printf ("%s%s %s (%s), based on %s %s\n",
-     prog_name, versionstring, prog_version, term_code,
-     based_prog_name, based_prog_version);
+  printf ("%s%s %s%s\n", prog_name, versionstring, prog_version, term_code);
   puts (kpathsea_version_string);
 
   if (copyright_holder) {

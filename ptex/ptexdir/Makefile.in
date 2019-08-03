@@ -49,8 +49,7 @@ web2c_programs = $(cwebdir)/fixwrites $(cwebdir)/splitup $(cwebdir)/web2c
 # These definitions have to come before the rules that expand them.
 # The tex{ini,0,1,2}.c files are created by splitup, run as part of convert.
 ptex_c = texini.c tex0.c tex1.c tex2.c
-@PLAIN@ptex_o = texini.o tex0.o tex1.o tex2.o ptexextra-plain.o
-@SRCSP@ptex_o = texini.o tex0.o tex1.o tex2.o ptexextra-src-special.o
+ptex_o = texini.o tex0.o tex1.o tex2.o ptexextra.o
 plib_o = kanji.o version.o usage.o
 
 # Prevent Make from deleting the intermediate forms.
@@ -75,12 +74,11 @@ ptex: $(ptex_o) $(plib_o) $(kpathsea) $(proglib)
 
 $(ptex_o): $(ptex_c) texcoerce.h texd.h kanji.h
 
-texini.o: texini.c texcoerce.h texd.h kanji.h
-tex0.o: tex0.c texcoerce.h texd.h kanji.h
-tex1.o: tex1.c texcoerce.h texd.h kanji.h
-tex2.o: tex2.c texcoerce.h texd.h kanji.h
-@PLAIN@ptexextra-plain.o: ptexextra-plain.c texcoerce.h texd.h kanji.h texmfmp-help.h
-@SRCSP@ptexextra-src-special.o: ptexextra-src-special.c texcoerce.h texd.h kanji.h texmfmp-help.h
+texini.o: texini.c texcoerce.h texd.h kanji.h ptexhelp.h
+tex0.o: tex0.c texcoerce.h texd.h kanji.h ptexhelp.h
+tex1.o: tex1.c texcoerce.h texd.h kanji.h ptexhelp.h
+tex2.o: tex2.c texcoerce.h texd.h kanji.h ptexhelp.h
+ptexextra.o: ptexextra.c ptexextra.h texcoerce.h texd.h kanji.h ptexhelp.h
 
 $(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_aux) $(web2c_programs)
 	$(web2c) ptex
@@ -90,10 +88,8 @@ ptex.p: ptex.web ptex.ch $(srcdir)/tangle
 ptex.web: $(srcdir)/tex.web $(srcdir)/tex.ch
 	$(srcdir)/tie -m ptex.web $(srcdir)/tex.web $(srcdir)/tex.ch
 
-@PLAIN@srcsp=
-@SRCSP@srcsp=$(srcdir)/tex-src-special.ch $(srcdir)/tex-c-style.ch
 ptex.ch: $(srcdir)/tie ptex.web ptex-base.ch
-	$(srcdir)/tie -c ptex.ch ptex.web ptex-base.ch $(srcsp)
+	$(srcdir)/tie -c ptex.ch ptex.web ptex-base.ch
 
 ### TFtoPL
 tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
@@ -101,16 +97,9 @@ tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
 tftopl.o: tftopl.c kanji.h ptexhelp.h
 tftopl.c: tftopl.p $(web2c_aux)
 tftopl.p: tftopl.web tftopl.ch
-ifeq ($(version), 7.3.2x)
-tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch tfusage.ch
-	rm -f tftopl.web && \
-	$(srcdir)/tie -m tftopl.web $(srcdir)/tftopl.web $(srcdir)/tftopl.ch \
-		tfusage.ch
-else
 tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
 	rm -f tftopl.web && \
 	$(srcdir)/tie -m tftopl.web $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
-endif
 
 
 ### PLtoTF
@@ -119,16 +108,9 @@ pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
 pltotf.o: pltotf.c kanji.h ptexhelp.h
 pltotf.c: pltotf.p $(web2c_aux)
 pltotf.p: pltotf.web pltotf.ch
-ifeq ($(version), 7.3.2x)
-pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch plusage.ch
-	rm -f pltotf.web && \
-	$(srcdir)/tie -m pltotf.web $(srcdir)/pltotf.web $(srcdir)/pltotf.ch \
-		plusage.ch
-else
 pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
 	rm -f pltotf.web && \
 	$(srcdir)/tie -m pltotf.web $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
-endif
 
 ### pDVItype
 pdvitype: pdvitype.o $(plib_o) $(kpathsea) $(proglib)
@@ -149,13 +131,13 @@ jbibtex.c jbibd.h: jbibtex.p $(web2c_aux) jbibd.sed
 jbibtex.p: jbibtex.web jbibtex.ch
 jbibtex.web:
 	$(LN) $(srcdir)/bibtex.web jbibtex.web
-jbibextra.o: jbibd.h kanji.h
+jbibextra.o: jbibd.h kanji.h ptexhelp.h
 
 # Additional dependencies for recompiling the C code are generated
 # automatically, included at the end.
-kanji.o: kanji.c kanji.h
-version.o: version.c kanji.h
-usage.o: usage.c kanji.h
+kanji.o: kanji.c kanji.h ptexhelp.h
+version.o: version.c kanji.h ptexhelp.h
+usage.o: usage.c
 
 # Additional dependencies for relinking.
 $(srcdir)/tangleboot:

@@ -21,5 +21,3 @@
 @define const PTEXTFTOPLHELP;
 @define const PTEXPLTOTFHELP;
 @define const PDVITYPEHELP;
-
-@define procedure usagehelp();

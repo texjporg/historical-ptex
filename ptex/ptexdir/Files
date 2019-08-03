@@ -18,15 +18,10 @@ mkconf
 pconvert
 pdvitype.ch
 pltotf.ch
-plusage.ch
 ptex-base.ch
-ptexextra-plain.c
-ptexextra-src-special.c
+ptexextra.c
+ptexextra.h
 ptexhelp.h
-srcspecial.defines
-texmfmp-help.h.in
 tftopl.ch
-tfusage.ch
 usage.c
 version.c
-web2c-7.3.7.patch

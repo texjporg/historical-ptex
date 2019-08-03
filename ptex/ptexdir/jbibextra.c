@@ -37,15 +37,6 @@
 #include "jbibd.h"
 #include <kpathsea/variable.h>
 
-#ifdef HAVE_SYS_PARAM_H
-#  include <sys/param.h>
-#else
-#  include <limits.h>
-#endif
-#ifndef NOFILE
-#  define NOFILE OPEN_MAX
-#endif
-
 /*
    const_string based_prog_name="BibTeX";
    const_string based_prog_version="0.99c";
@@ -55,11 +46,11 @@
 #  define DEFAULT_FILE_CODE  6     /* JIS */
 #  define DEFAULT_TERM_CODE  6     /* JIS */
 #else
-#  ifdef SJISPTEX
+#  ifdef OUTSJIS
 #    define DEFAULT_FILE_CODE  10     /* SJIS */
 #    define DEFAULT_TERM_CODE  10     /* SJIS */
 #  else /* EUC */
-#    ifdef EUCPTEX
+#    ifdef OUTEUC
 #      define DEFAULT_FILE_CODE  20     /* EUC */
 #      define DEFAULT_TERM_CODE  20     /* EUC */
 #    else
@@ -244,7 +235,10 @@ get_kanji_code()
   extern int atoi();
   register char *p;
 
-  kanji_file_code = DEFAULT_FILE_CODE;
+  if (prockanjicode == JIS) kanji_file_code = 6;
+  else if (prockanjicode == EUC) kanji_file_code = 20;
+  else if (prockanjicode == SJIS) kanji_file_code = 10;
+  else kanji_file_code = DEFAULT_FILE_CODE;
   kanji_term_code = DEFAULT_TERM_CODE;
 
   if( p=kpse_var_value("BIBFILECODE") )

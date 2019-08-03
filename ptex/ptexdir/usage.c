@@ -1,12 +1,11 @@
 #include "config.h"
-#include "kanji.h"
 
 /*** lib/usage.c:  Output a help message (from help.h). ***/
 void
-usage P2C(int, status,  const_string, str)
+usage P1C(const_string, str)
 {
   fprintf (stderr, "Try `%s --help' for more information.\n", str);
-  uexit (status);
+  uexit (1);
 }
 
 /* Call usage if the program exits by printing the help message.

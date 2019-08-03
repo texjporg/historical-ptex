@@ -53,7 +53,7 @@
 @x
 @d banner=='This is BibTeX, Version 0.99c' {printed when the program starts}
 @y
-@d banner=='This is JBibTeX, Version 0.32, based on BibTeX, Version 0.99c'
+@d banner=='This is JBibTeX, Version 0.99c-j0.33'
   {printed when the program starts}
 @z
 
@@ -1470,7 +1470,7 @@ itself will get a new section number.
 
 @<Define |parse_arguments|@> =
 procedure parse_arguments;
-const n_options = 4; {Pascal won't count array lengths for us.}
+const n_options = 5; {Pascal won't count array lengths for us.}
 var @!long_options: array[0..n_options] of getopt_struct;
     @!getopt_return_val: integer;
     @!option_index: c_int_type;
@@ -1485,7 +1485,7 @@ begin
       {End of arguments; we exit the loop below.} ;
 
     end else if getopt_return_val = "?" then begin
-      usage (1, 'jbibtex');
+      usage ('jbibtex');
 
     end else if argument_is ('min-crossrefs') then begin
       min_crossrefs := atoi (optarg);
@@ -1496,6 +1496,9 @@ begin
     end else if argument_is ('version') then begin
       print_version_and_exit (banner, 'Oren Patashnik', nil);
 
+    end else if argument_is ('kanji') then begin
+      @<Set process kanji code@>;
+
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
 
@@ -1503,7 +1506,7 @@ begin
    We must have one remaining argument.}
   if (optind + 1 <> argc) then begin
     write_ln (stderr, 'jbibtex: Need exactly one file argument.');
-    usage (1, 'jbibtex');
+    usage ('jbibtex');
   end;
 end;
 
@@ -1570,6 +1573,16 @@ long_options[current_option].flag := 0;
 long_options[current_option].val := 0;
 incr (current_option);
 
+@ Kanji option.
+@.-kanji@>
+
+@<Define the option...@> =
+long_options[current_option].name := 'kanji';
+long_options[current_option].has_arg := 1;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr(current_option);
+
 @ An element with all zeros always ends the list.
 
 @<Define the option...@> =
@@ -1609,4 +1622,28 @@ begin
         push_lit_stk(0,stk_int);
     end;
 exit:end;  
+
+@ kanji code.
+
+@d jis_enc==0
+@d euc_enc==1
+@d sjis_enc==2
+
+@ @<Glob...@>=
+@!proc_kanji_code:jis_enc..sjis_enc;
+
+@ @<Initialize the option...@> =
+ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS')@/
+ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC')@/
+ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS')@/
+
+@ @<Set process kanji code@>=
+  if strcmp(optarg, 'jis') = 0 then
+    proc_kanji_code:=jis_enc
+  else if strcmp(optarg, 'euc') = 0 then
+    proc_kanji_code:=euc_enc
+  else if strcmp(optarg, 'sjis') = 0 then
+    proc_kanji_code:=sjis_enc
+  else
+    print_ln('Bad kanjicode encoding', optarg, '.');
 @z

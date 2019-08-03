@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.0.1
+% This is a change file for pTeX 3.0.4
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -34,12 +34,14 @@
 % (02/21/2000) KN  pTeX p2.1.9 (Web2c 7.3.1)
 % (11/13/2000) KN  pTeX p2.1.10
 % (05/22/2001) KN  pTeX p2.1.11
-% (10/03/2001) KN  pTeX p3.0 (modified BSD licence)
+% (03/10/2001) KN  pTeX p3.0 (modified BSD licence)
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
+@d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p3.0.1, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version 3.14159-p3.0.4' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.0.4' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -68,7 +70,7 @@
 @d sjis_enc=2 {denotes Shift JIS kanji encoding}
 
 @<Glob...@>=
-@!input_kanji_code:jis_encoding..sjis_encoding; {kanji encoding}
+@!proc_kanji_code:jis_enc..sjis_enc;
 @z
 
 @x [4.47] l.1245 - pTeX:
@@ -236,15 +238,24 @@ pseudo: if tally<trick_count then
 
 @x [5.61] l.1570 - pTeX:
 @<Initialize the output...@>=
-wterm(banner);
-wterm(version_string);
+if src_specials_p or file_line_error_style_p or parse_first_line_p then
+  wterm(banner_k)
+else
+  wterm(banner);
 @y
 @<Initialize the output...@>=
-wterm(banner);
-ifdef('OUTJIS') wterm(' (JIS)'); endif('OUTJIS')@/
-ifdef('OUTSJIS') wterm(' (SJIS)'); endif('OUTSJIS')@/
-ifdef('OUTEUC') wterm(' (EUC)'); endif('OUTEUC')@/
-wterm(version_string);
+if src_specials_p or file_line_error_style_p or parse_first_line_p then
+  wterm(banner_k)
+else
+  wterm(banner);
+wterm(' (');
+case proc_kanji_code of
+  jis_enc: wterm('jis');
+  euc_enc: wterm('euc');
+  sjis_enc: wterm('sjis');
+  othercases wterm('?');
+endcases;
+wterm(')');
 @z
 
 @x [8.112] l.2476 - pTeX:
@@ -1066,25 +1077,24 @@ for k:="A" to "Z" do
   sf_code(k):=999;
   tozen_code(k):=@"A3C1+k-"A"; tozen_code(k+"a"-"A"):=@"A3E1+k-"A";
   end;
-@!ifdef('EUCPTEX')@;@/
-@t\hskip10pt@>kcat_code(161):=other_kchar; {1 ku}
-@t\hskip10pt@>kcat_code(162):=other_kchar; {2 ku}
-@t\hskip10pt@>kcat_code(163):=kana; {3 ku}
-@t\hskip10pt@>kcat_code(164):=kana; {4 ku}
-@t\hskip10pt@>kcat_code(165):=kana; {5 ku}
-@t\hskip10pt@>kcat_code(166):=kana; {6 ku}
-@t\hskip10pt@>kcat_code(167):=other_kchar; {7 ku}
-@t\hskip10pt@>kcat_code(168):=other_kchar; {8 ku}
-@+@t\1@>for k:=176 to 244 do kcat_code(k):=kanji; {16 ku ... 84 ku}
-@+@t\2@>endif('EUCPTEX');@;@/
-@!ifdef('SJISPTEX')@;@/
-@t\hskip10pt@>kcat_code(129):=other_kchar;
-@t\hskip10pt@>kcat_code(130):=kana;
-@t\hskip10pt@>kcat_code(131):=kana;
-@t\hskip10pt@>kcat_code(132):=other_kchar;
-@+@t\1@>for k:=136 to 159 do kcat_code(k):=kanji;
-@+@t\1@>for k:=224 to 234 do kcat_code(k):=kanji;
-@+@t\2@>endif('SJISPTEX');@;@/
+if (proc_kanji_code=sjis_enc) then begin
+  @t\hskip10pt@>kcat_code(129):=other_kchar;
+  @t\hskip10pt@>kcat_code(130):=kana;
+  @t\hskip10pt@>kcat_code(131):=kana;
+  @t\hskip10pt@>kcat_code(132):=other_kchar;
+  @+@t\1@>for k:=136 to 159 do kcat_code(k):=kanji;
+  @+@t\1@>for k:=224 to 234 do kcat_code(k):=kanji;
+end else begin
+  @t\hskip10pt@>kcat_code(161):=other_kchar; {1 ku}
+  @t\hskip10pt@>kcat_code(162):=other_kchar; {2 ku}
+  @t\hskip10pt@>kcat_code(163):=kana; {3 ku}
+  @t\hskip10pt@>kcat_code(164):=kana; {4 ku}
+  @t\hskip10pt@>kcat_code(165):=kana; {5 ku}
+  @t\hskip10pt@>kcat_code(166):=kana; {6 ku}
+  @t\hskip10pt@>kcat_code(167):=other_kchar; {7 ku}
+  @t\hskip10pt@>kcat_code(168):=other_kchar; {8 ku}
+  @+@t\1@>for k:=176 to 244 do kcat_code(k):=kanji; {16 ku ... 84 ku}
+end;
 @z
 
 @x [17.236] l.4943 - pTeX: cur_jfam_code, jchr_widow_penalty
@@ -1878,18 +1888,20 @@ string_code, meaning_code:
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else print_char(cur_chr);
 @y
-@!ifdef('EUCPTEX')@/
-jis_code: begin cur_val:=JIStoEUC(cur_val); print_int(cur_val); end;
-euc_code: print_int(cur_val);
-sjis_code: begin cur_val:=SJIStoEUC(cur_val); print_int(cur_val); end;
-kuten_code: begin cur_val:=KUTENtoEUC(cur_val); print_int(cur_val); end;@/
-endif('EUCPTEX')@/
-@!ifdef('SJISPTEX')@/
-jis_code: begin cur_val:=JIStoSJIS(cur_val); print_int(cur_val); end;
-euc_code: begin cur_val:=EUCtoSJIS(cur_val); print_int(cur_val); end;
-sjis_code: print_int(cur_val);
-kuten_code: begin cur_val:=KUTENtoSJIS(cur_val); print_int(cur_val); end;@/
-endif('SJISPTEX')@/
+jis_code: begin
+  if (proc_kanji_code=sjis_enc) then cur_val:=JIStoSJIS(cur_val)
+  else cur_val:=JIStoEUC(cur_val);
+  print_int(cur_val); end;
+euc_code: begin
+  if (proc_kanji_code=sjis_enc) then cur_val:=EUCtoSJIS(cur_val);
+  print_int(cur_val); end;
+sjis_code: begin
+  if (not proc_kanji_code=sjis_enc) then cur_val:=SJIStoEUC(cur_val);
+  print_int(cur_val); end;
+kuten_code: begin
+  if (proc_kanji_code=sjis_enc) then cur_val:=KUTENtoSJIS(cur_val)
+  else cur_val:=KUTENtoEUC(cur_val);
+  print_int(cur_val); end;
 kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else begin if KANJI(cx) <> 0 then print_char(Hi(cx));
@@ -2032,14 +2044,27 @@ skip_mode:=true;
 @z
 
 @x [29.536] l.10427 - pTeX:
-begin wlog(banner);
-wlog(version_string);
+begin
+if src_specials_p or file_line_error_style_p or parse_first_line_p
+then
+  wlog(banner_k)
+else
+  wlog(banner);
 @y
-begin wlog(banner);
-ifdef('OUTJIS') wlog(' (JIS)'); endif('OUTJIS')@/
-ifdef('OUTSJIS') wlog(' (SJIS)'); endif('OUTSJIS')@/
-ifdef('OUTEUC') wlog(' (EUC)'); endif('OUTEUC')@/
-wlog(version_string);
+begin
+if src_specials_p or file_line_error_style_p or parse_first_line_p
+then
+  wlog(banner_k)
+else
+  wlog(banner);
+wlog(' (');
+case proc_kanji_code of
+  jis_enc: wlog('jis');
+  euc_enc: wlog('euc');
+  sjis_enc: wlog('sjis');
+  othercases wterm('?');
+endcases;
+wlog(')');
 @z
 
 @x [30.560] l.10422 - pTeX:
@@ -2454,8 +2479,8 @@ continue:
       synch_h;
       end;
     p:=link(p);
-    @!ifdef('EUCPTEX') jc:=EUCtoJIS(KANJI(info(p))); endif('EUCPTEX');@/
-    @!ifdef('SJISPTEX') jc:=SJIStoJIS(KANJI(info(p))); endif('SJISPTEX');@/
+	if (proc_kanji_code=sjis_enc) then jc:=SJIStoJIS(KANJI(info(p)))
+	else jc:=EUCtoJIS(KANJI(info(p)));
     dvi_out(set2); dvi_out(Hi(jc)); dvi_out(Lo(jc));
     cur_h:=cur_h+char_width(f)(orig_char_info(f)(c)); {not |jc|}
     end;
@@ -3941,9 +3966,15 @@ main_loop:@<Append character |cur_chr| and the following characters (if~any)
 
 @x [46.1034] l.20072 - pTeX: disp_node
 @<Append character |cur_chr|...@>=
+if ((head=tail) and (mode>0)) then begin
+  if (insert_src_special_auto) then append_src_special;
+end;
 adjust_space_factor;@/
 @y
 @<Append character |cur_chr|...@>=
+if ((head=tail) and (mode>0)) then begin
+  if (insert_src_special_auto) then append_src_special;
+end;
 adjust_space_factor;@/
 if direction=dir_tate then disp:=t_baseline_shift else disp:=y_baseline_shift;
 @<Append |disp_node| at begin of displace area@>;
@@ -5280,6 +5311,12 @@ show_code: @<Show the current meaning of a token, then |goto common_ending|@>;
 show_mode: @<Show the current japanese processing mode@>;
 @z
 
+@x
+font_info:=xmalloc_array(fmemory_word, font_mem_size);
+@y
+font_info:=xmalloc_array(memory_word, font_mem_size);
+@z
+
 @x [50.1320] l.24357 - pTeX:
 @ @<Dump the array info for internal font number |k|@>=
 begin
@@ -5305,15 +5342,15 @@ begin {Allocate the font arrays}
 @y
 @<Undump the array info for internal font number |k|@>=
 begin {Allocate the font arrays}
-xmalloc_array(font_dir, font_max);
-xmalloc_array(font_num_ext, font_max);
+font_dir:=xmalloc_array(eight_bits, font_max);
+font_num_ext:=xmalloc_array(integer, font_max);
 @z
 
 @x [50.1322] l.24409 - pTeX:
-xmalloc_array(char_base, font_max);
+char_base:=xmalloc_array(integer, font_max);
 @y
-xmalloc_array(ctype_base, font_max);
-xmalloc_array(char_base, font_max);
+ctype_base:=xmalloc_array(integer, font_max);
+char_base:=xmalloc_array(integer, font_max);
 @z
 
 @x [50.1322] l.24419 - pTeX:
@@ -5331,19 +5368,25 @@ undump_things(ctype_base[null_font], font_ptr+1-null_font);
 undump_things(char_base[null_font], font_ptr+1-null_font);
 @z
 
-@x [51.1337] l.24977 - pTeX:
-  xmalloc_array(font_check, font_max);
+@x
+  font_info:=xmalloc_array (fmemory_word, font_mem_size);
 @y
-  xmalloc_array(font_dir, font_max);
-  xmalloc_array(font_num_ext, font_max);
-  xmalloc_array(font_check, font_max);
+  font_info:=xmalloc_array (memory_word, font_mem_size);
+@z
+
+@x [51.1337] l.24977 - pTeX:
+  font_check:=xmalloc_array(four_quarters, font_max);
+@y
+  font_dir:=xmalloc_array(eight_bits, font_max);
+  font_num_ext:=xmalloc_array(integer, font_max);
+  font_check:=xmalloc_array(four_quarters, font_max);
 @z
 
 @x [51.1337] l.24991 - pTeX:
-  xmalloc_array(char_base, font_max);
+  char_base:=xmalloc_array(integer, font_max);
 @y
-  xmalloc_array(ctype_base, font_max);
-  xmalloc_array(char_base, font_max);
+  ctype_base:=xmalloc_array(integer, font_max);
+  char_base:=xmalloc_array(integer, font_max);
 @z
 
 @x [51.1337] l.25001 - pTeX:
@@ -5383,8 +5426,8 @@ function get_jfm_pos(@!kcode:KANJI_code;@!f:internal_font_number):eight_bits;
 var @!jc:KANJI_code; {temporary register for KANJI}
 @!sp,@!mp,@!ep:pointer;
 begin@/
-ifdef('EUCPTEX') jc:=EUCtoJIS(kcode); endif('EUCPTEX')@/
-ifdef('SJISPTEX') jc:=SJIStoJIS(kcode); endif('SJISPTEX')@/
+if (proc_kanji_code=sjis_enc) then jc:=SJIStoJIS(kcode)
+else jc:=EUCtoJIS(kcode);
 sp:=1; { start position }
 ep:=font_num_ext[f]-1; { end position }
 if (kchar_code(f)(sp)<=jc)and(jc<=kchar_code(f)(ep)) then
@@ -5438,7 +5481,7 @@ begin k:=0;
       4: cx:=@"BBCD; 5: cx:=@"B8DE; 6: cx:=@"CFBB;
       7: cx:=@"BCB7; 8: cx:=@"C8AC; 9: cx:=@"B6E5;
     endcases;@/
-    ifdef('SJISPTEX') cx:=EUCtoSJIS(cx); endif('SJISPTEX')@/
+	if (proc_kanji_code=sjis_enc) then cx:=EUCtoSJIS(cx);
     print_char(Hi(cx)); print_char(Lo(cx));
     end;
   end;

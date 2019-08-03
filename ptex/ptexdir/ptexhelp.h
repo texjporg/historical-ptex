@@ -5,30 +5,37 @@
 #define HELP_H
 
 #ifdef TeX
-/*  texmfmp-help.h */
+/*  ptexextra.h */
+#undef TEXPOOLNAME
+#define TEXPOOLNAME "ptex.pool"
 #endif /* TeX */
 
 #ifdef TFTOPL
+string based_prog_name = "TFtoPL";
 const_string PTEXTFTOPLHELP[] = {
 "Usage: tftopl [option] tfmfile [plfile]",
 "",
-"  -verbose             output progress reports.",
-"  -version             print version information and exit.",
-"  -help                print this message and exit.",
+"  -verbose               output progress reports.",
+"  -version               print version information and exit.",
+"  -help                  print this message and exit.",
+"  -kanji={jis|euc|sjis}  plfile kanji code.",
 NULL };
 #endif /* TFTOPL */
 
 #ifdef PLTOTF
+string based_prog_name = "PLtoTF";
 const_string PTEXPLTOTFHELP[] = {
 "Usage: pltotf [option] plfile [tfmfile]",
 "",
-"  -verbose             output progress reports.",
-"  -version             print version information and exit.",
-"  -help                print this message and exit.",
+"  -verbose               output progress reports.",
+"  -version               print version information and exit.",
+"  -help                  print this message and exit.",
+"  -kanji={jis|euc|sjis}  plfile kanji code.",
 NULL };
 #endif /* PLTOTF */
 
 #ifdef BIBTEX
+string based_prog_name = "BibTeX";
 const_string JBIBTEXHELP[] = {
 "Usage: jbibtex [option] auxfile",
 "",
@@ -37,10 +44,12 @@ const_string JBIBTEXHELP[] = {
 "  -terse                     do silently.",
 "  -version                   print version information and exit.",
 "  -help                      print this message and exit.",
+"  -kanji={jis|euc|sjis}      kanji code for output-file.",
 NULL };
 #endif /* BIBTEX */
 
 #ifdef DVITYPE
+string based_prog_name = "DVItype";
 const_string PDVITYPEHELP[] = {
 "Usage: pdvitype [option] dvifile",
 "",

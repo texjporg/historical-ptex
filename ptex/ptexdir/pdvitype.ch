@@ -32,7 +32,7 @@
 @x
 @d banner=='This is DVItype, Version 3.6' {printed when the program starts}
 @y
-@d banner=='This is PDVItype, Version 0.3, based on DVItype, Version 3.6'
+@d banner=='This is PDVItype, Version 3.6-p0.4'
   {printed when the program starts}
 @z
 
@@ -581,7 +581,7 @@ filenames, but it doesn't seem worth reprogramming all that.
 
 @<Move font name into the |cur_name| string@>=
 r := name_end - name_start;
-cur_name := xmalloc (r + 1);
+cur_name := xmalloc_array (char, r);
 {|strncpy| might be faster, but it's probably a good idea to keep the
  |xchr| translation.}
 for k := name_start to name_end do begin
@@ -615,17 +615,29 @@ end;
 
 @ declare kanji conversion function
 
-@p procedure out_kanji(c:integer);
-begin if text_ptr>=line_length-3 then flush_text;
-ifdef('EUCPTEX')
-  incr(text_ptr); text_buf[text_ptr]:= c div 256 + 128;
-  incr(text_ptr); text_buf[text_ptr]:= c mod 256 + 128;
-endif('EUCPTEX')
-ifdef('SJISPTEX')
-  c := JIStoSJIS(c);
-  incr(text_ptr); text_buf[text_ptr]:= c div 256;
-  incr(text_ptr); text_buf[text_ptr]:= c mod 256;
-endif('SJISPTEX')
+@d jis_enc==0
+@d euc_enc==1
+@d sjis_enc==2
+
+@ @<Global...@> =
+@!proc_kanji_code:jis_enc..sjis_enc;
+
+@ @<Set init...@> =
+ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS');
+ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC');
+ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS');
+
+@ @p procedure out_kanji(c:integer);
+begin
+  if text_ptr>=line_length-3 then flush_text;
+  if (proc_kanji_code=sjis_enc) then begin
+    c := JIStoSJIS(c);
+    incr(text_ptr); text_buf[text_ptr]:= c div 256;
+    incr(text_ptr); text_buf[text_ptr]:= c mod 256;
+  end else begin
+    incr(text_ptr); text_buf[text_ptr]:= c div 256 + 128;
+    incr(text_ptr); text_buf[text_ptr]:= c mod 256 + 128;
+  end;
 end;
 
 @ output hexdecimal / octal character code.
@@ -988,7 +1000,7 @@ Parse a Unix-style command line.
 
 @<Define |parse_arguments|@> =
 procedure parse_arguments;
-const n_options = 8; {Pascal won't count array lengths for us.}
+const n_options = 9; {Pascal won't count array lengths for us.}
 var @!long_options: array[0..n_options] of getopt_struct;
     @!getopt_return_val: integer;
     @!option_index: c_int_type;
@@ -1003,7 +1015,7 @@ begin
       {End of arguments; we exit the loop below.} ;
 
     end else if getopt_return_val = "?" then begin
-      usage (1, 'pdvitype');
+      usage ('pdvitype');
 
     end else if argument_is ('help') then begin
       usage_help (PDVITYPE_HELP);
@@ -1036,7 +1048,7 @@ begin
   {Now |optind| is the index of first non-option on the command line.}
   if (optind + 1 <> argc) then begin
     write_ln (stderr, 'pdvitype: Need exactly one file argument.');
-    usage (1, 'pdvitype');
+    usage ('pdvitype');
   end;
 end;
 

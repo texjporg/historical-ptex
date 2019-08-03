@@ -11,8 +11,11 @@
 @x [2] l.64 - pTeX:
 @d banner=='This is TFtoPL, Version 3.1' {printed when the program starts}
 @y
-@d banner=='This is Nihongo TFtoPL, Version p1.4, based on TFtoPL, Version 3.1'
+@d banner=='This is Nihongo TFtoPL, Version 3.2-p1.5'
   {printed when the program starts}
+@d jis_enc==0
+@d euc_enc==1
+@d sjis_enc==2
 @z
 
 @x [2] l.91 - pTeX:
@@ -31,10 +34,14 @@ var @!k:integer; {all-purpose initiallization index}
 @x [7] l.149 - pTeX:
   print_ln (version_string);
 @y
-  print (version_string);
-  ifdef('OUTEUC') print_ln(' (EUC)'); endif('OUTEUC');
-  ifdef('OUTSJIS') print_ln(' (SJIS)'); endif('OUTSJIS');
-  ifdef('OUTJIS') print_ln(' (JIS)'); endif('OUTJIS');
+  print_ln (version_string);
+  print ('process kanji code is ');
+  case proc_kanji_code of
+    jis_enc: print('jis');
+    euc_enc: print('euc');
+    sjis_enc: print('sjis');
+  end;
+  print_ln('.');
 @z
 
 @x [18.20] l.438 - pTeX:
@@ -338,9 +345,39 @@ else
 @z
 
 @x
-      usage (0, TFTOPL_HELP);
+const n_options = 4; {Pascal won't count array lengths for us.}
+@y
+const n_options = 5; {Pascal won't count array lengths for us.}
+@z
+@x
+      usage_help (TFTOPL_HELP);
 @y
       usage_help (PTEX_TFTOPL_HELP);
+@z
+@x
+    end else if argument_is ('version') then begin
+      print_version_and_exit (banner, nil, 'D.E. Knuth');
+@y
+    end else if argument_is ('version') then begin
+      print_version_and_exit (banner, nil, 'D.E. Knuth');
+
+    end else if argument_is ('kanji') then begin
+      @<Set process kanji code@>;
+@z
+
+@x
+@ An element with all zeros always ends the list.
+@y
+@ kanji option
+
+@<Define the option...@> =
+long_options[current_option].name := 'kanji';
+long_options[current_option].has_arg := 1;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr(current_option);
+
+@ An element with all zeros always ends the list.
 @z
 
 @x [99] l.1751 - pTeX:
@@ -445,8 +482,8 @@ if charcode_format=charcode_octal then
     end;
   end
 else begin
-  ifdef('EUCPTEX') cx:=JIStoEUC(jis_code); endif('EUCPTEX')@/
-  ifdef('SJISPTEX') cx:=JIStoSJIS(jis_code); endif('SJISPTEX')@/
+  if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(jis_code)
+  else cx:=JIStoEUC(jis_code);
   out(xchr[Hi(cx)]); out(xchr[Lo(cx)]);
   end;
 end;
@@ -482,6 +519,26 @@ if first_byte<=8 then
 else
   jis_to_index:=(first_byte-7)*94+second_byte;
 end
+
+@ output kanji code.
+
+@<Global...@> =
+@!proc_kanji_code:jis_enc..sjis_enc;
+
+@ @<Initialize the option...@> =
+ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS')@/
+ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC')@/
+ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS')@/
+
+@ @<Set process kanji code@>=
+  if strcmp(optarg, 'jis') = 0 then
+    proc_kanji_code:=jis_enc
+  else if strcmp(optarg, 'euc') = 0 then
+    proc_kanji_code:=euc_enc
+  else if strcmp(optarg, 'sjis') = 0 then
+    proc_kanji_code:=sjis_enc
+  else
+    print_ln('Bad kanjicode encoding', optarg, '.');
 
 @* Index.
 @z

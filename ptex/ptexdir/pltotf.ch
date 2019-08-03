@@ -12,17 +12,24 @@
 @x [2] l.69 - pTeX:
 @d banner=='This is PLtoTF, Version 3.5' {printed when the program starts}
 @y
-@d banner=='This is Nihongo PLtoTF, Version p1.4, based on PLtoTF, Version 3.5'
+@d banner=='This is Nihongo PLtoTF, Version 3.5-p1.6'
   {printed when the program starts}
+@d jis_enc==0
+@d euc_enc==1
+@d sjis_enc==2
 @z
 
 @x [6] l.140 - pTeX:
   print_ln (version_string);
 @y
-  print (version_string);
-  ifdef('OUTEUC') print_ln(' (EUC)'); endif('OUTEUC');
-  ifdef('OUTSJIS') print_ln(' (SJIS)'); endif('OUTSJIS');
-  ifdef('OUTJIS') print_ln(' (JIS)'); endif('OUTJIS');
+  print_ln (version_string);
+  print ('process kanji code is ');
+  case proc_kanji_code of
+    jis_enc: print('jis');
+    euc_enc: print('euc');
+    sjis_enc: print('sjis');
+  end;
+  print_ln ('.');
 @z
 
 @x [18] l.495 - pTeX:
@@ -79,8 +86,8 @@ else  begin kmode:=0;
         begin incr(limit); buffer[limit]:=c_a;
         end
       else  begin read(pl_file,c_b);
-        ifdef('EUCPTEX') cx:=JIStoEUC(c_a*@'400+c_b); endif('EUCPTEX')@/
-        ifdef('SJISPTEX') cx:=JIStoSJIS(c_a*@'400+c_b); endif('SJISPTEX')@/
+	    if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(c_a*@'400+c_b)
+		else cx:=JIStoEUC(c_a*@'400+c_b);
         incr(limit); buffer[limit]:=cx div @'400;
         incr(limit); buffer[limit]:=cx mod @'400;
         end;
@@ -391,9 +398,39 @@ end;
 @z
 
 @x
-      usage (0, PLTOTF_HELP);
+const n_options = 3; {Pascal won't count array lengths for us.}
+@y
+const n_options = 4; {Pascal won't count array lengths for us.}
+@z
+@x
+      usage_help (PLTOTF_HELP);
 @y
       usage_help (PTEX_PLTOTF_HELP);
+@z
+@x
+    end else if argument_is ('version') then begin
+      print_version_and_exit (banner, nil, 'D.E. Knuth');
+@y
+    end else if argument_is ('version') then begin
+      print_version_and_exit (banner, nil, 'D.E. Knuth');
+
+    end else if argument_is ('kanji') then begin
+      @<Set process kanji code@>;
+@z
+
+@x
+@ An element with all zeros always ends the list.
+@y
+@ kanji option.
+
+@<Define the option...@> =
+long_options[current_option].name := 'kanji';
+long_options[current_option].has_arg := 1;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr(current_option);
+
+@ An element with all zeros always ends the list.
 @z
 
 @x [148] l.2620 - pTeX:
@@ -710,14 +747,34 @@ else if (ch='J')or(ch='j') then
   end
 else if iskanji1(ch) then
   begin incr(loc); cx:=Lo(ch)*@'400+Lo(buffer[loc]); cur_char:=" ";
-  ifdef('EUCPTEX') jis_code:=EUCtoJIS(cx); endif('EUCPTEX')
-  ifdef('SJISPTEX') jis_code:=SJIStoJIS(cx); endif('SJISPTEX')
+  if (proc_kanji_code=sjis_enc) then jis_code:=SJIStoJIS(cx)
+  else jis_code:=EUCtoJIS(cx);
   if not valid_jis_code(jis_code) then
     err_print('jis code ', jis_code:1, ' is invalid');
   end
 else jis_code:=-1;
 get_kanji:=jis_code;
 end;
+
+@ input kanji code.
+
+@<Global...@> =
+@!proc_kanji_code:jis_enc..sjis_enc;
+
+@ @<Initialize the option...@> =
+ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS');
+ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC');
+ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS');
+
+@ @<Set process kanji code@>=
+  if strcmp(optarg, 'jis') = 0 then
+    proc_kanji_code:=jis_enc
+  else if strcmp(optarg, 'euc') = 0 then
+    proc_kanji_code:=euc_enc
+  else if strcmp(optarg, 'sjis') = 0 then
+    proc_kanji_code:=sjis_enc
+  else
+    print_ln('Bad kanjicode encoding', optarg, '.');
 
 @* Index.
 @z

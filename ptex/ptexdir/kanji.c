@@ -9,22 +9,20 @@ boolean iskanji1(c)
   unsigned char c;
 {
     c &= 0xff;
-#ifdef SJISPTEX
-    return((c>=0x81 && c<=0x9f) || (c>=0xe0 && c<=0xfc));
-#else
-    return(c>=0xa1 && c<=0xfe);
-#endif
+	if (prockanjicode == SJIS)
+      return((c>=0x81 && c<=0x9f) || (c>=0xe0 && c<=0xfc));
+	else
+      return(c>=0xa1 && c<=0xfe);
 }
 
 boolean iskanji2(c)
   unsigned char c;
 {
     c &= 0xff;
-#ifdef SJISPTEX
-    return(c>=0x40 && c<=0xfc && c!=0x7f);
-#else
-    return(c>=0xa1 && c<=0xfe);
-#endif
+	if (prockanjicode == SJIS)
+      return(c>=0x40 && c<=0xfc && c!=0x7f);
+	else
+      return(c>=0xa1 && c<=0xfe);
 }
 
 boolean checkkanji(c)
@@ -44,11 +42,10 @@ integer calcpos(c)
     c1 = c>>8;
     c2 = c & 0xff;
     if(c1) {
-#ifdef SJISPTEX
-        return((c2+(c2<<(c1-0x81)) & 0xff)<<1);
-#else
-        return((c2+(c2<<(c1-0xa1)) & 0xff)<<1);
-#endif
+		if (prockanjicode == SJIS)
+			return((c2+(c2<<(c1-0x81)) & 0xff)<<1);
+		else
+			return((c2+(c2<<(c1-0xa1)) & 0xff)<<1);
     } else
         return(((c2+c2+1) & 0xff)<<1);
 }
@@ -63,14 +60,14 @@ integer calcpos(c)
     c1 = (c >> 8) & 0xff;
     c2 = c & 0xff;
     if(iskanji1(c1)) {
-#ifdef SJISPTEX
-        c1 = ((c1 - 0x81) % 4) * 64;  /* c1 = 0, 64, 128, 192 */
-        c2 = c2 % 64;                 /* c2 = 0..63 */
-#else
-        c1 = ((c1 - 0xa1) % 4) * 64;  /* c1 = 0, 64, 128, 192 */
-        c2 = c2 % 64;                 /* c2 = 0..63 */
-#endif
-        return(c1 + c2);              /* ret = 0..255 */
+		if (prockanjicode == SJIS) {
+			c1 = ((c1 - 0x81) % 4) * 64;  /* c1 = 0, 64, 128, 192 */
+			c2 = c2 % 64;                 /* c2 = 0..63 */
+		} else {
+			c1 = ((c1 - 0xa1) % 4) * 64;  /* c1 = 0, 64, 128, 192 */
+			c2 = c2 % 64;                 /* c2 = 0..63 */
+		}
+		return(c1 + c2);              /* ret = 0..255 */
     } else
         return(c2);
 }
@@ -196,45 +193,41 @@ integer KUTENtoSJIS(kcode)
     return(JIStoSJIS(kuten2jis(kcode)));
 }
 
-#ifdef OUTJIS
-#include <sys/param.h>
 void putc2(c, fp)
   unsigned char c;
   FILE *fp;
 {
-      static integer kanji[NOFILE];
-      static unsigned char c1[NOFILE];
-      integer jc;
-      register fd;
+	static integer kanji[NOFILE];
+	static unsigned char c1[NOFILE];
+	integer jc;
+	register fd;
 
-      fd = fileno(fp);
-
-      if (kanji[fd] == 1) {
-          jc = (c1[fd] << 8) | c;
-#ifdef SJISPTEX
-          jc = SJIStoJIS(jc);
-#else
-          jc = EUCtoJIS(jc);
-#endif
-          (void) putc(jc >> 8, fp);
-          (void) putc(jc & 0xff, fp);
-          kanji[fd] = 2;
-      } else if (iskanji1(c)) {
-          if (kanji[fd] == 0) {
-                  (void) putc('\033', fp);
-                  (void) putc('$', fp);
-                  (void) putc('B', fp);
-          }
-          c1[fd] = c;
-          kanji[fd] = 1;
-      } else {
-          if (kanji[fd] == 2) {
-                  (void) putc('\033', fp);
-                  (void) putc('(', fp);
-                  (void) putc('B', fp);
-                  kanji[fd] = 0;
-          }
-          (void) putc(c, fp);
-      }
+	fd = fileno(fp);
+	if (kanji[fd] == 1) {
+		jc = (c1[fd] << 8) | c;
+		if (prockanjicode == JIS) jc = EUCtoJIS(jc);
+		(void) putc(jc >> 8, fp);
+		(void) putc(jc & 0xff, fp);
+		kanji[fd] = 2;
+	} else if (iskanji1(c)) {
+		if (kanji[fd] == 0) {
+			if (prockanjicode == JIS) {
+				(void) putc('\033', fp);
+				(void) putc('$', fp);
+				(void) putc('B', fp);
+			}
+		}
+		c1[fd] = c;
+		kanji[fd] = 1;
+	} else {
+		if (kanji[fd] == 2) {
+			if (prockanjicode == JIS) {
+				(void) putc('\033', fp);
+				(void) putc('(', fp);
+				(void) putc('B', fp);
+			}
+			kanji[fd] = 0;
+		}
+		(void) putc(c, fp);
+	}
 }
-#endif /* OUTJIS */
