@@ -165,7 +165,7 @@ formats=$(euc-formats) $(sjis-formats)
 formats: $(formats)
 
 texmf.cnf: $(kpathsea_dir)/texmf.cnf
-	$(SHELL) $(thisdir)/mkconf $< > texmf.cnf
+	$(SHELL) $(thisdir)/mkconf $(kpathsea_dir)/texmf.cnf > texmf.cnf
 
 dumpenv = TEXMFCNF=$(thisdir) TEXMF=$(texmf)
 

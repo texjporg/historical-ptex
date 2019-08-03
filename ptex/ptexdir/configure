@@ -40,7 +40,7 @@ CONFIG_FILES=Makefile
 CONFIG_HEADERS=..
 export CONFIG_FILES CONFIG_HEADERS
 ../config.status
-TMPFILE=`mktemp /tmp/makefile.XXXXXX` || exit 1
+TMPFILE=makefile.tmp
 sed -f $CONFIGSED Makefile > $TMPFILE
 mv -f $TMPFILE Makefile
 

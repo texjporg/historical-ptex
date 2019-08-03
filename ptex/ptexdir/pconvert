@@ -8,13 +8,13 @@ target=$1
 usage () {
 	echo ""
 	echo "Usage: $0 <basefile>"
-	echo "  <basefile> = ptex|tftopl"
+	echo "  <basefile> = ptex|pltotf|tftopl|pdvitype|jbibtex"
 	echo ""
 }
 
 convert_ptex () {
 	cat $web2cdir/common.defines $web2cdir/texmf.defines \
-		./kanji.defines ./ptex.p \
+		./kanji.defines ./$target.p \
 	| $web2cdir/web2c -t -h../texmfmp.h -ctexcoerce \
 	| $web2cdir/fixwrites tex \
 	| $web2cdir/splitup -i -l 10000 tex
@@ -28,7 +28,7 @@ convert_ptex () {
 convert_tool () {
 	cat $web2cdir/common.defines ./kanji.defines ./$target.p \
 	| $web2cdir/web2c -hkanji.h -c$target \
-	| $web2cdir/fixwrites > $target.c
+	| $web2cdir/fixwrites $target > $target.c
 }
 
 convert_jbibtex() {

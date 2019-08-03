@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.2
+% This is a change file for pTeX 3.1.3
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -40,8 +40,8 @@
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.1.2' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.1.2' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1.3' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1.3' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -90,7 +90,7 @@ var k,@!l:KANJI_code; {small indices or counters}
    not is_printable[k]
 @y
 @<Character |k| cannot be printed@>=
-   not is_printable[k] and not check_kanji(k)
+  not (iskanji1(k) or iskanji2(k) or is_printable[k])
 @z
 
 @x [4.51] l.1325 - pTeX:
@@ -207,10 +207,10 @@ else if iskanji1(xchr[s]) then
     if file_offset>=max_print_line-1 then
        begin wlog_cr; file_offset:=0;
        end;
-    if (selector=term_and_log)or(selector=term_only) then
-      if term_offset>=max_print_line-1 then
-        begin wterm_cr; term_offset:=0;
-        end;
+  if (selector=term_and_log)or(selector=term_only) then
+    if term_offset>=max_print_line-1 then
+       begin wterm_cr; term_offset:=0;
+       end;
   end
 else kcode_pos:=0;
 case selector of
@@ -247,7 +247,7 @@ if @<Character |k| cannot be printed@>
 then begin print_visible_char("^"); print_visible_char("^");
 @z
 
-@x [5.61] l.1570 - pTeX:
+@x [5.61] l.1596 - pTeX:
 @<Initialize the output...@>=
 if src_specials_p or file_line_error_style_p or parse_first_line_p then
   wterm(banner_k)
@@ -508,7 +508,7 @@ processing we will see that a |style_node| has |type=16|; and a number
 of larger type codes will also be defined, for use in math mode only.
 @z
 
-@x [12.174] l.3532 - pTeX: print KANJI
+@x [12.174] l.3605 - pTeX: print KANJI
       print_ASCII(qo(character(p)));
 @y
       if font_dir[font(p)]<>dir_default then
@@ -518,7 +518,7 @@ of larger type codes will also be defined, for use in math mode only.
       else print_ASCII(qo(character(p)));
 @z
 
-@x [12.175] l.3542 - pTeX: Print a short indication of dir_nodes.
+@x [12.175] l.3615 - pTeX: Print a short indication of dir_nodes.
 hlist_node,vlist_node,ins_node,whatsit_node,mark_node,adjust_node,
   unset_node: print("[]");
 @y
@@ -526,7 +526,7 @@ hlist_node,vlist_node,dir_node,ins_node,whatsit_node,
   mark_node,adjust_node,unset_node: print("[]");
 @z
 
-@x [12.176] l.3568 - pTeX: print KANJI.
+@x [12.176] l.3641 - pTeX: print KANJI.
   print_char(" "); print_ASCII(qo(character(p)));
 @y
   print_char(" ");
@@ -2057,10 +2057,12 @@ jis_code: begin
   else cur_val:=JIStoEUC(cur_val);
   print_int(cur_val); end;
 euc_code: begin
-  if (proc_kanji_code=sjis_enc) then cur_val:=EUCtoSJIS(cur_val);
+  if (proc_kanji_code=sjis_enc) then cur_val:=EUCtoSJIS(cur_val)
+  else do_nothing;
   print_int(cur_val); end;
 sjis_code: begin
-  if (proc_kanji_code<>sjis_enc) then cur_val:=SJIStoEUC(cur_val);
+  if (proc_kanji_code=sjis_enc) then do_nothing 
+  else cur_val:=SJIStoEUC(cur_val);
   print_int(cur_val); end;
 kuten_code: begin
   if (proc_kanji_code=sjis_enc) then cur_val:=KUTENtoSJIS(cur_val)
@@ -5666,7 +5668,8 @@ set_kansuji_char: print_esc("kansujichar");
 set_kansuji_char:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
 if not check_kanji(cur_val) then
-  begin print_err("Invalid KANSUJI char ("); print_hex(n); print_char(")");
+  begin print_err("Invalid KANSUJI char (");
+  print_hex(cur_val); print_char(")");
 @.Invalid KANSUJI char@>
   help1("I'm skip this control sequences.");@/
   error; return;
@@ -5679,7 +5682,12 @@ else if (n<0)or(n>9) then
   end
 else
   begin
-    define(kansuji_base+n,n,tokanji(cur_val));
+   if (proc_kanji_code=sjis_enc) then
+      define(kansuji_base+n,n,tokanji(SJIStoJIS(cur_val)))
+   else if (proc_kanji_code=euc_enc) then
+      define(kansuji_base+n,n,tokanji(EUCtoJIS(cur_val)))
+   else if (proc_kanji_code=jis_enc) then
+      define(kansuji_base+n,n,tokanji(cur_val));
   end;
 end;
 
