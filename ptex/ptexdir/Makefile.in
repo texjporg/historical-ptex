@@ -1,123 +1,329 @@
-# Makefile for BibTeX.
+# Makefile for ptex -- ken-na@ascii.co.jp, Public domain.
+version = 7.0
 
-SHELL = /bin/sh
-srcdir = @srcdir@
-VPATH = @srcdir@
+kanjicode = @kanjicode@
 
-# This is so kpathsea will get remade automatically if you change
-# something in it and recompile from the package directory.
-kpathsea_parent = ../..
-kpathsea_dir = $(kpathsea_parent)/kpathsea
-kpathsea = $(kpathsea_dir)/kpathsea.a
+default : programs
 
-# Routines used everywhere.
-commondefines = $(srcdir)/../lib/common.defines $(srcdir)/../lib/texmf.defines
-commonh = $(srcdir)/../lib/config.h $(kpathsea_dir)/paths.h
-commono = ../lib/lib.a $(kpathsea)
+programs=ptex tftopl pltotf pdvitype jbibtex
+fmts=ptex.fmt
 
-# Routines used in TeX, Metafont, and BibTeX.
-fileioc = ../lib/openinout.c
-fileioo = openinout.o
+ac_include ../../make/paths.make
 
-program = jbibtex
-
-CC = @CC@
-CFLAGS = -g
-CPPFLAGS = -DBibTeX -I$(srcdir)/../lib -I../..
-
-CCLD = $(CC)
-LDFLAGS = $(CFLAGS) $(XLDFLAGS)
-LIBS = @LIBS@ $(extralibs)
-libs = $(fileioo) $(commono) $(LIBS)
-
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-
+# Used for installation.
 LN = @LN_S@
 
+# Used for triptrap.
+DIFF = diff
+DIFFFLAGS =
 
-.SUFFIXES:
-.SUFFIXES: .o .c .p .ch
-.p.c:
-	$(SHELL) $(srcdir)/../jbibtex/convert $*.p $*.c
-.ch.p:
-	../web/tangle $*.web c$*.ch
-.c.o:
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $*.c
+.SUFFIXES: # get rid of .p.o
+ac_include ../../make/common.make
+ac_include ../../make/programs.make
+##ifeq ($(CC), gcc)
+##XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat -D__USE_FIXED_PROTOTYPES__
+##endif
 
+# With --enable-ipc, TeX may need to link with -lsocket.
+socketlibs = @socketlibs@
 
-default: all
-all: $(program)
+proglib = ../lib/lib.a
 
+common_makeargs = $(MFLAGS) CC='$(CC)' CFLAGS='$(CFLAGS)' $(XMAKEARGS)
+install_makeargs = INSTALL='$(INSTALL)' INSTALL_DATA='$(INSTALL_DATA)' \
+  INSTALL_PROGRAM='$(INSTALL_PROGRAM)' \
+  $(makevars) $(common_makeargs)
 
-$(program): $(program).o $(commono) $(fileioo) extra.o
-	$(CCLD) -o $(program) $(LDFLAGS) $(program).o extra.o $(libs)
-$(program).o: $(program).c $(commonh) $(srcdir)/../lib/jbib.h
-$(program).c: $(program).p $(commondefines) convert
-$(program).p: $(program).web cjbibtex.ch
+# The sh script that does the conversion:
+web2c = srcdir=$(thisdir) $(shared_env) $(SHELL) $(thisdir)/pconvert
+# Additional dependencies:
+web2c_aux = $(thisdir)/pconvert $(cwebdir)/common.defines \
+	$(thisdir)/kanji.defines
+web2c_programs = $(cwebdir)/fixwrites $(cwebdir)/splitup $(cwebdir)/web2c
+web2c_texmf = $(web2c_aux) $(web2c_programs)
 
-cjbibtex.ch: jbibtex.ch
-	rm -f $@
-	cp $(srcdir)/../jbibtex/jbibtex.ch cjbibtex.ch
+# Unfortunately, suffix rules can't have dependencies, or multiple
+# targets, and we can't assume all makes supports pattern rules.
+.SUFFIXES: .p .c .ch .p
+.p.c: # really depends on $(web2c_programs), and generates .h.
+	 $(web2c) $*
+.ch.p: # really depends on ../tangle; for ptex, also generates .pool
+	$(shared_env) ../tangle $(thisdir)/$*.web $<
 
-openinout.c: $(fileioc)
-	rm -f openinout.c
-	$(LN) $(fileioc) openinout.c
+# These definitions have to come before the rules that expand them.
+# The tex{ini,0,1,2}.c files are created by splitup, run as part of convert.
+ptex_c = texini.c tex0.c tex1.c tex2.c
+ptex_o = texini.o tex0.o tex1.o tex2.o ptexextra.o
+plib_o = kanji.o version.o
 
-extra.o: extra.c jbibd.h
-jbibd.h: $(program).c
-	touch jbibd.h
-extra.c: $(srcdir)/../lib/jbib.c
-	-rm -f extra.c
-	$(LN) $(srcdir)/../lib/jbib.c extra.c
-Makefile: Makefile.in ../config.status
-	(cd ..; sh config.status)
+# Prevent Make from deleting the intermediate forms.
+.PRECIOUS: %.p %.c
 
-$(program).web: $(srcdir)/../bibtex/bibtex.web
-	-rm -f $(program).web
-	$(LN) $(srcdir)/../bibtex/bibtex.web $(program).web
+#  
+# Rules for pTeX, TFtoPL, PLtoTF.
+# fix dir
+thisdir = .
+srcdir = ..
+top_srcdir= ../..
+cwebdir = ../web2c
 
+kpathsea_parent = $(top_srcdir)
+kpathsea_srcdir_parent = $(kpathsea_parent)
 
-c-sources: $(program).c openinout.c
-.PHONY: c-sources
+programs: $(programs)
 
-install install-exec: all
-	$(INSTALL_PROGRAM) $(program) $(bindir)/$(program)
-install-data:
+### pTeX
+ptex: $(ptex_o) $(plib_o) $(kpathsea) $(proglib)
+	$(kpathsea_link) $(ptex_o) $(plib_o) $(socketlibs) $(LOADLIBES)
 
+$(ptex_o): $(ptex_c) texcoerce.h texd.h kanji.h
 
-TAGS: *.c *.h
-	etags -t *.c *.h
+$(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_texmf)
+	$(web2c) ptex
 
+ptex.p: ptex.web ptex.ch
 
-mostlyclean::
-	rm -f *.o $(program) $(lib) $(programs)
+ptex.ch: ptex.chg.2.1.5
+	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
+			/^#ifdef JPN/d; /^#endif JPN/d;" ptex.chg.2.1.5 > $@
 
-clean:: mostlyclean
-	rm -f *.dvi *.pool
+ptex.web:
+	$(LN) ../tex.web ptex.web
 
-distclean:: clean
-	rm -f Makefile config.status c-auto.h
+### TFtoPL
+tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
+	$(kpathsea_link) tftopl.o $(plib_o) $(LOADLIBES)
+tftopl.o: tftopl.c kanji.h maintain.h
+tftopl.c: tftopl.p $(web2c_aux)
+tftopl.p: tftopl.web tftopl.ch
+tftopl.ch: tftopl.chg
+	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
+			/^#ifdef JPN/d; /^#endif JPN/d;" tftopl.chg > $@
+tftopl.web:
+	$(LN) ../tftopl.web tftopl.web
 
-# Although we can remake configure and c-auto.h.in, we don't remove
-# them, since many people may lack Autoconf.  Use configclean for that.
-realclean:: distclean
-	rm -f TAGS *.info*
+### PLtoTF
+pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
+	$(kpathsea_link) pltotf.o $(plib_o) $(LOADLIBES)
+pltotf.o: pltotf.c kanji.h maintain.h
+pltotf.c: pltotf.p $(web2c_aux)
+pltotf.p: pltotf.web pltotf.ch
+pltotf.ch: pltotf.chg
+	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
+			/^#ifdef JPN/d; /^#endif JPN/d;" pltotf.chg > $@
+pltotf.web:
+	$(LN) ../pltotf.web pltotf.web
 
-extraclean::
-	rm -f *.aux *.bak *.bbl *.blg *.dvi *.log *.orig *.pl *.rej
-	rm -f *.i *.s *.tfm *.vf *.vpl *\#* *gf *pk *~
-	rm -f CONTENTS.tex a.out core mfput.* patch* texput.*
+### pDVItype
+pdvitype: pdvitype.o $(plib_o) $(kpathsea) $(proglib)
+	$(kpathsea_link) pdvitype.o $(plib_o) $(LOADLIBES)
+pdvitype.o: pdvitype.c kanji.h maintain.h
+	$(compile) -DDVITYPE -DHEX_CHAR_CODE $<
+pdvitype.c: pdvitype.p $(web2c_aux)
+pdvitype.p: pdvitype.web pdvitype.ch
+pdvitype.web:
+	$(LN) ../dvitype.web pdvitype.web
 
-configclean:
-	rm -f configure c-auto.h.in c-auto.h
+### jBibTeX
+jbibtex: jbibtex.o jbibextra.o $(plib_o) $(kpathsea) $(proglib)
+	$(kpathsea_link) jbibtex.o jbibextra.o $(plib_o) $(LOADLIBES)
 
+jbibtex.o: jbibtex.c kanji.h jbibextra.h
+	$(compile) -DBIBTEX $<
+jbibtex.c jbibd.h: jbibtex.p $(web2c_aux) jbibd.sed
+jbibtex.p: jbibtex.web jbibtex.ch
+jbibtex.web:
+	$(LN) ../bibtex.web jbibtex.web
+jbibextra.o: jbibd.h kanji.h maintain.h
 
-# Prevent GNU make 3 from overflowing arg limit on system V.
-.NOEXPORT:
+# Additional dependencies for recompiling the C code are generated
+# automatically, included at the end.
+kanji.o: kanji.c kanji.h
+version.o: version.c kanji.h
 
+texini.o: texini.c texcoerce.h texd.h kanji.h
+tex0.o: tex0.c texcoerce.h texd.h kanji.h
+tex1.o: tex1.c texcoerce.h texd.h kanji.h
+tex2.o: tex2.c texcoerce.h texd.h kanji.h
+ptexextra.o: ptexextra.c texcoerce.h texd.h kanji.h maintain.h
+
+# Additional dependencies for relinking.
+../tangleboot:
+	cd .. && $(MAKE) tangleboot
+../tangle:
+	cd .. && $(MAKE) tangle
+$(cwebdir)/fixwrites:
+	cd $(cwebdir) && $(MAKE) fixwrites
+$(cwebdir)/splitup:
+	cd $(cwebdir) && $(MAKE) splitup
+$(cwebdir)/web2c:
+	cd $(cwebdir) && $(MAKE) web2c
+$(proglib):
+	cd ../lib && $(MAKE) lib.a
+$(kpathsea):
+	cd $(kpathsea_dir) && $(MAKE) libkpathsea.a
+
+# 
+# Making formats and bases.
+formats: $(fmts)
+all_fmts=$(fmts)
+
+ptex.fmt: ptex
+	$(MAKE) files="ptex.tex min10.tfm" prereq-check
+	./ptex -ini \\input ptex \\dump </dev/null
+
+platex.fmt: ptex
+	$(MAKE) files=platex.ltx prereq-check
+	./ptex -ini \\input platex.ltx </dev/null
+
+# This is meant to be called recursively, with $(files) set.
+prereq-check: $(kpathsea_dir)/kpsewhich
+	$(kpathsea_dir)/kpsewhich $(files) >/dev/null \
+		|| $(MAKE) prereq-lose >/dev/null
+
+prereq-lose:
+	@echo "You seem to be missing input files necessary to make the" >&2
+	@echo "basic formats (some or all of: $(files))." >&2
+	@echo "Perhaps you've defined the default paths incorrectly, or" >&2
+	@echo "perhaps you have environment variables set pointing" >&2
+	@echo "to an incorrect location.  See ../kpathsea/BUGS." >&2
+	@echo >&2
+	@echo "If you simply do not have the files, you can" >&2
+	@echo "retrieve a minimal set of input files from" >&2
+	@echo "ftp://ftp.tug.org/tex/lib.tar.gz, mirrored on" >&2
+	@echo "CTAN hosts in systems/web2c." >&2
+	false
+
+$(kpathsea_dir)/kpsewhich: $(kpathsea)
+
+# 
+install: install-exec install-data
+install-exec:: install-links
+install-data:: install-formats
+
+# The actual binary executables and pool files.
+install-programs: $(programs)
+	$(SHELL) $(top_srcdir)/mkdirchain $(bindir) $(texpooldir)
+	for p in $(programs); do $(INSTALL_LIBTOOL_PROG) $(bindir) $$p; done
+
+# The links to ptex for each format and for {ini,vir}ptex.
+install-links: install-programs
+	cd $(bindir) && rm -f iniptex virptex; \
+	$(LN) ptex iniptex; \
+	$(LN) ptex virptex
+
+# Always do plain.*, so examples from the TeXbook (etc.) will work.
+install-formats: install-fmts
+install-fmts: $(all_fmts)
+	$(SHELL) $(top_srcdir)/mkdirchain $(fmtdir)
+	for f in $(all_fmts); do $(INSTALL_DATA) $$f $(fmtdir)/$$f; done
+
+configbak = texmf.cnf.bak
+
+# Auxiliary files.
+install-data::
+	$(SHELL) $(top_srcdir)/mkdirchain \
+		$(texpooldir) $(web2cdir) $(fontnamedir)
+	$(INSTALL_DATA) ptex.pool $(texpooldir)/ptex.pool
+	$(SHELL) $(thisdir)/mkconf $(web2cdir)
+# tcx files are a bad idea
+#	cd $(srcdir)/share && for f in *.tcx; do \
+#	  $(INSTALL_DATA) $$f $(web2cdir)/$$f; done
+# map files are not provided with pTeX
+#	cd $(srcdir)/share && for f in *.map; do \
+#	  $(INSTALL_DATA) $$f $(fontnamedir)/$$f; done
+#	cd $(srcdir)/doc && $(MAKE) $(install_makeargs) install-data
+
+# 
+# Testing, including triptrap. The `x' filenames are for output.
+check: pltotf-check tftopl-check pooltype-check ptex-check 
+
+triptrap: trip
+tripdir = $(srcdir)/triptrap
+ptripdir = ./triptrap
+testdir = $(srcdir)/tests
+testenv = TEXMFCNF=$(ptripdir)
+dvitype_args = -output-level=2 -dpi=72.27 -page-start='*.*.*.*.*.*.*.*.*.*'
+trip: ptex pltotf tftopl ../dvitype
+	@echo ">>> See $(tripdir)/trip.diffs for example of acceptable diffs." >&2
+	./pltotf $(tripdir)/trip.pl trip.tfm
+	./tftopl ./trip.tfm trip.pl
+	-diff $(tripdir)/trip.pl trip.pl
+	rm -f trip.tex; $(LN) $(tripdir)/trip.tex . # get same filename in log
+	-$(SHELL) -c '$(testenv) ./ptex -ini <$(tripdir)/trip1.in >tripin.fot'
+	mv trip.log tripin.log
+	-diff $(tripdir)/tripin.log tripin.log
+# May as well test non-ini second time through.
+	-$(SHELL) -c '$(testenv) ./ptex <$(tripdir)/trip2.in >trip.fot'
+	-diff $(tripdir)/trip.fot trip.fot
+# We use $(DIFF) instead of `diff' only for those files where there
+# might actually be legitimate numerical differences.
+	-$(DIFF) $(DIFFFLAGS) $(tripdir)/trip.log trip.log
+	$(SHELL) -c '$(testenv) ../dvitype $(dvitype_args) trip.dvi >trip.typ'
+	-$(DIFF) $(DIFFFLAGS) $(tripdir)/trip.typ trip.typ
+
+# Ad hoc tests.
+pltotf-check: pltotf
+	./pltotf -verbose $(testdir)/cmr10 $(testdir)/xcmr10
+	./pltotf -verbose $(testdir)/min10 $(testdir)/xmin10
+
+tftopl-check: tftopl
+	./tftopl -verbose $(testdir)/cmr10 $(testdir)/xcmr10
+	./tftopl -verbose $(testdir)/min10 $(testdir)/xmin10
+
+pooltype-check: ../pooltype
+	../pooltype ptex.pool > $(testdir)/xtexpool.typ
+
+ptex-check: trip ptex.fmt
+# Test truncation (but don't bother showing the warning msg).
+	./ptex -output-comment="`cat PROJECTS`" $(testdir)/hello 2>/dev/null \
+	  && ../dvitype hello.dvi | grep kb@mail.tug.org >/dev/null
+# \openout should show up in \write's.
+	./ptex $(testdir)/openout && grep xfoo openout.log
+# one.two.tex -> one.two.log
+	./ptex $(testdir)/one.two && ls -l one.two.log
+# uno.dos -> uno.dos.log
+	./ptex $(testdir)/uno.dos && ls -l uno.dos.log
+	./ptex $(testdir)/just.texi && ls -l just.log
+	-./ptex $(testdir)/batch.tex
+	./ptex -shell $(testdir)/write18 | grep echo
+# tcx files are a bad idea.
+#	./ptex -translate-file=$(srcdir)/share/isol1-t1.tcx $(testdir)/eight \
+#	  && ../dvitype eight.dvi >eigh.typ
+	./ptex -mltex -ini $(testdir)/mltextst
+	-./ptex </dev/null
+	-PATH=$(kpathsea_dir):$$PATH ./ptex '\nonstopmode\font\foo=nonesuch\end'
+
+installcheck:
+	cd $(testdir) && ptex '\nonstopmode \tracingstats=1 \input story \bye'
+
+# 
+# Cleaning.
 clean::
-	rm -f *.p *.c *.h
-
+	rm -f *.aux *.dvi *.fot *.log *.pl *.tfm *.typ *.fmt
+	rm -f texcoerce.h texd.h jbibd.h jbibtex.h
+	rm -f $(ptex_c) $(ptex_o) $(plib_o) $(programs)
+	rm -f tftopl.h tftopl.c tftopl.o
+	rm -f pltotf.h pltotf.c pltotf.o
+	rm -f pdvitype.h pdvitype.c pdvitype.o
+	rm -f jbibtex.c jbibtex.o jbibextra.o
 distclean:: clean
-	rm -f cjbibtex.ch
+	rm -fr failure
+	rm -f ptex.web ptex.ch ptex.p ptex.pool
+	rm -f tftopl.web tftopl.ch tftopl.p
+	rm -f pltotf.web pltotf.ch pltotf.p
+	rm -f pdvitype.web pdvitype.p
+	rm -f jbibtex.web jbibtex.p
+	rm -f Makefile kanji.h
+extraclean:: distclean
+	rm -f trip.tex trap.mf mtrap.mp trap.mp trap.mpx
+	rm -f trip.* tripin.* tripos.tex 8terminal.tex
+	rm -f trap.* mftrap.* mftrapin.* mptrap.* mptrapin.*
+	rm -f trapf.* mtrap.* writeo* missfont.log
+
+# Makefile.
+Makefile: configure $(srcdir)/config.status $(thisdir)/Makefile.in
+	$(SHELL) configure $(kanjicode)
+
+kanji.h: kanji.h.in
+	$(SHELL) configure $(kanjicode)

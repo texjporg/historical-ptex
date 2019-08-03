@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+#  author: Ken Nakano (ken-na@ascii.co.jp)
+#
+progname=`basename $0`
+
+printUsage () {
+	echo "Usage: $progname {EUC|JIS|SJIS}"
+	exit 1
+}
+
+if [ -z "$*" ]; then
+	printUsage
+fi
+
+case $1 in
+	euc|EUC)  kanjicode=EUC  ;;
+	jis|JIS)  kanjicode=JIS  ;;
+	sjis|SJIS) kanjicode=SJIS ;;
+	*) echo "unknown option $1"; printUsage ;;
+esac
+
+if [ ! -f kanji.h.in ]; then
+	echo "kanji.h.in not found."
+	exit 1
+fi
+echo "creating kanji.h"
+sed -e "s/@kanjicode@/$kanjicode/" kanji.h.in > kanji.h
+
+if [ ! -f ../config.status ]; then
+	echo "../config.status not found."
+	echo "please make orignal Web2c programs before make pTeX."
+	exit 1
+fi
+CONFIG_FILES=Makefile
+CONFIG_HEADERS=..
+export CONFIG_FILES CONFIG_HEADERS
+../config.status
+sed -e "s/@kanjicode@/$kanjicode/" Makefile > $$ && mv -f $$ Makefile
+exit 0

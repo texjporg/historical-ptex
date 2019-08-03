@@ -1,19 +1,5 @@
 % pltotf.ch for C compilation with web2c.
 %
-% The original version of this file was created by Pavel Curtis.
-%
-% Japanese version History:
-%   05/??/87 Greg McFarlane, ASCII: handles kanji format tfm files
-%                                   (changes indicated by KANJI:)
-%   06/??/89 Hisato Hamano, ASCII : Marge Kanji and C Version
-%                                   Handle TATE-kumi tfm files
-%   09/??/90 Hisato Hamano, ASCII : Marge EUC Version
-%   06/06/95 Ken Nakano, ASCII    : Rewrite for version 3.4.
-%   11/18/95 Ken Nakano           : bug fix (GLUEKERN can't handle COMMENT).
-%
-% History:
-% (more recent changes in ../ChangeLog.W2C)
-%
 % 04/04/83 (PC)  Original version, made to work with version 1.2 of PLtoTF.
 % 04/16/83 (PC)  Brought up to version 1.3 of PLtoTF.
 % 06/30/83 (HWT) Revised changefile format for version 1.7 Tangle
@@ -23,60 +9,47 @@
 % 03/22/88 (ETM) Converted for use with WEB to C
 % 11/29/89 (KB)  Version 3.
 % 01/16/90 (SR)  Version 3.2.
-% (more recent changes in ../ChangeLog.W2C)
+% (more recent changes in the ChangeLog)
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [0] WEAVE: print changes only.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [0] WEAVE: print changes only.
 \pageno=\contentspagenumber \advance\pageno by 1
 @y
 \pageno=\contentspagenumber \advance\pageno by 1
 \let\maybe=\iffalse
-\def\title{PL$\,$\lowercase{to}$\,$TF changes for C, and for Kanji}
+#ifndef JPN
+\def\title{PL$\,$\lowercase{to}$\,$TF changes for C}
+#else JPN
+\def\title{PL$\,$\lowercase{to}$\,$TF changes for C, and for KANJI}
+#endif JPN
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [1] Change banner string.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
-@d banner=='This is PLtoTF, Version 3.4' {printed when the program starts}
+#ifdef JPN
+@x [2] l.67 - pTeX:
+@d banner=='This is PLtoTF, Version 3.5' {printed when the program starts}
 @y
-@d banner=='This is PLtoTF, Version 3.4 p1.1(output-kanji-code)' {more is printed later}
+@d banner=='This is Nihongo PLtoTF, Version p1.2, based on PLtoTF, Version 3.5'
+  {printed when the program starts}
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [2] Fix files in program statement.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
-@p program PLtoTF(@!pl_file,@!tfm_file,@!output);
-@y
-@p program PLtoTF;
-@z
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [still 2] No banner unless verbose.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI: But I like print banner when PLtoTF is used with no argument.
-@x
+@x [still 2] No banner unless verbose.
+procedure initialize; {this procedure gets things started properly}
+  var @<Local variables for initialization@>@/
   begin print_ln(banner);@/
 @y
-  begin
-    if (argc < 3) or (argc > n_options + 3)
-    then begin
-      print (banner); print_ln (version_string);
-      print_ln ('Usage: pltotf [-verbose] <property list file> <tfm file>.');
-      uexit (1);
-    end;
-    @<Initialize the option variables@>;
-    @<Parse arguments@>;
+@<Define |parse_arguments|@>
+procedure initialize; {this procedure gets things started properly}
+  var @<Local variables for initialization@>@/
+begin
+  kpse_set_progname (argv[0]);
+  parse_arguments;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [3] Larger constants.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x [3] Larger constants.
+@!buf_size=60; {length of lines displayed in error messages}
+@y
+@!buf_size=3000; {max input line length, output error line length}
+@z
 @x
 @!max_lig_steps=5000;
   {maximum length of ligature program, must be at most $32767-257=32510$}
@@ -84,41 +57,31 @@
 @!hash_size=5003; {preferably a prime number, a bit larger than the number
   of character pairs in lig/kern steps}
 @y
-@!max_lig_steps=32000;
+@!max_lig_steps=32500;
   {maximum length of ligature program, must be at most $32767-257=32510$}
 @!max_kerns=15000; {the maximum number of distinct kern values}
 @!hash_size=15077; {preferably a prime number, a bit larger than the number
   of character pairs in lig/kern steps}
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [6] Open PL file.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [6] Open PL file.
 reset(pl_file);
 @y
-argv (optind, pl_name);
 reset (pl_file, pl_name);
 if verbose then begin
   print (banner);
+#ifndef JPN
   print_ln (version_string);
+#else JPN
+  print (version_string);
+  ifdef('OUTEUC') print_ln(' (EUC)'); endif('OUTEUC');
+  ifdef('OUTSJIS') print_ln(' (SJIS)'); endif('OUTSJIS');
+  ifdef('OUTJIS') print_ln(' (JIS)'); endif('OUTJIS');
+#endif JPN
 end;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [15] Change type of tfm_file and declare extra file name variables.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
-@!tfm_file:packed file of 0..255;
-@y
-@!tfm_file:packed file of 0..255;
-@!tfm_name,@!pl_name:packed array[1..PATH_MAX] of char;
-@z
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [16] Open TFM file.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [16] Open TFM file.
 @ On some systems you may have to do something special to write a
 packed file of bytes. For example, the following code didn't work
 when it was first tried at Stanford, because packed files have to be
@@ -129,67 +92,71 @@ opened with a special switch setting on the \PASCAL\ that was used.
 rewrite(tfm_file);
 @y
 @ On some systems you may have to do something special to write a
-packed file of bytes with Pascal.  It's no problem in C.
+packed file of bytes.  It's no problem in C.
 @^system dependencies@>
 
 @<Set init...@>=
-argv (optind + 1, tfm_name);
-rewrite (tfm_file, tfm_name);
+rewritebin (tfm_file, tfm_name);
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [28] We redefine fill_buffer procedure, which can read JIS kanji code.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
+#ifdef JPN
+@x [18] l.488 - pTeX:
+@!xord:array[char] of ASCII_code; {conversion table}
+@y
+@!xord:array[char] of ASCII_code; {conversion table}
+@!xchr:array[char] of byte; {specifiles conversion of output character}
+@z
+
+@x [19] l.499 - pTeX:
+for k:=first_ord to last_ord do xord[chr(k)]:=invalid_code;
+@y
+for k:=0 to @'37 do xchr[k]:='?';
+for k:=@'40 to 255 do xchr[k]:=k;
+for k:=first_ord to last_ord do xord[chr(k)]:=invalid_code;
+@z
+
+@x [27] l.580 - pTeX: to convert putc of web2c
+for k:=1 to loc do print(buffer[k]); {print the characters already scanned}
+@y
+for k:=1 to loc do print(xchr[buffer[k]]);
+  {print the characters already scanned}
+@z
+@x [27] l.584 - pTeX: to convert putc of web2c
+for k:=loc+1 to limit do print(buffer[k]); {print the characters yet unseen}
+@y
+for k:=loc+1 to limit do print(xchr[buffer[k]]);
+  {print the characters yet unseen}
+@z
+
+@x [28] l.603 - pTeX: Read JIS kanji code.
 @p procedure fill_buffer;
 begin left_ln:=right_ln; limit:=0; loc:=0;
 @y
 @p procedure fill_buffer;
-var @!c_a,@!c_b:integer;
-@!kmode:integer;
+var @!c_a,@!c_b:byte;
+@!kmode:byte;
 begin left_ln:=right_ln; limit:=0; loc:=0; kmode:=0;
 @z
-@x
+@x [28] l.612 - pTeX:
 else  begin while (limit<buf_size-1)and(not eoln(pl_file)) do
     begin incr(limit); read(pl_file,buffer[limit]);
     end;
 @y
 else  begin while (limit<buf_size-3)and(not eoln(pl_file)) do
-   begin read(pl_file,c_a); if c_a=@'33 then
-     begin read(pl_file,c_a); if c_a='$' then
-       begin read(pl_file,c_a);
-         if (c_a='@@')or(c_a='B') then kmode:=1 { Kanji in }
-         else begin
-           incr(limit); buffer[limit]:=@'33;
-           incr(limit); buffer[limit]:='$';
-           incr(limit); buffer[limit]:=c_a;
-         end;
-       end else if c_a='(' then begin read(pl_file,c_a);
-         if (c_a='J')or(c_a='B')or(c_a='H') then kmode:=0 { Kanji out }
-         else begin
-           incr(limit); buffer[limit]:=@'33;
-           incr(limit); buffer[limit]:='(';
-           incr(limit); buffer[limit]:=c_a;
-         end;
-       end else begin
-         incr(limit); buffer[limit]:=@'33;
-         incr(limit); buffer[limit]:=c_a;
-       end;
-     end else begin
-       if kmode=0 then begin incr(limit); buffer[limit]:=c_a; end
-       else begin read(pl_file,c_b);
-ifdef('EUC')
-         c_a:=JIStoEUC(c_a*256+c_b);
-endif('EUC')
-ifdef('SJIS')
-         c_a:=JIStoSJIS(c_a*256+c_b);
-endif('SJIS')
-         incr(limit); buffer[limit]:=c_a div 256;
-         incr(limit); buffer[limit]:=c_a mod 256;
-       end;
-     end;
-   end;
+    begin read(pl_file,c_a);
+    if c_a=@'33 then @<Store JIS code characters to buffer@>
+    else
+      begin if kmode=0 then
+        begin incr(limit); buffer[limit]:=c_a;
+        end
+      else  begin read(pl_file,c_b);
+        ifdef('EUCPTEX') c_a:=JIStoEUC(c_a*@'400+c_b); endif('EUCPTEX')@/
+        ifdef('SJISPTEX') c_a:=JIStoSJIS(c_a*@'400+c_b); endif('SJISPTEX')@/
+        incr(limit); buffer[limit]:=c_a div @'400;
+        incr(limit); buffer[limit]:=c_a mod @'400;
+        end;
+      end;
+    end;
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,19 +167,48 @@ endif('SJIS')
 %      This bug may be found in other routines so...
 %      Fix: add some (more?) space at the end of each line, in fill_buffer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [28] l.615 - pTeX:
   buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
+  if left_ln then @<Set |loc| to the number of leading blanks in
+    the buffer, and check the indentation@>;
+  end;
+end;
 @y
   buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
-  if right_ln then
-    begin incr(limit); buffer[limit+1]:=' ';
+  if right_ln then begin incr(limit); buffer[limit+1]:=' ';
     end;
+  if left_ln then @<Set |loc| to the number of leading blanks in
+    the buffer, and check the indentation@>;
+  end;
+end;
+
+@ @<Store JIS code characters...@>=
+begin read(pl_file,c_a);
+if c_a='$' then  begin read(pl_file,c_a);
+  if (c_a='@@')or(c_a='B') then kmode:=1 { Kanji in }
+  else begin incr(limit); buffer[limit]:=@'33;
+    incr(limit); buffer[limit]:='$';
+    incr(limit); buffer[limit]:=c_a;
+    end;
+  end
+else  if c_a='(' then  begin read(pl_file,c_a);
+  if (c_a='J')or(c_a='B')or(c_a='H') then kmode:=0 { Kanji out }
+  else  begin incr(limit); buffer[limit]:=@'33;
+    incr(limit); buffer[limit]:='(';
+    incr(limit); buffer[limit]:=c_a;
+    end;
+  end
+else  begin
+  incr(limit); buffer[limit]:=@'33;
+  incr(limit); buffer[limit]:=c_a;
+  end;
+end
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [36] May have to increase some numbers to fit new commands
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [36] l.747 - pTeX:
 @d max_name_index=88 {upper bound on the number of keywords}
 @d max_letters=600 {upper bound on the total length of all keywords}
 @y
@@ -223,8 +219,7 @@ endif('SJIS')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [44] Add kanji related codes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
+@x [44] l.832 - pTeX:
 @d character_code=12
 @y
 @d character_code=12
@@ -233,130 +228,68 @@ endif('SJIS')
 @d chars_in_type_code=15   {|CHARSINTYPE| property}
 @d dir_code=16             {|DIRECTION| property}
 @z
-
-@x
+@x [44] l.849 - pTeX:
 @d lig_code=74
 @y
 @d lig_code=74
 @d glue_code=75            {|GLUE| property}
 @#
-@d undefined=0
-@d tfm_format=1
-@d jfm_or_vfm=2
-@d jfm_format=3
-@d vfm_format=4
+@d undefined=0  {not decided file format yet}
+@d tfm_format=1 {\.{TFM} file format}
+@d jfm_or_vfm=2 {Yoko or Tate \.{JFM} file format}
+@d jfm_format=3 {Yoko-kumi \.{JFM} file format}
+@d vfm_format=4 {Tate-kumi \.{JFM} file format}
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [79] `index' might be a libraly routine.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [79] `index' might be a library routine.
 |k|th element of its list.
-
-@<Glob...@>=
-@!index:array[pointer] of byte;
 @y
 |k|th element of its list.
-
 @d index == index_var
-
-@<Glob...@>=
-@!index:array[pointer] of byte;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [84] We change valid property code.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+#ifdef JPN
+@x [84] l.1535 - pTeX: Change valid property code.
 else if cur_code>character_code then
   flush_error('This property name doesn''t belong on the outer level')
 @.This property name doesn't belong...@>
 @y
 else if (cur_code>dir_code)or
         ((file_format=tfm_format)and(cur_code>character_code)) then
-    flush_error('This property name doesn''t belong on the outer level')
+  flush_error('This property name doesn''t belong on the outer level')
 @.This property name doesn't belong...@>
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [85] We added some property codes.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
+@x [85] l.1557 - pTeX: Added some property codes.
 character_code: read_char_info;
 @y
 character_code: read_char_info;
-@<Read the kanji property@>
+type_code: read_kanji_info;
+glue_kern_code: read_glue_kern;
+chars_in_type_code: read_chars_in_type;
+dir_code: read_direction;
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [94] LIGTABLE command can not be used in JPL.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
-@ @<Read ligature/kern list@>=
-begin while level=1 do
-@y
-@ @<Read ligature/kern list@>=
-begin @<If is jfm or vfm, then print error@>;
-  while level=1 do
-@z
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [103] No output (except errors) unless verbose.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [103] No output (except errors) unless verbose.
 @<Print |c| in octal notation@>;
 @y
 if verbose then @<Print |c| in octal notation@>;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [104] CHARACTER property can not use for jpl.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
-@ @<Read a character prop...@>=
-begin get_name;
-if cur_code=comment_code then skip_to_end_of_item
-@y
-@ @<Read a character prop...@>=
-begin get_name;
-if cur_code=comment_code then skip_to_end_of_item
-else @<If is jfm or vfm, then print error@>
-@z
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [110] there are no charlists in kanji format files.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI:
-@x
-@<Doublecheck the lig/kern commands and the extensible recipes@>;
+#ifdef JPN
+@x [110] l.1907 - pTeX: there are no charlists in kanji format files.
 for c:=0 to 255 do
   @<Make sure that |c| is not the largest element of a charlist cycle@>;
 @y
-@<Doublecheck the lig/kern commands and the extensible recipes@>;
 if file_format=tfm_format then
   for c:=0 to 255 do
     @<Make sure that |c| is not the largest element of a charlist cycle@>;
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [110] change error message if gluekern table
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%@x
-%  print_ln('Last LIGTABLE LABEL was not used.');
-%@y
-%  if file_format=tfm_format then
-%    print_ln('Last LIGTABLE LABEL was not used.')
-%  else
-%    print_ln('Last GLUEKERN LABEL was not used.');
-%@z
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [115] Output of reals.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [115] Output of reals.
 @ @d round_message(#)==if delta>0 then print_ln('I had to round some ',
 @.I had to round...@>
   #,'s by ',(((delta+1) div 2)/@'4000000):1:7,' units.')
@@ -367,23 +300,18 @@ if file_format=tfm_format then
   print_ln(' units.'); end
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [118] Change the name of the variable `class', since AIX 3.1's <math.h>
 % defines a function by that name.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 @x
 @d pending=4 {$f(x,y)$ is being evaluated}
 @y
 @d pending=4 {$f(x,y)$ is being evaluated}
-
-@d class == class_var
+@d class == class_var  {Avoid problems with AIX \.{<math.h>}}
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [120] when checking glue_kern prog check glues as well
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% KANJI: koko
-@x
+#ifdef JPN
+@x [120] l.2027 - pTeX: when checking glue_kern prog check glues as well
     begin if lig_exam<>bchar then
       check_existence(lig_exam)('LIG character examined by');
 @.LIG character examined...@>
@@ -401,40 +329,37 @@ if file_format=tfm_format then
 @.LIG character generated...@>
     if lig_gen>=128 then if(c<128)or(c=256) then
       if(lig_exam<128)or(lig_exam=bchar) then seven_unsafe:=true;
-    end else
-      check_existence(lig_exam)('GLUE character generated by');
+    end
+  else check_existence(lig_exam)('GLUE character generated by');
   end
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [123] web2c can't handle these mutually recursive procedures.
 % But let's do a fake definition of f here, so that it gets into web2c's
 % symbol table...
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 @x
 @p function f(@!h,@!x,@!y:indx):indx; forward;@t\2@>
   {compute $f$ for arguments known to be in |hash[h]|}
 @y
-@p
-ifdef('notdef')
+@p 
+ifdef('notdef') 
 function f(@!h,@!x,@!y:indx):indx; begin end;@t\2@>
   {compute $f$ for arguments known to be in |hash[h]|}
 endif('notdef')
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [124] ... and then really define it now.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 @x
 @p function f;
 @y
-@p function f(@!h,@!x,@!y:indx):indx;
+@p function f(@!h,@!x,@!y:indx):indx; 
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [126] Fix up output of bytes.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+#ifdef JPN
+@x [126] l.2165 - pTeX: Fix up output of bytes.
 @<Doublecheck...@>=
 if nl>0 then for lig_ptr:=0 to nl-1 do
   if lig_kern[lig_ptr].b2<kern_flag then
@@ -446,20 +371,112 @@ if nl>0 then for lig_ptr:=0 to nl-1 do
 @y
 @<Doublecheck...@>=
 @z
+#endif JPN
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [127] Fix up output of bytes.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [127] Fix up output of bytes.
 @d out(#)==write(tfm_file,#)
 @y
 @d out(#)==putbyte(#,tfm_file)
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [136] Fix output of reals.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+#ifdef JPN
+@x [128] l.2194 - pTeX: Decide the |file_format|.
+@<Do the output@>=
+@y
+@<Do the output@>=
+case file_format of
+tfm_format: do_nothing;
+undefined,jfm_or_vfm: begin file_format:=jfm_format;
+  print_ln('Input file is in kanji YOKO-kumi format.');
+  end;
+jfm_format: print_ln('Input file is in kanji YOKO-kumi format.');
+vfm_format: print_ln('Input file is in kanji TATE-kumi format.');
+end;
+@z
+@x [128] l.2198 - pTeX: Output kanji character
+@<Output the character info@>;
+@y
+if file_format<>tfm_format then @<Output the kanji character type info@>;
+@<Output the character info@>;
+@z
+@x [128] l.2200 - pTeX: Output glue/kern programs
+@<Output the ligature/kern program@>;
+@y
+@<Output the ligature/kern program@>;
+if (file_format<>tfm_format)and(ng>0) then
+  for krn_ptr:=0 to ng-1 do
+    begin out_scaled(glue[3*krn_ptr+0]);
+    out_scaled(glue[3*krn_ptr+1]);
+    out_scaled(glue[3*krn_ptr+2]);
+    end;
+@z
+
+@x [130] l.2223 - pTeX:
+not_found:=true; bc:=0;
+while not_found do
+  if (char_wd[bc]>0)or(bc=255) then not_found:=false
+  else incr(bc);
+not_found:=true; ec:=255;
+while not_found do
+  if (char_wd[ec]>0)or(ec=0) then not_found:=false
+  else decr(ec);
+if bc>ec then bc:=1;
+@y
+if file_format<>tfm_format then
+  begin bc:=0; ec:=0; nt:=1;
+  for kanji_type_index:=0 to max_kanji do
+    begin if kanji_type[kanji_type_index]>0 then incr(nt);
+    if kanji_type[kanji_type_index]>ec then ec:=kanji_type[kanji_type_index];
+    end;
+  end
+else  begin not_found:=true; bc:=0;
+  while not_found do
+    if (char_wd[bc]>0)or(bc=255) then not_found:=false
+    else incr(bc);
+  not_found:=true; ec:=255;
+  while not_found do
+    if (char_wd[ec]>0)or(ec=0) then not_found:=false
+    else decr(ec);
+  if bc>ec then bc:=1;
+  end;
+@z
+@x [130] l.2237 - pTeX:
+lf:=6+lh+(ec-bc+1)+memory[width]+memory[height]+memory[depth]+
+memory[italic]+nl+lk_offset+nk+ne+np;
+@y
+if file_format<>tfm_format then
+  lf:=7+nt+lh+(ec-bc+1)+memory[width]+memory[height]+memory[depth]+
+    memory[italic]+nl+lk_offset+nk+3*ng+np
+else
+  lf:=6+lh+(ec-bc+1)+memory[width]+memory[height]+memory[depth]+
+    memory[italic]+nl+lk_offset+nk+ne+np;
+@z
+
+@x [131] l.2243 - pTeX:
+out_size(lf); out_size(lh); out_size(bc); out_size(ec);
+out_size(memory[width]); out_size(memory[height]);
+out_size(memory[depth]); out_size(memory[italic]);
+out_size(nl+lk_offset); out_size(nk); out_size(ne); out_size(np);
+@y
+if file_format=jfm_format then
+  begin out_size(yoko_id_number); out_size(nt);
+  end
+else if file_format=vfm_format then
+  begin out_size(tate_id_number); out_size(nt);
+  end;
+out_size(lf); out_size(lh); out_size(bc); out_size(ec);
+out_size(memory[width]); out_size(memory[height]);
+out_size(memory[depth]); out_size(memory[italic]);
+out_size(nl+lk_offset); out_size(nk);
+if file_format<>tfm_format then begin out_size(ng*3)
+  end
+else begin out_size(ne);
+  end;
+out_size(np);
+@z
+#endif JPN
+
+@x [136] Fix output of reals.
 @p procedure out_scaled(x:fix_word); {outputs a scaled |fix_word|}
 var @!n:byte; {the first byte after the sign}
 @!m:0..65535; {the two least significant bytes}
@@ -479,57 +496,91 @@ begin if fabs(x/design_units)>=16.0 then
     print_real(x/@'4000000,1,3);
     print_ln(' is too large.');
 @.The relative dimension...@>
-    print('  (Must be less than 16*designsize');
-    if design_units<>unity then begin print(' =');
-      print_real(design_units/@'200000,1,3);
-      print(' designunits');
-    end;
+  print('  (Must be less than 16*designsize');
+  if design_units<>unity then begin print(' =');
+	print_real(design_units/@'200000,1,3);
+	print(' designunits');
+  end;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [141] char_remainder[c] is unsinged, and label_table[sort_ptr].rr
+% [141] char_remainder[c] is unsigned, and label_table[sort_ptr].rr
 % might be -1, and if -1 is coerced to being unsigned, it will be bigger
 % than anything else.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
   while label_table[sort_ptr].rr>char_remainder[c] do
 @y
   while label_table[sort_ptr].rr>toint(char_remainder[c]) do
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [146] Declare some routines which we need.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+#ifdef JPN
+@x [146] l.2460 - pTeX:
 @p procedure param_enter;
 @y
 @p
 @<Declare kanji scanning routines@>@/
-@<Declare jfm routines@>@/
-
 procedure param_enter;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [147] Be quiet unless verbose.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
+@x [146] l.2472 - pTeX: LIGTABLE command can not be used in JPL.
+begin @<Read ligature/kern list@>;
+end;
+@y
+begin @<If is jfm or vfm then print error@>;
+@<Read ligature/kern list@>;
+end;
+@z
+
+@x [146] l.2477 - pTeX: CHARACTER command can not be used in JPL.
+begin @<Read character info list@>;
+end;
+@y
+begin @<If is jfm or vfm then print error@>;
+@<Read character info list@>;
+end;
+@z
+
+@x [146] l.2490 - pTeX:
+begin @<Correct and check the information@>
+end;
+@y
+begin @<Correct and check the information@>
+end;
+@#
+procedure read_kanji_info; {TYPE command}
+var @!c:byte; {the char}
+begin @<If is tfm then print error@>;
+@<Read Kanji character type list@>;
+end;
+@#
+procedure read_glue_kern; {GLUEKERN command}
+var krn_ptr:0..max_kerns; {an index into |kern|}
+@!c:byte; {runs through all character codes}
+begin @<If is tfm then print error@>;
+@<Read glue/kern list@>;
+end;
+@#
+procedure read_chars_in_type; {CHARSINTYPE command}
+var @!type_num:byte; {kanji character type number}
+@!jis_code:integer; {sixteen bits Kanji character code}
+begin @<If is tfm then print error@>;
+@<Read Kanji characters list in this type@>;
+end;
+@#
+procedure read_direction; {DIRECTION command}
+begin @<If is tfm then print error@>;
+@<Read direction@>;
+end;
+@z
+#endif JPN
+
+@x [147] Be quiet unless verbose. 
 read_input; print_ln('.');@/
-corr_and_check;@/
-@<Do the output@>;
 @y
 read_input;
 if verbose then print_ln('.');
-corr_and_check;@/
-if file_format=tfm_format then begin @<Do the output@>;
-end else begin @<Do the kanji output@>; end;
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [148] From here to end of file is kanji related stuff
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x
-@* System-dependent changes.
+@x [148] System-dependent changes.
 This section should be replaced, if necessary, by changes to the program
 that are necessary to make \.{PLtoTF} work at a particular installation.
 It is usually best to design your change file so that all changes to
@@ -539,81 +590,113 @@ which introduce new sections, can be inserted here; then only the index
 itself will get a new section number.
 @^system dependencies@>
 @y
-@* System-dependent changes.  We want to parse a Unix-style command line.
-@^system dependencies@>
+Parse a Unix-style command line.
 
-@<Parse arguments@> =
+@d argument_is (#) == (strcmp (long_options[option_index].name, #) = 0)
+
+@<Define |parse_arguments|@> =
+procedure parse_arguments;
+const n_options = 3; {Pascal won't count array lengths for us.}
+var @!long_options: array[0..n_options] of getopt_struct;
+    @!getopt_return_val: integer;
+    @!option_index: c_int_type;
+    @!current_option: 0..n_options;
 begin
+  @<Initialize the option variables@>;
   @<Define the option table@>;
   repeat
-    getopt_return_val := getopt_long_only (argc, gargv, '', long_options,
-                                           address_of_int (option_index));
-    if getopt_return_val <> -1
-    then begin
-      if getopt_return_val = "?"
-      then uexit (1); {|getopt| has already given an error message.}
-      {We don't have any non-flag options.}
-    end;
+    getopt_return_val := getopt_long_only (argc, argv, '', long_options,
+                                           address_of (option_index));
+    if getopt_return_val = -1 then begin
+      {End of arguments; we exit the loop below.} ;
+
+    end else if getopt_return_val = "?" then begin
+      usage (1, 'pltotf');
+
+    end else if argument_is ('help') then begin
+      usage (0, PLTOTF_HELP);
+
+    end else if argument_is ('version') then begin
+      print_version_and_exit (banner, nil, 'D.E. Knuth');
+
+    end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
 
-  {Now |optind| is the index of first non-option on the command line.}
-end
+  {Now |optind| is the index of first non-option on the command line.
+   We must have one or two remaining arguments.}
+  if (optind + 1 <> argc) and (optind + 2 <> argc) then begin
+    write_ln (stderr, 'pltotf: Need one or two file arguments.');
+    usage (1, 'pltotf');
+  end;
+  
+  pl_name := extend_filename (cmdline (optind), 'pl');
 
+  {If an explicit output filename isn't given, construct it from |pl_name|.}
+  if optind + 2 = argc then begin
+    tfm_name := extend_filename (cmdline (optind + 1), 'tfm');
+  end else begin
+    tfm_name := basename_change_suffix (pl_name, '.pl', '.tfm');
+  end;
+end;
 
-@ The array of information we pass in.  The type |getopt_struct| is
-defined in C, to avoid type clashes.  We also need to know the return
-value from getopt, and the index of the current option.
-
-@<Local var...@> =
-@!long_options: array[0..n_options] of getopt_struct;
-@!getopt_return_val: integer;
-@!option_index: c_int_type;
-
-
-@ Here are the options we allow.
+@ Here are the options we allow.  The first is one of the standard GNU options.
+@.-help@>
 
 @<Define the option...@> =
-long_options[0].name := 'verbose';
-long_options[0].has_arg := 0;
-long_options[0].flag := address_of_int (verbose);
-long_options[0].val := 1;
+current_option := 0;
+long_options[current_option].name := 'help';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr (current_option);
 
+@ Another of the standard options.
+@.-version@>
 
-@ The global variable |verbose| determines whether or not we print
-progress information.
+@<Define the option...@> =
+long_options[current_option].name := 'version';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr (current_option);
 
+@ Print progress information?
+
+@<Define the option...@> =
+long_options[current_option].name := 'verbose';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := address_of (verbose);
+long_options[current_option].val := 1;
+incr (current_option);
+
+@ 
 @<Glob...@> =
 @!verbose: c_int_type;
 
-@ It starts off |false|.
-
+@
 @<Initialize the option...@> =
 verbose := false;
-
 
 @ An element with all zeros always ends the list.
 
 @<Define the option...@> =
-long_options[1].name := 0;
-long_options[1].has_arg := 0;
-long_options[1].flag := 0;
-long_options[1].val := 0;
+long_options[current_option].name := 0;
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
 
+@ Global filenames.
 
-@ Pascal compilers won't count the number of elements in an array
-constant for us.  This doesn't include the zero-element at the end,
-because this array starts at index zero.
+@<Global...@> =
+@!tfm_name,@!pl_name:c_string;
 
-@<Constants...@> =
-n_options = 1;
-
-
-@* For Japanese Font Metric routines. % KANJI:
+#ifdef JPN
+@* For Japanese Font Metric routines.
 We need to include some routines for handling kanji characters.
 
 @<Constants...@>=
 max_kanji=7237; { maximam number of 2byte characters }
-kanji_id_number=11; { is identifier for YOKO-kumi font}
+yoko_id_number=11; { is identifier for YOKO-kumi font}
 tate_id_number=9; { is identifier for TATE-kumi font}
 
 @ @<Glob...@>=
@@ -626,11 +709,22 @@ ng:integer; {number of 3-word entries in glue table}
 
 @ @<Set init...@>=
 file_format:=undefined;
-for kanji_type_index:=0 to max_kanji do
-  kanji_type[kanji_type_index]:=-1;
-ng := 0;
+for kanji_type_index:=0 to max_kanji do kanji_type[kanji_type_index]:=-1;
+ng:=0;
 
-@ @<Enter all of the names and ...@>=
+@ @<If is jfm or vfm then print error@>=
+if (file_format>tfm_format) then
+  err_print('This is an illegal command for kanji format files.')
+else if (file_format=undefined) then file_format:=tfm_format
+
+@ @<If is tfm then print error@>=
+if (file_format=tfm_format) then
+  err_print('You can use this command only for kanji format files.')
+else if (file_format=undefined) then file_format:=jfm_or_vfm
+
+@ These are extended propaties for \.{JFM}.
+
+@<Enter all of the names and ...@>=
 load4("T")("Y")("P")("E")(type_code);@/
 load8("G")("L")("U")("E")("K")("E")("R")("N")(glue_kern_code);@/
 load11("C")("H")("A")("R")("S")("I")("N")("T")("Y")("P")("E")
@@ -645,165 +739,78 @@ load12("E")("X")("T")("R")("A")("S")("T")("R")("E")("T")("C")("H")
 load11("E")("X")("T")("R")("A")("S")("H")("R")("I")("N")("K")
   (parameter_code+9);@/
 
-@ @<If is jfm or vfm, then print error@>=
-if (file_format>tfm_format) then
-  err_print('This is an illegal command for kanji format files.')
-else if (file_format=undefined) then file_format:=tfm_format
-
-@ @<If is tfm, then print error@>=
-if (file_format=tfm_format) then
-  err_print('You can use this command only for kanji format files.')
-else if (file_format=undefined) then file_format:=jfm_or_vfm
-
-@ @<Read the kanji property@>=
-type_code: read_kanji_info;
-glue_kern_code: read_glue_kern;
-chars_in_type_code: read_chars_in_type;
-dir_code: @<Read direction@>;
-
-@ Next codes read and check direction.  We can not decide |file_format| of
-metric file whether for yoko-kumi or tate-kumi, until have scan |DIRECTION|
-property (|dir_code| command).
-
-@<Read direction@>=
-begin @<If is tfm,...@>;
-while cur_char=" " do get_next;
-if cur_char="T" then begin
-  if verbose then err_print('This is tatekumi format');
-  file_format:=vfm_format;
-end else if cur_char="Y" then begin
-  if verbose then err_print('This is yokokumi format');
-  file_format:=jfm_format;
-end else
-  err_print('The dir value should be "TATE" or "YOKO"');
-skip_to_paren;
-end
-
-@ The |read_chars_in_type| is used when |chars_in_type_code| command is found.
-
-@<Declare jfm routines@>=
-procedure read_chars_in_type;
-var @!type_num:byte;
-@!jis_code:integer;
-begin @<If is tfm,...@>;
-type_num:=get_byte;
-if type_num=0 then
-  skip_error('You cannot list the chars in type 0. It is the default type')
-else begin repeat
-    jis_code:=get_jis_code;
-    if jis_code<0 then
-      err_print('Illegal characters. I was expecting a jis code or character')
-    else if jis_code=0 then { 0 signals |end_of_list| }
-      do_nothing
-    else if not valid_jis_code(jis_code) then
-      err_print('jis code ', jis_code:1, ' is invalid')
-    else if kanji_type[jis_to_index(jis_code)]>=0 then
-      err_print('jis code ', jis_code:1, ' is already in type ',
-        kanji_type[jis_to_index(jis_code)])
-    else
-      kanji_type[jis_to_index(jis_code)]:=type_num;
-  until jis_code = 0;
-  decr(loc); { get the ')' back for |finish_the_property| }
-  end
-end;
-
-@ The |read_kaji_info| procedure is like the |read_char_info| procedure,
-except can not use |NEXTLARGER| and |VARCHAR|.
-
-@<Declare jfm routines@>=
-procedure read_kanji_info;
-var @!c:byte; {the char}
-begin @<If is tfm,...@>;
-c:=get_byte; {read the character type that is begin specified}
-if verbose then @<Print |c| in octal notation@>;
-while level=1 do
-  begin while cur_char=" " do get_next;
-    if cur_char="(" then @<Read a kanji property@>
-    else if cur_char=")" then skip_to_end_of_item
-      else junk_error;
-  end;
-  if char_wd[c]=0 then char_wd[c]:=sort_in(width,0); {legitimatize c}
-  finish_inner_property_list;
-end;
-
-@ @<Read a kanji property@>=
-begin get_name;
-if cur_code=comment_code then skip_to_end_of_item
-else if (cur_code<char_wd_code)and(cur_code>char_ic_code) then
-  flush_error('This property name doesn''t belong in a TYPE list')
-else  begin case cur_code of
-  char_wd_code: char_wd[c]:=sort_in(width,get_fix);
-  char_ht_code: char_ht[c]:=sort_in(height,get_fix);
-  char_dp_code: char_dp[c]:=sort_in(depth,get_fix);
-  char_ic_code: char_ic[c]:=sort_in(italic,get_fix);
-  end;@/
-  finish_the_property;
-  end;
-end
 
 @ Here, we declare kanji related routines and package gluekern stuff.
 There routines a bit similar reading ligature/kern programs.
 
-@<Declare jfm routines@>=
-procedure read_glue_kern;
-var krn_ptr:0..max_kerns; {an index into |kern|}
-@!c:byte; {runs through all character codes}
-begin @<Read glue/kern list@>;
-end;
-
-@ @<Read glue/kern list@>=
-begin @<If is tfm,...@>;
-  while level=1 do
+@<Read glue/kern list@>=
+begin while level=1 do
   begin while cur_char=" " do get_next;
-    if cur_char="(" then @<Read a glue/kern command@>
-    else if cur_char=")" then skip_to_end_of_item else junk_error;
+  if cur_char="(" then @<Read a glue/kern command@>
+  else if cur_char=")" then skip_to_end_of_item
+  else junk_error;
   end;
 finish_inner_property_list;
-end
+end;
 
 @ @<Read a glue/kern command@>=
 begin get_name;
-  if cur_code=comment_code then skip_to_end_of_item
-  else  begin case cur_code of
-    label_code:@<Read a glue label step@>;
-    stop_code:@<Read a stop step@>;
-    krn_code:@<Read a (glue) kerning step@>;
-    glue_code:@<Read a glue step@>;
-    others:
-      flush_error('This property name doesn''t belong in a GLUEKERN list');
+if cur_code=comment_code then skip_to_end_of_item
+else  begin case cur_code of
+  label_code:@<Read a glue label step@>;
+  stop_code:@<Read a stop step@>;
+  krn_code:@<Read a (glue) kerning step@>;
+  glue_code:@<Read a glue step@>;
+  others:
+    flush_error('This property name doesn''t belong in a GLUEKERN list');
 @.This property name doesn't belong...@>
-    end;
-    finish_the_property;
-    end;
+  end;
+  finish_the_property;
+  end;
 end
 
 @ When a character is about to be tagged, we use the following
 so that an error message is given in case of multiple tags.
 
-@d check_glue_tag(#) == {print error if |c| already tagged}
-begin case char_tag[#] of
-no_tag: do_nothing;
-lig_tag: err_print('This character already appeared in a GLUEKERN LABEL');
-@.This character already...@>
-list_tag: err_print('Impossible: a list tag in a kanji format file?');
-ext_tag: err_print('Impossible: an extensible tag in a kanji format file?');
-end;
-end
-
 @<Read a glue label step@>=
-begin c:=get_byte; check_glue_tag(c);
-  if nl>255 then
-    err_print('GLUEKERN with more than 255 commands cannot have further labels')
+begin c:=get_byte;
+case char_tag[c] of
+  no_tag: do_nothing;
+  lig_tag: err_print('This character already appeared in a GLUEKERN LABEL');
+  @.This character already...@>
+  list_tag: err_print('Impossible: a list tag in a kanji format file?');
+  ext_tag: err_print('Impossible: an extensible tag in a kanji format file?');
+end;
+if nl>255 then
+  err_print('GLUEKERN with more than 255 commands cannot have further labels')
 @.GLUEKERN with more than 255...@>
-  else begin char_tag[c]:=lig_tag; char_remainder[c]:=nl;
-    lk_step_ended:=false;
+else begin char_tag[c]:=lig_tag; char_remainder[c]:=nl;
+  lk_step_ended:=false;
   end;
 end
 
+@ @<Read a (glue) kerning step@>=
+begin lig_kern[nl].b0:=0; lig_kern[nl].b1:=get_byte;@/
+lig_kern[nl].b2:=kern_flag; kern[nk]:=get_fix; krn_ptr:=0;
+while kern[krn_ptr]<>kern[nk] do incr(krn_ptr);
+if krn_ptr=nk then
+  begin if nk<256 then incr(nk)
+  else begin err_print('At most 256 different kerns are allowed');
+@.At most 256 different kerns...@>
+    krn_ptr:=255;
+    end;
+  end;
+lig_kern[nl].b3:=krn_ptr;
+if nl=511 then
+  err_print('GLUEKERN table should never exceed 511 LIG/KRN commands')
+@.GLUEKERN table should never...@>
+else incr(nl);
+lk_step_ended:=true;
+end
+
 @ @<Read a glue step@>=
-begin
-  lig_kern[nl].b0:=0; lig_kern[nl].b1:=get_byte; lig_kern[nl].b2:=0;@/
-  glue[3*ng+0]:=get_fix; glue[3*ng+1]:=get_fix; glue[3*ng+2]:=get_fix;
+begin lig_kern[nl].b0:=0; lig_kern[nl].b1:=get_byte; lig_kern[nl].b2:=0;@/
+glue[3*ng+0]:=get_fix; glue[3*ng+1]:=get_fix; glue[3*ng+2]:=get_fix;
 krn_ptr:=0;
 while (glue[3*krn_ptr+0]<>glue[3*ng+0])or
       (glue[3*krn_ptr+1]<>glue[3*ng+1])or
@@ -822,233 +829,186 @@ else incr(nl);
 lk_step_ended:=true;
 end
 
-@ @<Read a (glue) kerning step@>=
-begin
-lig_kern[nl].b0:=0; lig_kern[nl].b1:=get_byte; lig_kern[nl].b2:=kern_flag;@/
-kern[nk]:=get_fix; krn_ptr:=0;
-while kern[krn_ptr]<>kern[nk] do incr(krn_ptr);
-if krn_ptr=nk then
-  begin if nk<256 then incr(nk)
-  else begin err_print('At most 256 different kerns are allowed');
-@.At most 256 different kerns...@>
-    krn_ptr:=255;
-    end;
+@ The |TYPE| command like |CHARACTER| command, but |TYPE| only use
+|CHARWD|, |CHARHT|, |CHARDP| and |CHARIT|
+
+@<Read Kanji character type list@>=
+begin c:=get_byte; {read the character type that is begin specified}
+if verbose then @<Print |c| in octal notation@>;
+while level=1 do
+  begin while cur_char=" " do get_next;
+  if cur_char="(" then @<Read a kanji property@>
+  else if cur_char=")" then skip_to_end_of_item
+    else junk_error;
   end;
-lig_kern[nl].b3:=krn_ptr;
-if nl=511 then
-  err_print('GLUEKERN table should never exceed 511 LIG/KRN commands')
-@.GLUEKERN table should never...@>
-else incr(nl);
-lk_step_ended:=true;
+if char_wd[c]=0 then char_wd[c]:=sort_in(width,0); {legitimatize c}
+finish_inner_property_list;
+end;
+
+@ @<Read a kanji property@>=
+begin get_name;
+if cur_code=comment_code then skip_to_end_of_item
+else if (cur_code<char_wd_code)and(cur_code>char_ic_code) then
+  flush_error('This property name doesn''t belong in a TYPE list')
+else  begin case cur_code of
+  char_wd_code: char_wd[c]:=sort_in(width,get_fix);
+  char_ht_code: char_ht[c]:=sort_in(height,get_fix);
+  char_dp_code: char_dp[c]:=sort_in(depth,get_fix);
+  char_ic_code: char_ic[c]:=sort_in(italic,get_fix);
+  end;@/
+  finish_the_property;
+  end;
 end
 
-@ The general plan for producing \.{JFM} files is long but simple as same as
-producing \.{TFM}.
+@ Next codes used to get KANJI codes from \.{JPL} file.
 
-@<Do the kanji output@>=
-case file_format of
-tfm_format: err_print('PLtoTF: something wrong');
-undefined,jfm_or_vfm: begin file_format:=jfm_format;
-  print_ln('Input file is in kanji format.');
-  end;
-jfm_format: print_ln('Input file is in kanji format.');
-vfm_format: print_ln('Input file is in TATE-kumi format.');
-end;
-@<Compute the fourteen subfile sizes@>;
-@<Output the fourteen subfile sizes@>;
-@<Output the header block@>;
-@<Output the kanji character type info@>;
-@<Output the dimensions themselves@>;
-@<Output the glue/kern program@>;
-@<Output the parameters@>;
+@<Read Kanji characters list in this type@>=
+begin type_num:=get_byte;
+if type_num=0 then
+  skip_error('You cannot list the chars in type 0. It is the default type')
+else  begin repeat jis_code:=get_kanji;
+  if jis_code<0 then
+    err_print('Illegal characters. I was expecting a jis code or character')
+  else if jis_code=0 then { 0 signals |end_of_list| }
+    do_nothing
+  else if kanji_type[jis_to_index(jis_code)]>=0 then
+    err_print('jis code ', jis_code:1, ' is already in type ',
+      kanji_type[jis_to_index(jis_code)])
+  else
+    kanji_type[jis_to_index(jis_code)]:=type_num;
+  until jis_code=0;
+  skip_to_paren;
+  end
+end
 
-@ @<Compute the fourteen subfile sizes@>=
-lh:=header_ptr div 4;@/
-bc:=0; ec:=0; nt:=1;
-for kanji_type_index:=0 to max_kanji do begin
-  if kanji_type[kanji_type_index]>0 then incr(nt);
-  if kanji_type[kanji_type_index]>ec then ec:=kanji_type[kanji_type_index];
-end;
-incr(memory[width]); incr(memory[height]); incr(memory[depth]);
-incr(memory[italic]);@/
-@<Compute the ligature/kern program offset@>;
-lf:=7+nt+lh+(ec-bc+1)+memory[width]+memory[height]+memory[depth]+
-  memory[italic]+nl+lk_offset+nk+3*ng+np;
+@ Next codes read and check direction.  We can not decide |file_format| of
+metric file whether for yoko-kumi or tate-kumi, until have scan |DIRECTION|
+property (|dir_code| command).
 
-@ @<Output the fourteen subfile sizes@>=
-if file_format=jfm_format then begin out_size(kanji_id_number);
-end else begin out_size(tate_id_number);
-end;
-out_size(nt);
-out_size(lf); out_size(lh); out_size(bc); out_size(ec);
-out_size(memory[width]); out_size(memory[height]);
-out_size(memory[depth]); out_size(memory[italic]);
-out_size(nl+lk_offset); out_size(nk);
-out_size(ng*3); out_size(np);
+@<Read direction@>=
+begin while cur_char=" " do get_next;
+if cur_char="T" then
+  begin if verbose then err_print('This is tatekumi format');
+  file_format:=vfm_format;
+  end
+else if cur_char="Y" then
+  begin if verbose then err_print('This is yokokumi format');
+  file_format:=jfm_format;
+  end
+else err_print('The dir value should be "TATE" or "YOKO"');
+skip_to_paren;
+end
 
-@ @<Output the kanji character type info@>=
-out_size(0); out_size(0); { the default }
-for kanji_type_index:=1 to max_kanji do begin
-  if kanji_type[kanji_type_index]>0 then begin
-    out_size(index_to_jis(kanji_type_index));
+@ Next codes used to write |kanji_type| to \.{JFM}.
+
+@<Output the kanji character type info@>=
+begin out_size(0); out_size(0); { the default }
+for kanji_type_index:=1 to max_kanji do
+  begin if kanji_type[kanji_type_index]>0 then
+    begin out_size(index_to_jis(kanji_type_index));
     out_size(kanji_type[kanji_type_index]);
     if verbose then begin
       print('char index = ', kanji_type_index);
       print(' (jis ');
-      print_hex(index_to_jis(kanji_type_index));
-      print(' ) is type ');
+      print_jis_hex(index_to_jis(kanji_type_index));
+      print(') is type ');
       print_octal(kanji_type[kanji_type_index]);
       write_ln('');
+      end;
     end;
   end;
 end;
-index[0]:=0;
-for c:=bc to ec do begin
-  out(index[char_wd[c]]);
-  out(index[char_ht[c]]*16+index[char_dp[c]]);
-  out(index[char_ic[c]]*4+char_tag[c]);
-  out(char_remainder[c]);
-  end;
-
-@ @<Output the glue/kern program@>=
-@<Output the ligature/kern program@>;
-if ng>0 then for krn_ptr:=0 to ng-1 do begin
-  out_scaled(glue[3*krn_ptr+0]);
-  out_scaled(glue[3*krn_ptr+1]);
-  out_scaled(glue[3*krn_ptr+2]);
-end
 
 @ We also need to define some routines which handling 2bytes characters.
 These routine is called from only |read_chars_in_type| command.
 
-The |get_next_raw| function replaces kanji character in buffer to one space
-character and return kanji code.  The |get_jis_from_kanji| and the
-|get_hex_code| function support reading kanji character. The first one deals
-with as kanji character, but later as JIS kanji code number.
-The |get_jis_code| function is interface of abobe two functions.
-
-@d kanjiord(#) == #
-@d next_non_blank(#) ==
-begin repeat # := get_next_raw;
-  until # <> ' ';
-end
-
-@<Declare kanji scanning routines@>=
-function get_next_raw:char;
-begin
-  while loc=limit do fill_buffer;
-  incr(loc);
-  get_next_raw:=buffer[loc];
-  if iskanji(buffer[loc]) then cur_char:=" "
-  else cur_char:=xord[buffer[loc]];
-end;
-@#
-function get_jis_from_kanji(byte1:char):integer;
-var @!byte2:char;
-@!kcode:integer;
-begin
-  byte2:=get_next_raw;
-ifdef('EUC')
-  if kanjiord(byte1)>0 then
-    kcode:=kanjiord(byte1)-128
-  else
-    kcode:=kanjiord(byte1)+128;
-  kcode:=kcode*256;
-  if kanjiord(byte2)>0 then
-    kcode:=kcode+kanjiord(byte2)-128
-  else
-    kcode:=kcode+kanjiord(byte2)+128;
-  get_jis_from_kanji:=kcode;
-endif('EUC')
-ifdef('SJIS')
-  if kanjiord(byte1)<0 then
-    k_code:=256+kanjiord(byte1)
-  else
-    k_code:=kanjiord(byte1);
-  k_code:=k_code*256;
-  if kanjiord(byte2)<0 then
-    k_code:=k_code+256+kanjiord(byte2)
-  else
-    k_code:=k_code+kanjiord(byte2);
-  get_jis_from_kanji:=SJIStoJIS(k_code);
-endif('SJIS')
-end;
-@#
-function get_hex_code(ch:char):integer;
-var @!num:integer;
-begin num:=0;
-  while ((ch>='0')and(ch<='9'))or((ch>='A')and(ch<='F')) do
-  begin
-    if ch>='A' then num:=num*16+ord(ch)+10-'A'
-    else num:=num*16+ord(ch)-'0';
-    ch:=get_next_raw;
-  end;
-  decr(loc); {we've gone one char too far}
-  get_hex_code:=num;
-end;
-@#
-function get_jis_code:integer;
-var @!ch:char;
-@!tmp_jis_code:integer;
-begin next_non_blank(ch);
-  if ch=')' then tmp_jis_code:=0
-  else if iskanji(ch) then tmp_jis_code:=get_jis_from_kanji(ch)
-  else if (ch='J')or(ch='j') then
-    begin next_non_blank(ch);
-      if (ch>='0')and(ch<='9') then tmp_jis_code:=get_hex_code(ch)
-      else if ch=')' then tmp_jis_code:=0
-      else tmp_jis_code:=-1
-    end
-  else tmp_jis_code:=-1;
-  get_jis_code:=tmp_jis_code;
-end;
-
-@ The kanji jis code is taken from the |char_ext| and |char_code| values
+The kanji jis code is taken from the |char_ext| and |char_code| values
 set by the user.  The index into the |kanji_type| array is based on the
 kuten codes, with all unused codes removed and beginning at 0, not 0101.
 The |jis_to_index| is called from |chars_in_type| command.
 
 @<Declare kanji scanning routines@>=
+function get_next_raw:byte; {get next rawdata in buffer}
+begin while loc=limit do fill_buffer;
+incr(loc); get_next_raw:=buffer[loc];
+if iskanji1(buffer[loc]) then cur_char:=" "
+else cur_char:=xord[buffer[loc]];
+end;
+@#
+function todig(@!ch:char):byte; {convert character to number}
+begin if (ch>="A")and(ch<="F") then todig:=ch-"A"+10
+else if (ch>="0")and(ch<="9") then todig:=ch-"0"
+else skip_error('This expression is out of JIS-code encoding.');
+end;
+@#
+procedure print_jis_hex(jis_code:integer); {prints jiscode as four digits}
+var dig:array[0..4] of byte; {holds jis hex codes}
+i:byte; {index of array}
+begin dig[0]:=Hi(jis_code) div 16; dig[1]:=Hi(jis_code) mod 16;
+dig[2]:=Lo(jis_code) div 16; dig[3]:=Lo(jis_code) mod 16;
+for i:=0 to 3 do
+  if dig[i]<10 then print(dig[i]) else
+  case dig[i] of
+     10: print('A'); 11: print('B'); 12: print('C');
+     13: print('D'); 14: print('E'); 15: print('F');
+  end;
+end;
+@#
 function valid_jis_code(jis:integer):boolean;
 var @!first_byte,@!second_byte:integer; { jis code bytes }
 begin valid_jis_code:=true;
-  first_byte:=jis div 256;
-  if (first_byte<@"21)or(first_byte>@"7E) then valid_jis_code:=false
-  else if (first_byte>@"28)and(first_byte<@"30) then valid_jis_code:=false;
-  second_byte:=jis mod 256;
-  if (second_byte<@"21)or(second_byte>@"7E) then valid_jis_code:=false;
+first_byte:=jis div @'400; second_byte:=jis mod @'400;
+if (first_byte<@"21)
+   or((first_byte>@"28)and(first_byte<@"30))
+   or(first_byte>@"74) then valid_jis_code:=false;
+if (second_byte<@"21)or(second_byte>@"7E) then valid_jis_code:=false;
 end;
 @#
 function jis_to_index(jis:integer):integer;
 var @!first_byte,@!second_byte:integer; { jis code bytes }
 begin
-  first_byte:=jis div 256 -@"21;
-  second_byte:=jis mod 256 -@"21;
-  if first_byte<=8 then
-    jis_to_index:=first_byte*94+second_byte
-  else { next |first_byte| start 16 }
-    jis_to_index:=(first_byte-7)*94+second_byte;
+first_byte:=jis div @'400 -@"21;
+second_byte:=jis mod @'400 -@"21;
+if first_byte<=8 then
+  jis_to_index:=first_byte*94+second_byte
+else { next |first_byte| start 16 }
+  jis_to_index:=(first_byte-7)*94+second_byte;
 end;
 @#
-function index_to_jis(kanji_index:integer):integer;
-begin
-  if kanji_index<=8*94+94-1 then
-    index_to_jis:=(kanji_index div 94 +@"21)*256+(kanji_index mod 94 +@"21)
-  else
-    index_to_jis:=((kanji_index+7*94) div 94 +@"21)*256+
-      ((kanji_index+7*94) mod 94 +@"21)
+function index_to_jis(ix:integer):integer;
+begin if ix<=8*94+94-1 then
+  index_to_jis:=(ix div 94 +@"21)*@'400+(ix mod 94 +@"21)
+else
+  index_to_jis:=((ix+7*94) div 94 +@"21)*@'400+((ix+7*94) mod 94 +@"21)
 end;
 @#
-procedure print_hex(c:integer); {prints four hex digits}
-var @!a:integer;
-begin
-print('"',(c div @"1000):1, ((c div @"100) mod @"10):1,
-          ((c div @"10) mod @"10):1);
-a:=c mod @"10;
-if a<10 then print('',a:1)
-else case a of
-  10: print('A'); 11: print('B'); 12: print('C');
-  13: print('D'); 14: print('E'); 15: print('F');
-  end;
+function get_kanji:integer; {get kanji character code}
+var @!ch:byte;
+@!cx,@!jis_code:integer; {sixteen bits kanji character code}
+begin repeat ch:=get_next_raw; {|ch| is rawdata in buffer}
+until ch<>' '; {skip the blanks before the kanji code}
+if ch=')' then
+  begin decr(loc); jis_code:=0;
+  end
+else if (ch='J')or(ch='j') then
+  begin repeat ch:=get_next_raw; until ch<>' ';
+  cx:=todig(xord[ch])*@"1000;
+  incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch)*@"100;
+  incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch)*@"10;
+  incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch);
+  jis_code:=cx; cur_char:=ch;
+  if not valid_jis_code(jis_code) then
+    err_print('jis code ', jis_code:1, ' is invalid');
+  end
+else if iskanji1(ch) then
+  begin incr(loc); cx:=Lo(ch)*@'400+Lo(buffer[loc]); cur_char:=" ";
+  ifdef('EUCPTEX') jis_code:=EUCtoJIS(cx); endif('EUCPTEX')
+  ifdef('SJISPTEX') jis_code:=SJIStoJIS(cx); endif('SJISPTEX')
+  if not valid_jis_code(jis_code) then
+    err_print('jis code ', jis_code:1, ' is invalid');
+  end
+else jis_code:=-1;
+get_kanji:=jis_code;
 end;
+#endif JPN
 @z

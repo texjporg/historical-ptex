@@ -1,4 +1,5 @@
 #include "cpascal.h"
+#include "kanji.h"
 
 /* re-define aopenin, aopenout */
 #undef aopenin

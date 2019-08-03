@@ -1,48 +1,58 @@
-/* kanji.h: Handling 2byte char.
-   This is included by config.h.
+/*
+   kanji.h: Handling 2byte char, and so on.
 */
 #ifndef KANJI_H
 #define KANJI_H
+#include "cpascal.h"
 
-#ifdef KANJI
-#define INPUTJIS
+#define KANJI
+#define JIS   1
+#define SJIS  2
+#define EUC   3
 
-#define output-kanji-code
-#define internal-kanji-code
+/* 端末に出力する漢字コードを EUC, JIS, SJIS のいずれかで指定する。*/
+#define TERM_CODE @kanjicode@
 
-#define PTEXPOOLNAME "ptex.pool"
+/* OUTJIS, OUTSJIS, OUTEUC は端末とログファイルへの出力コードを示す。*/
+/* EUCPTEX, SJISPTEX は、pTeX の内部処理コードを示す。*/
+#if TERM_CODE == JIS
+#define OUTJIS
+#define EUCPTEX
+#elif TERM_CODE == SJIS
+#define OUTSJIS
+#define SJISPTEX
+#else
+#define OUTEUC
+#define EUCPTEX
+#endif
 
-#define tokanji(X) X
-#define tonum(X) X
+/* functions */
 #define Hi(X) ((X >> 8) & 0xff)
 #define Lo(X) (X & 0xff)
 #define PutHi(X,Y) X &= 0xff; (X |= (Y << 8))
 #define PutLo(X,Y) X &= 0xff00; (X |= (Y & 0xff))
-#define xchr(X) X
-#define xord(X) X
-#define getchr(X) (X & 0xff);
-#define getcmd(X) curcmd = ((X >> 8) & 0xff); curchr = (X & 0xff)
-#define getcmdx(T, M, C) M = (T) >> 8; C = ((T) & 0xff)
 
-extern boolean iskanji();
-extern boolean iskanji2();
-extern boolean iskana();
-extern boolean checkkanji();
-extern integer calcpos();
+extern boolean iskanji1(unsigned char);
+extern boolean iskanji2(unsigned char);
+extern boolean checkkanji(integer);
+extern integer calcpos(integer);
 
-extern integer EUCtoJIS();
-extern integer JIStoEUC();
-extern integer SJIStoEUC();
-extern integer KUTENtoEUC();
-extern integer SJIStoJIS();
-extern integer JIStoSJIS();
-extern integer EUCtoSJIS();
-extern integer KUTENtoSJIS();
+extern integer EUCtoJIS(integer);
+extern integer JIStoEUC(integer);
+extern integer SJIStoJIS(integer);
+extern integer JIStoSJIS(integer);
+extern integer SJIStoEUC(integer);
+extern integer EUCtoSJIS(integer);
+extern integer KUTENtoEUC(integer);
+extern integer KUTENtoSJIS(integer);
 
-#if defined(JIS) && !defined(KANJI_C)
+/* JIS 端末に出力するとき、putc の定義を変える */
+#if defined(OUTJIS) && !defined(KANJI_C)
 #undef putc
 #define putc(c,fp) putc2(c,fp)
 #endif /* JIS or *not* KANJI_C */
 
-#endif /* KANJI */
+/* 連絡先など */
+#include "maintain.h"
+
 #endif /* not KANJI_H */

@@ -1,0 +1,78 @@
+#!/bin/sh
+# Convert WEB programs not needing special treatment to C.
+# $1 is the Pascal file to be converted.
+#
+# author: Ken Nakano (ken-na@ascii.co.jp)
+#
+web2cdir=../web2c
+target=$1
+
+usage () {
+	echo ""
+	echo "Usage: $0 <basefile>"
+	echo "  <basefile> = ptex|tftopl"
+	echo ""
+}
+
+convert_ptex () {
+	cat $web2cdir/common.defines $web2cdir/texmf.defines \
+		./kanji.defines ./ptex.p \
+	| sed -f $web2cdir/cvttex.sed \
+	| $web2cdir/web2c -t -h../texmfmp.h -ctexcoerce \
+	| $web2cdir/fixwrites tex \
+	| $web2cdir/splitup tex
+	sleep 2
+	cat texcoerce.h $web2cdir/coerce.tex > xtexcoerce.h
+	echo '#include "kanji.h"' >> xtexcoerce.h
+	mv xtexcoerce.h texcoerce.h
+	touch texd.h
+}
+
+convert_tool () {
+	cat $web2cdir/common.defines ./kanji.defines ./$target.p \
+	| $web2cdir/web2c -hkanji.h -c$target \
+	| $web2cdir/fixwrites > $target.c
+}
+
+convert_jbibtex() {
+	cat $web2cdir/common.defines ./jbibtex.defines ./$target.p \
+	| $web2cdir/web2c -hjbibextra.h -c$target \
+	| sed -f $web2cdir/cvtbib.sed \
+	| $web2cdir/fixwrites $target > $target.c
+	sed -e 's/(buftype)//g' -e 's/(pdstype)//g' < $target.h >x$target.h
+	mv x$target.h $target.h
+	sed -f jbibd.sed $target.c > jbibd.h
+}
+
+
+case $target in 
+	ptex) convert_ptex
+		cfile=tex2.c # last output file, or thereabouts
+		output_files="tex[0-9]*.c texini.c texd.h texcoerce.h"
+		;;
+	pltotf|tftopl|pdvitype) convert_tool
+		cfile=$target.c
+		output_files="$target.c $target.h"
+		;;
+	jbibtex) convert_jbibtex
+		cfile=$target.c
+		output_files="$target.c $target.h jbibd.h"
+		;;
+	*) usage;
+esac
+
+if test ! -s $cfile || grep @error@ $output_files >/dev/null; then
+  : ${TMPDIR=./failure}
+  # Don't just delete it, since it may be useful for debugging.
+  echo "$0: conversion of $pascalfile failed, moving dregs:" >&2
+  cmd="mv $output_files $TMPDIR"
+  if test ! -d $TMPDIR ; then
+     mkdir $TMPDIR
+  fi
+  (cd $TMPDIR && rm -f $output_files)
+  echo "$0:   $cmd" >&2
+  $cmd
+  exit 1
+fi
+
+exit 0

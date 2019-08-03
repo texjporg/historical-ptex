@@ -1,22 +1,11 @@
-{ add for pTeX }
-@define const PTEXPOOLNAME;
-@define @field LH;
-@define @field v;
-{ kanji.h}
-@define function tokanji ();
-@define function tonum ();
+{ defined at kanji.c, kanji.h }
 @define function Hi ();
 @define function Lo ();
 @define procedure PutHi ();
 @define procedure PutLo ();
-@define function xchr ();
-@define function xord ();
-@define function getchr ();
-@define procedure getcmd ();
-@define procedure getcmdx ();
-@define function iskanji ();
+
+@define function iskanji1 ();
 @define function iskanji2 ();
-@define function iskana ();
 @define function checkkanji ();
 @define function calcpos ();
 @define function EUCtoJIS ();
@@ -28,6 +17,3 @@
 @define function EUCtoSJIS ();
 @define function KUTENtoSJIS ();
 @define function putc2 ();
-{ jextra.h }
-@define function mktok ();
-@define function getjfmpos ();
