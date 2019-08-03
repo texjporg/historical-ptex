@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.6
+% This is a change file for pTeX 3.1.8
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -38,14 +38,14 @@
 % (03/10/2001) KN  pTeX p3.0 (modified BSD licence)
 % (09/02/2004) ST  pTeX p3.1.4
 % (11/29/2004) KN  pTeX p3.1.5
-% (12/09/2004) KN  pTeX p3.1.7
+% (12/13/2004) KN  pTeX p3.1.8
 %
 @x [1.2] l.195 - pTeX:
 @d TeX_banner_k=='This is TeXk, Version 3.141592' {printed when \TeX\ starts}
 @d TeX_banner=='This is TeX, Version 3.141592' {printed when \TeX\ starts}
 @y
-@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.7' {printed when p\TeX\ starts}
-@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.7' {printed when p\TeX\ starts}
+@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.8' {printed when p\TeX\ starts}
+@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.8' {printed when p\TeX\ starts}
 @z
 
 @x [2.??] l.586 - pTeX:
@@ -219,7 +219,10 @@ pseudo: if tally<trick_count then trick_buf[tally mod error_line]:=s;
 @y
 procedure print_char(@!s:ASCII_code); {prints a single character}
 label exit; {label is not used but nonetheless kept (for other changes?)}
-begin
+begin if @<Character |s| is the current new-line character@> then
+ if selector<pseudo then
+  begin print_ln; return;
+  end;
 if kcode_pos=1 then kcode_pos:=2
 else if iskanji1(xchr[s]) then
   begin kcode_pos:=1;
@@ -1956,21 +1959,25 @@ begin repeat cur_chr:=buffer[k]; incr(k);
     begin cat:=kcat_code(cur_chr); incr(k);
     end
   else cat:=cat_code(cur_chr);
-  if buffer[k]=cur_chr then @+if cat=sup_mark then @+if k<limit then
+  while (buffer[k]=cur_chr)and(cat=sup_mark)and(k<limit) do
     begin c:=buffer[k+1]; @+if c<@'200 then {yes, one is indeed present}
       begin d:=2;
       if is_hex(c) then @+if k+2<=limit then
         begin cc:=buffer[k+2]; @+if is_hex(cc) then incr(d);
         end;
       if d>2 then
-        begin hex_to_cur_chr; buffer[k-1]:=cur_chr;
+        begin hex_to_cur_chr;
         end
-      else if c<@'100 then buffer[k-1]:=c+@'100
-      else buffer[k-1]:=c-@'100;
-      limit:=limit-d; first:=first-d;
-      l:=k; cur_chr:=buffer[k-1]; cat:=cat_code(cur_chr);
-      while l<=limit do
-        begin buffer[l]:=buffer[l+d]; incr(l);
+      else if c<@'100 then cur_chr:=c+@'100
+      else cur_chr:=c-@'100;
+      cat:=cat_code(cur_chr);
+      if (cat=letter)or(cat=sup_mark) then
+        begin buffer[k-1]:=cur_chr;
+        limit:=limit-d; first:=first-d;
+        l:=k;
+        while l<=limit do
+          begin buffer[l]:=buffer[l+d]; incr(l);
+          end;
         end;
       end;
     end;
