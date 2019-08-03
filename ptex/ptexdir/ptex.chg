@@ -27,6 +27,7 @@
 % (09/20/95) KN  pTeX p2.1.1
 % (11/21/95) KN  pTeX p2.1.4
 % (08/27/97) KN  pTeX p2.1.5 (based on 3.14159)
+% (02/26/98) KN  pTeX p2.1.6
 %
 #endif JPN
 % tex.ch for C compilation with web2c, derived from various other change files.
@@ -99,7 +100,7 @@ a modified \TeX{} version.
 @x [2] l.187 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.5, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p2.1.6, based on TeX, Version 3.14159'
 #endif JPN
 @z
 
@@ -9428,9 +9429,9 @@ end
 JFM (Japanese Font Metic) file.  The \.{\\inhibitxspcode} is used to control
 inserting a space between 2byte-char and 1byte-char.
 
-@d inhibit_both=0     {is able to insert space before 2byte-char and after it}
-@d inhibit_previous=1 {is able to insert space only before 2byte-char}
-@d inhibit_after=2    {is able to insert space only after 2byte-char}
+@d inhibit_both=0     {disable to insert space before 2byte-char and after it}
+@d inhibit_previous=1 {disable to insert space before 2byte-char}
+@d inhibit_after=2    {disable to insert space after 2byte-char}
 @d no_entry=1000
 @d new_pos=0
 @d cur_pos=1
@@ -9461,13 +9462,13 @@ var p,s:pointer;
 begin s:=calc_pos(c); p:=s;
 if n=new_pos then
   begin repeat
-  if (inhibit_xsp_type(p)=0)or(inhibit_xsp_code(p)=c) then goto done;
+  if (inhibit_xsp_code(p)=0)or(inhibit_xsp_code(p)=c) then goto done;
   incr(p); if p>255 then p:=0;
   until s=p; p:=no_entry;
   end
 else
   begin repeat
-  if inhibit_xsp_type(p)=0 then goto done1;
+  if inhibit_xsp_code(p)=0 then goto done1;
   if inhibit_xsp_code(p)=c then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
@@ -9921,8 +9922,8 @@ end
 begin if (auto_xsp_code(ax) mod 2)=1 then
   begin x:=get_inhibit_pos(cx,cur_pos);
   if x<>no_entry then
-    if (inhibit_xsp_type(x)<>inhibit_both)or
-       (inhibit_xsp_type(x)<>inhibit_after) then
+    if (inhibit_xsp_type(x)=inhibit_both)or
+       (inhibit_xsp_type(x)=inhibit_after) then
       do_ins:=false else do_ins:=true
   else do_ins:=true;
   end

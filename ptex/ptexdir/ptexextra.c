@@ -31,7 +31,7 @@ extern struct tm *localtime ();
 #ifdef TeX
 const_string local_maintainer="Ken Nakano";
 const_string this_bug_address="www-ptex@ascii.co.jp";
-#define BANNER "This is pTeX, Version p2.1.5, based on TeX, Version 3.14159"
+#define BANNER "This is pTeX, Version p2.1.6, based on TeX, Version 3.14159"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP TEXHELP
