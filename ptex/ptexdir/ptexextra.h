@@ -42,7 +42,7 @@ const_string PTEXHELP[] = {
   NULL
 };
 
-#define BANNER "This is pTeX, Version 3.141592-p3.1.8"
+#define BANNER "This is pTeX, Version 3.141592-p3.1.9"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP PTEXHELP

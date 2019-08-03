@@ -1,5 +1,6 @@
-% This is a change file for pTeX 3.1.8
-% By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
+% This is a change file for pTeX 3.1.9
+% By Sadayuki Tanaka (sada-t@ascii.co.jp), Ken Nakano (ken-na@ascii.co.jp)
+% and ASCII Corporation.
 %
 % Thanks for :
 %    Ryoichi Kurasawa (us009185@interramp.com),
@@ -39,13 +40,14 @@
 % (09/02/2004) ST  pTeX p3.1.4
 % (11/29/2004) KN  pTeX p3.1.5
 % (12/13/2004) KN  pTeX p3.1.8
+% (10/17/2005) ST  pTeX p3.1.9
 %
 @x [1.2] l.195 - pTeX:
 @d TeX_banner_k=='This is TeXk, Version 3.141592' {printed when \TeX\ starts}
 @d TeX_banner=='This is TeX, Version 3.141592' {printed when \TeX\ starts}
 @y
-@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.8' {printed when p\TeX\ starts}
-@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.8' {printed when p\TeX\ starts}
+@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.9' {printed when p\TeX\ starts}
+@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.9' {printed when p\TeX\ starts}
 @z
 
 @x [2.??] l.586 - pTeX:
@@ -7602,7 +7604,7 @@ main_loop_j+3:
 @ @<Append |disp_node| at begin ...@>=
 begin if (not is_char_node(tail))and(type(tail)=disp_node) then
   begin if prev_disp=disp then
-    begin free_node(tail,small_node_size); tail:=prev_node;
+    begin free_node(tail,small_node_size); tail:=prev_node; link(tail):=null;
     end
   else disp_dimen(tail):=disp;
   end

@@ -1,3 +1,8 @@
+2005/10/17: (p3.1.9)
+	mkconf: platex の検索パスに tex/platex を入れないように修正
+	ptex: 単語の先頭で LIG/ を行うようなTFMを使用するとベースラインシフト
+        が0でない場合に異常終了するバグを修正
+
 2005/03/07: (p3.1.8)
 	Makefile.in: make install の最後に mktexlsr の実行を追加
 	Makefile.in, INSTALL.txt: teTeX-3.0のTEXMFディレクトリの変更に伴い修正
