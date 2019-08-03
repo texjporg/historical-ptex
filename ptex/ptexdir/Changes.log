@@ -1,0 +1,44 @@
+1995/11/21 (p2.1.4)
+	new feature: accept kanji filename.
+
+1995/11/17 (p2.1.3)
+	fix bug : try_break routine doesn't corect action when the list
+	has disp_node or dir_node (Error `disc4').
+
+1995/11/07 (p2.1.2)
+	fix bug : \kanjiskip doesn't inserted after JFM glue/kern.
+
+1995/10/11
+	include jbibtex (Shouichi Matsui<matsui@denken.or.jp>) and
+	pdvitype (Kazunori Asayama <asayama@kuis.kyoto-u.ac.jp>)
+
+1995/09/20 (p2.1.1)
+	fix bug : \xkanjiskip doesn't inserted after italic correction.
+	fix bug : italic correction doesn't inserted when \{y,t}baselineshift 
+			  is used.
+
+1995/09/08 (p2.1)
+	fix bug : \xkanjiskip doesn't inserted after math mode which correct
+              italic kern spacing.
+
+1995/08/29
+	rename `find_first' to `find_first_char' for djgpp 1.12.
+	(Kazunori Asayama <asayama@kuis.kyoto-u.ac.jp>)
+
+1995/03/25
+	fix bug : Three minuses sequence (---) doesn't become em-hyphen.
+
+1995/03/11
+	imprement \kanji primitive.
+
+1995/01/17
+	translate/modify pTeX 2.0 change file for TeX 3.1415.
+
+1994/12/17
+	translate/modify pTeX 2.0 change file for TeX 3.141.
+
+1994/10/17
+	translate/modify pTeX 1.0.9F change file which based on TeX 2.99 to
+	pTeX 2.0 which based on TeX 3.14.
+
+== EOF ===

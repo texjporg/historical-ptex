@@ -1,0 +1,48 @@
+/* kanji.h: Handling 2byte char.
+   This is included by config.h.
+*/
+#ifndef KANJI_H
+#define KANJI_H
+
+#ifdef KANJI
+#define INPUTJIS
+
+#define output-kanji-code
+#define internal-kanji-code
+
+#define PTEXPOOLNAME "ptex.pool"
+
+#define tokanji(X) X
+#define tonum(X) X
+#define Hi(X) ((X >> 8) & 0xff)
+#define Lo(X) (X & 0xff)
+#define PutHi(X,Y) X &= 0xff; (X |= (Y << 8))
+#define PutLo(X,Y) X &= 0xff00; (X |= (Y & 0xff))
+#define xchr(X) X
+#define xord(X) X
+#define getchr(X) (X & 0xff);
+#define getcmd(X) curcmd = ((X >> 8) & 0xff); curchr = (X & 0xff)
+#define getcmdx(T, M, C) M = (T) >> 8; C = ((T) & 0xff)
+
+extern boolean iskanji();
+extern boolean iskanji2();
+extern boolean iskana();
+extern boolean checkkanji();
+extern integer calcpos();
+
+extern integer EUCtoJIS();
+extern integer JIStoEUC();
+extern integer SJIStoEUC();
+extern integer KUTENtoEUC();
+extern integer SJIStoJIS();
+extern integer JIStoSJIS();
+extern integer EUCtoSJIS();
+extern integer KUTENtoSJIS();
+
+#if defined(JIS) && !defined(KANJI_C)
+#undef putc
+#define putc(c,fp) putc2(c,fp)
+#endif /* JIS or *not* KANJI_C */
+
+#endif /* KANJI */
+#endif /* not KANJI_H */

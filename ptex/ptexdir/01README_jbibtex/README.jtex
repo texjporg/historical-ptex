@@ -1,0 +1,21 @@
+JBibTeXは、電力中央研究所の松井正一さんがBibTeXを日本語化したものですが、
+ここにあるのはそれを桜井が JTeX 1.6 (web2c 6.1) の配布キット中に含める
+ことができるように若干変更したものです。
+
+まず、オリジナルのJBibTeXの配布キットのドキュメントであるREADME.1st.origと
+README.origを読んで下さい。そこで言及されているREADEM.1st.eucとreadmeが
+それぞれREADME.1st.origとREADME.origに名前が変更されています。またこれらの
+中で説明されているdirectoryの位置は以下のように変更されています。
+	bst	-> $TEXMFROOT/bibtex/jbib/bst
+			(generate用ファイルはdoc/jbibtexに)
+	bib	-> $TEXMFROOT/bibtex/jbib/bib
+			(jbtxdoc.bib,jbibtex.bibはdoc/jbibtexに)
+	doc	-> $TEXMFROOT/doc/jbibtex
+また、BibTeXのbst,bibは含めていません。sty fileはJLaTeX2eで使えるか
+どうか未確認なので、そのままこのdirectoryに置いてあります。だたし、
+sty/tables.styはJLaTeX2eと共に使うことができます。(少くともdoc/jbibtexの
+ドキュメントを処理できます。)
+
+なお、bstファイルを探すdirectoryを指定する環境変数は、bibtexと同様に、
+BSTINPUTSが定義されていればそれを、そうでなければTEXINPUTSを見るように
+なっています。

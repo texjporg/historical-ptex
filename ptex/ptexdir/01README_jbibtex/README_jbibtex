@@ -1,0 +1,6 @@
+JBibTeX に関するファイルは、JTeX 1.6 (web2c 6.1) の配付キットに含まれ
+ている JBibTeX を pTeX 2.1 の配付キット中に含めることができるように、
+京都大学の淺山さんが若干変更したものです。
+
+README.jtex, README.1st.orig, README.orig と読み進んでください。
+

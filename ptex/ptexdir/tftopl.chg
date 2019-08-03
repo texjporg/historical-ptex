@@ -1,0 +1,1069 @@
+% tftopl.ch for C compilation with web2c.
+%
+% The original version of this file was created by Pavel Curtis.
+%
+% Japanese version History:
+%
+%   06/06/95 Ken Nakano, ASCII     : Rewrite for version 3.1.
+%   09/??/90 Hamano Hisato, ASCII  : Marge EUC Version
+%   06/??/89 Hamano Hisato, ASCII  : Marge Kanji and C Version
+%                                    Handles TATE-kumi tfm files
+%   05/??/87 Greg McFarlane, ASCII : handles kanji format tfm files
+%                                    (changes indicated by KANJI:)
+%
+% History:
+% 04/04/83 (PC)  Original version, made to work with version 1.0 of TFtoPL,
+%                released with version 0.96 of TeX in February, 1983.
+% 04/16/83 (PC)  Brought up to version 1.0 released with version 0.97 of TeX
+%                in April, 1983.
+% 06/30/83 (HWT) Revised changefile format, for use with version 1.7 Tangle.
+% 07/28/83 (HWT) Brought up to version 2
+% 11/21/83 (HWT) Brought up to version 2.1
+% 03/24/84 (HWT) Brought up to version 2.2
+% 07/12/84 (HWT) Brought up to version 2.3
+% 07/05/87 (ETM) Brought up to version 2.5
+% 03/22/88 (ETM) Converted for use with WEB to C.
+% 11/30/89 (KB)  Version 3.
+% 01/16/90 (SR)  Version 3.1.
+% (more recent changes in ../ChangeLog and ./ChangeLog)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [0] WEAVE: print changes only.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+\pageno=\contentspagenumber \advance\pageno by 1
+@y
+\pageno=\contentspagenumber \advance\pageno by 1
+\let\maybe=\iffalse
+\def\title{TF\lowercase{to}PL changes for C, and for Kanji}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [1] Change banner string.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@d banner=='This is TFtoPL, Version 3.1' {printed when the program starts}
+@y
+@d banner=='This is TFtoPL, Version p3.1 (output-kanji-code)' {more is printed later}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [2] Fix files in program statement.  We need to tell web2c about one
+% special variabel.  Perhaps it would be better to allow @define's
+% anywhere in a source file, but that seemed equally ugly as this.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@p program TFtoPL(@!tfm_file,@!pl_file,@!output);
+@y
+{Tangle doesn't recognize @@ when it's right after the \.=.}
+@p
+@= @@define var tfm;@>@\
+program TFtoPL;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [still 2] Don't print banner unless verbose.  Also, we need to
+% initialize various things, and tftopl doesn't have an `initialize'
+% procedure, so we do it here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI: But I like print banner when TFtoPL is used with no argument.
+@x
+  begin print_ln(banner);@/
+@y
+  var @<Local variables for initialization@>
+  begin
+    if (argc < 2) or (argc > n_options + arg_options + 3)
+    then begin
+      print (banner); print_ln (version_string);
+      print ('Usage: tftopl ');
+      print ('[-verbose] ');
+      print_ln ('[-charcode-format=<format>] ');
+      print_ln ('<tfm file>[.tfm] [<property list file>].');
+@.Usage: ...@>
+      uexit (1);
+    end;
+
+    {We |xrealloc| when we know how big the file is.  The 1000 comes
+     from the negative lower bound.}
+    tfm_file_array := cast_to_byte_pointer (xmalloc (1002));
+    @<Initialize the option variables@>;
+    @<Parse arguments@>;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [6] Declare tfm_name.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@!tfm_file:packed file of 0..255;
+@y
+@!tfm_file:packed file of 0..255;
+@!tfm_name:packed array [1..PATH_MAX] of char;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [7] Open the TFM file.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@ On some systems you may have to do something special to read a
+packed file of bytes. For example, the following code didn't work
+when it was first tried at Stanford, because packed files have to be
+opened with a special switch setting on the \PASCAL\ that was used.
+@^system dependencies@>
+
+@<Set init...@>=
+reset(tfm_file);
+@y
+@ On some systems you may have to do something special to read a
+packed file of bytes.  With C under Unix, we just open the file by name
+and read characters from it.
+
+@<Set init...@>=
+set_paths (TFM_FILE_PATH_BIT);
+argv (optind, tfm_name);
+extend_filename (tfm_name, 'tfm');
+if test_read_access (tfm_name, TFM_FILE_PATH)
+then begin
+  reset (tfm_file, tfm_name);
+end else begin
+  errprint_pascal_string (tfm_name);
+  write_ln (stderr, ': TFM file not found.');
+  uexit (1);
+end;
+if verbose then begin
+  print (banner);
+  print_ln (version_string);
+end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [16] Declare pl_name.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@!pl_file:text;
+@y
+@!pl_file:text;
+@!pl_name:array[1..PATH_MAX] of char;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [17,18] Open the PL file.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@ @<Set init...@>=
+rewrite(pl_file);
+@y
+@ If an explicit filename isn't given, we write the output to |stdout|.
+
+@ @<Set init...@>=
+if optind + 1 = argc
+then pl_file := stdout
+else begin
+  argv (optind + 1, pl_name);
+  rewrite(pl_file, pl_name);
+end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [19] Make |tfm| be dynamically allocated, and rename `index'.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@<Types...@>=
+@!byte=0..255; {unsigned eight-bit quantity}
+@!index=0..tfm_size; {address of a byte in |tfm|}
+@y
+@d index == index_type
+@d kanji_id_byte = 11 {id byte for YOKO-kumi kanji tfm files }
+@d tate_id_byte = 9   {id byte for TATE-kumi kanji tfm files }
+@d tfm_format = 1 { normal tfm formated metric files }
+@d jfm_format = 2 { jfm formated metric files for YOKO-kumi kanji }
+@d vfm_format = 3 { vfm formated metric files for TATE-kumi kanji }
+
+@<Types...@>=
+@!byte=0..255; {unsigned eight-bit quantity}
+@!index=integer; {address of a byte in |tfm|}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [20] declare kanji_id_byte and file_format
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@ @<Glob...@>=
+@!tfm:array [-1000..tfm_size] of byte; {the input data all goes here}
+@y
+@ @<Glob...@>=
+{Kludge here to define |tfm| as a macro which takes care of the negative
+ lower bound.  We've defined |tfm| for the benefit of web2c above.}
+@=#define tfm (tfmfilearray + 1001);@>@\
+@!tfm_file_array: pointer_to_byte; {the input data all goes here}
+@!file_format:tfm_format..vfm_format; {format of tfm file}
+@!nt : 0..@'77777; { number of words in the character type table }
+@!ng : 0..@'77777; { number of words in the glue table }
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [21] Send error output to stderr.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@d abort(#)==begin print_ln(#);
+  print_ln('Sorry, but I can''t go on; are you sure this is a TFM?');
+@y
+@d abort(#)==begin write_ln(stderr, #);
+  write_ln(stderr, 'Sorry, but I can''t go on; are you sure this is a TFM?');
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [21] Allow arbitrarily large input files.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@<Read the whole input file@>=
+read(tfm_file,tfm[0]);
+if tfm[0]>127 then abort('The first byte of the input file exceeds 127!');
+@.The first byte...@>
+if eof(tfm_file) then abort('The input file is only one byte long!');
+@.The input...one byte long@>
+read(tfm_file,tfm[1]); lf:=tfm[0]*@'400+tfm[1];
+if lf=0 then
+  abort('The file claims to have length zero, but that''s impossible!');
+@.The file claims...@>
+if 4*lf-1>tfm_size then abort('The file is bigger than I can handle!');
+@.The file is bigger...@>
+for tfm_ptr:=2 to 4*lf-1 do
+  begin if eof(tfm_file) then
+    abort('The file has fewer bytes than it claims!');
+@.The file has fewer bytes...@>
+  read(tfm_file,tfm[tfm_ptr]);
+  end;
+if not eof(tfm_file) then
+  begin print_ln('There''s some extra junk at the end of the TFM file,');
+@.There's some extra junk...@>
+  print_ln('but I''ll proceed as if it weren''t there.');
+  end
+@y
+@<Read the whole input file@>=
+  read(tfm_file,tfm[0]);
+  if tfm[0]>127 then abort('The first byte of the input file exceeds 127!');
+@.The first byte...@>
+  if eof(tfm_file) then abort('The input file is only one byte long!');
+@.The input...one byte long@>
+  read(tfm_file,tfm[1]); lf:=tfm[0]*@'400+tfm[1];
+{ KANJI: decide if we are reading a kanji tfm file and
+  set |file_format| and nt}
+  if (lf=kanji_id_byte)or(lf=tate_id_byte) then begin
+    if lf=kanji_id_byte then begin
+      file_format := jfm_format;
+      print_ln('Input file is in kanji tfm format.');
+    end else begin
+      file_format := vfm_format;
+      print_ln('Input file is in TATE-kumi tfm format.');
+    end;
+    if eof(tfm_file) then abort('The input file is only two bytes long!');
+    read(tfm_file,tfm[2]);
+    if eof(tfm_file) then abort('The input file is only three bytes long!');
+    read(tfm_file,tfm[3]); nt:=tfm[2]*@'400+tfm[3];
+    if eof(tfm_file) then abort('The input file is only four bytes long!');
+    read(tfm_file,tfm[4]);
+    if eof(tfm_file) then abort('The input file is only five bytes long!');
+    read(tfm_file,tfm[5]); lf:=tfm[4]*@'400+tfm[5];
+  end else file_format:=tfm_format;
+{end KANJI:}
+  if lf=0 then
+    abort('The file claims to have length zero, but that''s impossible!');
+@.The file claims...@>
+tfm_file_array
+  := cast_to_byte_pointer (xrealloc (tfm_file_array, 4 * lf - 1 + 1002));
+{ KANJI: we have to put the rest of the file into tfm[6] and after}
+  case file_format of
+  tfm_format:
+    for tfm_ptr:=2 to 4*lf-1 do begin
+      if eof(tfm_file) then
+        abort('The file has fewer bytes than it claims!');
+@.The file has fewer bytes...@>
+      read(tfm_file,tfm[tfm_ptr]);
+    end;
+  jfm_format, vfm_format:
+    for tfm_ptr:=6 to 4*lf-1 do begin
+      if eof(tfm_file) then
+        abort('The file has fewer bytes than it claims!');
+@.The file has fewer bytes...@>
+      read(tfm_file,tfm[tfm_ptr]);
+    end;
+  end;
+{end KANJI:}
+  if not eof(tfm_file) then begin
+    print_ln('There''s some extra junk at the end of the TFM file,');
+@.There's some extra junk...@>
+    print_ln('but I''ll proceed as if it weren''t there.');
+  end;
+{begin KANJI:}
+  if file_format=jfm_format then
+    write_ln(pl_file, '(COMMENT THIS IS A KANJI FORMAT FILE)')
+  else if file_format=vfm_format then begin
+    write_ln(pl_file, '(COMMENT THIS IS A KANJI FORMAT FILE)');
+    write_ln(pl_file, '(DIRECTION TATE)');
+  end
+{end KANJI:}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [22] the location of subfile sizes is different
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+begin tfm_ptr:=2;@/
+@y
+begin
+  case file_format of
+  tfm_format: begin tfm_ptr:=2; check_sum_value := 24;
+    end;
+  jfm_format,vfm_format: begin tfm_ptr:=6; check_sum_value := 28;
+    end;
+  end;@/
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [22] ng has to be treated specially
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+if (bc>ec+1)or(ec>255) then abort('The character code range ',
+@.The character code range...@>
+  bc:1,'..',ec:1,'is illegal!');
+if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
+  abort('Incomplete subfiles for character dimensions!');
+@.Incomplete subfiles...@>
+if ne>256 then abort('There are ',ne:1,' extensible recipes!');
+@.There are ... recipes@>
+if lf<>6+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then
+  abort('Subfile sizes don''t add up to the stated total!');
+@.Subfile sizes don't add up...@>
+@y
+  case file_format of
+  tfm_format: begin
+      if (bc>ec+1)or(ec>255) then abort('The character code range ',
+@.The character code range...@>
+        bc:1,'..',ec:1,'is illegal!');
+      if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
+        abort('Incomplete subfiles for character dimensions!');
+@.Incomplete subfiles...@>
+      if ne>256 then abort('There are ',ne:1,' extensible recipes!');
+@.There are ... recipes@>
+      if lf<>6+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then
+        abort('Subfile sizes don''t add up to the stated total!');
+@.Subfile sizes don't add up...@>
+    end;
+  jfm_format,vfm_format: begin ng:=ne;
+      if (bc>ec+1)or(ec>255)or(bc<>0) then abort('The character code range ',
+@.The character code range...@>
+          bc:1,'..',ec:1,'is illegal!');
+      if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
+        abort('Incomplete subfiles for character dimensions!');
+@.Incomplete subfiles...@>
+      if lf<>7+nt+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ng+np then
+        abort('Sum of subfile sizes (',
+          7+nt+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ng+np:1,
+          ') is not equal to the stated total ', lf:1);
+@.Subfile sizes don't add up...@>
+    end;
+  end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [23] declare type_base. kanji_type and other globals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@!char_base,@!width_base,@!height_base,@!depth_base,@!italic_base,
+@!lig_kern_base,@!kern_base,@!exten_base,@!param_base:integer;
+  {base addresses for the subfiles}
+@y
+@!type_base,@!char_base,@!width_base,@!height_base,@!depth_base,@!italic_base,
+@!lig_kern_base,@!kern_base,@!glue_base,@!exten_base,@!param_base:integer;
+  {base addresses for the subfiles}
+@!kanji_type:array[0..max_kanji] of -1..255; {kanji type index}
+@!check_sum_value : integer; {either 24 (normal case) or 28 (kanji case)}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [24] define type_base
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@ @<Compute the base addresses@>=
+begin char_base:=6+lh-bc;
+@y
+@ @<Compute the base addresses@>=
+  begin case file_format of
+  tfm_format: char_base:=6+lh-bc;
+  jfm_format,vfm_format: begin type_base:=7+lh;
+    char_base:=type_base + nt - bc; { bc should be zero ...}
+    end;
+  end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [24] define glue_base
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+kern_base:=lig_kern_base+nl;
+exten_base:=kern_base+nk;
+param_base:=exten_base+ne-1;
+@y
+kern_base:=lig_kern_base+nl;
+exten_base:=kern_base+nk;
+glue_base:=exten_base;
+param_base:=exten_base+ne-1;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [25] must change check_sum from macro (=24) to variable
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@d check_sum=24
+@d design_size=check_sum+4
+@d scheme=design_size+4
+@d family=scheme+40
+@d random_word=family+20
+@y
+@d check_sum==check_sum_value
+@d design_size==check_sum+4
+@d scheme==design_size+4
+@d family==scheme+40
+@d random_word==family+20
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [25] add definition of glue macro
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@d kern(#)==4*(kern_base+#) {here \#\ is an index, not a character}
+@y
+@d kern(#)==4*(kern_base+#) {here \#\ is an index, not a character}
+@d glue(#)==4*(glue_base+#) {likewise}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [29] Change strings to C char pointers. The Pascal strings are
+% indexed starting at 1, so we pad with a blank.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@ In order to stick to standard \PASCAL, we use three strings called
+|ASCII_04|, |ASCII_10|, and |ASCII_14|, in terms of which we can do the
+appropriate conversion of ASCII codes. Three other little strings are
+used to produce |face| codes like \.{MIE}.
+
+@<Glob...@>=
+@!ASCII_04,@!ASCII_10,@!ASCII_14: packed array [1..32] of char;
+  {strings for output in the user's external character set}
+@!MBL_string,@!RI_string,@!RCE_string:packed array [1..3] of char;
+  {handy string constants for |face| codes}
+@y
+@ In order to stick to standard \PASCAL, we use three strings called
+|ASCII_04|, |ASCII_10|, and |ASCII_14|, in terms of which we can do the
+appropriate conversion of ASCII codes. Three other little strings are
+used to produce |face| codes like \.{MIE}.
+
+@d MBL_string == ASCII_1MBL
+@d RI_string == ASCII_1RI
+@d RCE_string == ASCII_1RCE
+
+@ @<Glob...@>=
+@!ASCII_04,@!ASCII_10,@!ASCII_14: ccharpointer;
+  {strings for output in the user's external character set}
+@!ASCII_all: packed array[0..256] of char;
+@!MBL_string,@!RI_string,@!RCE_string: ccharpointer;
+  {handy string constants for |face| codes}
+@z
+
+@x
+ASCII_04:=' !"#$%&''()*+,-./0123456789:;<=>?';@/
+ASCII_10:='@@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';@/
+ASCII_14:='`abcdefghijklmnopqrstuvwxyz{|}~ ';@/
+MBL_string:='MBL'; RI_string:='RI '; RCE_string:='RCE';
+@y
+ASCII_04:='  !"#$%&''()*+,-./0123456789:;<=>?';@/
+ASCII_10:=' @@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';@/
+ASCII_14:=' `abcdefghijklmnopqrstuvwxyz{|}~ ';@/
+vstrcpy (ASCII_all, ASCII_04);
+vstrcat (ASCII_all, '@@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_');
+vstrcat (ASCII_all, '`abcdefghijklmnopqrstuvwxyz{|}~');@/
+MBL_string:=' MBL'; RI_string:=' RI '; RCE_string:=' RCE';
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [40] How we output the character code depends on |charcode_format|.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+begin if font_type>vanilla then
+  begin tfm[0]:=c; out_octal(0,1)
+  end
+else if (c>="0")and(c<="9") then
+  out(' C ',c-"0":1)
+else if (c>="A")and(c<="Z") then
+  out(' C ',ASCII_10[c-"A"+2])
+else if (c>="a")and(c<="z") then
+  out(' C ',ASCII_14[c-"a"+2])
+else  begin tfm[0]:=c; out_octal(0,1);
+@y
+begin if (font_type > vanilla) or (charcode_format = charcode_octal) then
+  begin tfm[0]:=c; out_octal(0,1)
+  end
+else if (charcode_format = charcode_ascii) and (c > " ") and (c <= "~")
+        and (c <> "(") and (c <> ")") then
+  out(' C ', ASCII_all[c - " " + 1])
+{default case, use \.C only for letters and digits}
+else if (c>="0")and(c<="9") then
+  out(' C ',c-"0":1)
+else if (c>="A")and(c<="Z") then
+  out(' C ',ASCII_10[c-"A"+2])
+else if (c>="a")and(c<="z") then
+  out(' C ',ASCII_14[c-"a"+2])
+else  begin tfm[0]:=c; out_octal(0,1);
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [41] Don't output the face code as an integer.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+  out(MBL_string[1+(b mod 3)]);
+  out(RI_string[1+s]);
+  out(RCE_string[1+(b div 3)]);
+@y
+  put_byte(MBL_string[1+(b mod 3)], pl_file);
+  put_byte(RI_string[1+s], pl_file);
+  put_byte(RCE_string[1+(b div 3)], pl_file);
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [42] Force 32-bit constant arithmetic for 16-bit machines.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+f:=((tfm[k+1] mod 16)*@'400+tfm[k+2])*@'400+tfm[k+3];
+@y
+f:=((tfm[k+1] mod 16)*toint(@'400)+tfm[k+2])*@'400+tfm[k+3];
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [63] Name of parameter for kanji-font
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+else if (i<=13)and(font_type=mathex) then
+  if i=8 then out('DEFAULTRULETHICKNESS')
+  else out('BIGOPSPACING',i-8:1)
+else out('PARAMETER D ',i:1)
+@y
+else if (i<=13)and(font_type=mathex) then
+  if i=8 then out('DEFAULTRULETHICKNESS')
+  else out('BIGOPSPACING',i-8:1)
+else if (i<=9)and(file_format<>tfm_format) then
+  if i=8 then out('EXTRASTRETCH')
+  else out('EXTRASHRINK')
+else out('PARAMETER D ',i:1)
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [64] Add printing of newline at end of program
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+if nk>0 then for i:=0 to nk-1 do check_fix(kern(i))('Kern');
+@.Kern n is too big@>
+@y
+if nk>0 then for i:=0 to nk-1 do check_fix(kern(i))('Kern');
+@.Kern n is too big@>
+case file_format of
+tfm_format: do_nothing;
+jfm_format,vfm_format: begin
+  if ng>0 then for i:=0 to ng-1 do check_fix(glue(i))('Glue');
+@.Glue n is too big@>
+  end;
+end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [68] we print GLUEKERN instead of LIGTABLE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+  begin left; out('LIGTABLE'); out_ln;@/
+@y
+  begin left;
+  case file_format of
+  tfm_format: out('LIGTABLE');
+  jfm_format,vfm_format: out('GLUEKERN');
+  end;
+  out_ln;@/
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [69] we print Glue/kern instead of Ligature/kern
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+    print('Ligature/kern starting index for character '); print_octal(c);
+    print_ln(' is too large;'); print_ln('so I removed it.'); reset_tag(c);
+@.Ligature/kern starting index...@>
+@y
+    case file_format of
+    tfm_format: print('Ligature/kern ');
+@.Ligature/kern starting index...@>
+    jfm_format,vfm_format: print('Glue/kern ');
+@.Glue/kern index starging index...@>
+    end;
+    print('starting index for character '); print_octal(c);
+    print_ln(' is too large;'); print_ln('so I removed it.'); reset_tag(c);
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [76] if kanji format we output a glue step not a ligature step
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+else @<Output a ligature step@>;
+@y
+else if file_format=tfm_format then @<Output a ligature step@>
+else if (file_format=jfm_format)or(file_format=vfm_format) then
+  @<Output a glue step@>;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [80] No progress reports unless verbose.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+    incr(chars_on_line);
+    end;
+  print_octal(c); {progress report}
+@y
+    if verbose then incr(chars_on_line);
+    end;
+  if verbose then print_octal(c); {progress report}
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [80] the 'character' table is really the 'type' table
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+  left; out('CHARACTER'); out_char(c); out_ln;
+@y
+  left;
+  case file_format of
+  tfm_format: begin out('CHARACTER'); out_char(c); end;
+  jfm_format, vfm_format: begin out('TYPE'); tfm[0]:=c; out_octal(0,1); end;
+  end;
+  out_ln;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [80] types can only have tags equal to 0 or 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+  case tag(c) of
+  no_tag: do_nothing;
+  lig_tag: @<Output the applicable part of the ligature/kern
+    program as a comment@>;
+  list_tag: @<Output the character link unless there is a problem@>;
+  ext_tag: @<Output an extensible character recipe@>;
+  end; {there are no other cases}
+@y
+  case file_format of
+  tfm_format: begin
+    case tag(c) of
+    no_tag: do_nothing;
+    lig_tag: @<Output the applicable part of the ligature/kern
+      program as a comment@>;
+    list_tag: @<Output the character link unless there is a problem@>;
+    ext_tag: @<Output an extensible character recipe@>;
+    end; end;
+  jfm_format,vfm_format: begin
+    case tag(c) of
+    no_tag: do_nothing;
+    lig_tag: @<Output the applicable part of the ligature/kern
+      program as a comment@>;
+    list_tag,ext_tag: bad('the tag of type ', c:1, ' must be 0 or 1');
+    end; end;
+  end;
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [80] width indexes of types should not be zero
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+  end
+@y
+  end else if (file_format=jfm_format)or(file_format=vfm_format) then
+    bad('width index of type ', c:1, ' is zero!!')
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [91] Change the name of the variable `class', since AIX 3.1's <math.h>
+% defines a function by that name.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+@d pending=4 {$f(x,y)$ is being evaluated}
+@y
+@d pending=4 {$f(x,y)$ is being evaluated}
+
+@d class == class_var 
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [92] Change name of the function `f'.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+     r:=f(r,(hash[r]-1)div 256,(hash[r]-1)mod 256);
+@y
+     r:=f_fn(r,(hash[r]-1)div 256,(hash[r]-1)mod 256);
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [96] web2c can't handle these mutually recursive procedures.
+% But let's do a fake definition of f here, so that it gets into web2c's
+% symbol table. We also have to change the name, because there is also a
+% variable named `f', and some C compilers can't deal with that.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@p function f(@!h,@!x,@!y:index):index; forward;@t\2@>
+  {compute $f$ for arguments known to be in |hash[h]|}
+@y
+@p 
+ifdef('notdef') 
+function f_fn(@!h,@!x,@!y:index):index; begin end;@t\2@>
+  {compute $f$ for arguments known to be in |hash[h]|}
+endif('notdef')
+@z
+@x
+else eval:=f(h,x,y);
+@y
+else eval:=f_fn(h,x,y);
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [97] The real definition of f.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+@x
+@p function f;
+@y
+@p function f_fn(@!h,@!x,@!y:index):index; 
+@z
+@x
+f:=lig_z[h];
+@y
+f_fn:=lig_z[h];
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [101] declare kanji conversion subroutines and externals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@p begin initialize;@/
+@y
+@p
+@<declare kanji conversion functions@>;
+begin initialize;@/
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [102] don't check extensible recipes and list the char_type table
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@<Check the extensible recipes@>;
+do_characters; print_ln('.');@/
+@y
+case file_format of
+tfm_format: begin @<Check the extensible recipes@>; end;
+jfm_format,vfm_format: begin @<list |char_type| table@>; end;
+end;
+do_characters; if verbose then print_ln('.');
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [103] From here to end of file are changes related to kanji
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANJI:
+@x
+@* System-dependent changes.
+This section should be replaced, if necessary, by changes to the program
+that are necessary to make \.{TFtoPL} work at a particular installation.
+It is usually best to design your change file so that all changes to
+previous sections preserve the section numbering; then everybody's version
+will be consistent with the printed program. More extensive changes,
+which introduce new sections, can be inserted here; then only the index
+itself will get a new section number.
+@^system dependencies@>
+@y
+@* System-dependent changes.  We want to parse a Unix-style command line.
+
+This macro tests if its argument is the current option, as represented
+by the index variable |option_index|.
+
+@d argument_is (#) == (strcmp (long_options[option_index].name, #) = 0)
+
+@<Parse arguments@> =
+begin
+  @<Define the option table@>;
+  repeat
+    getopt_return_val := getopt_long_only (argc, gargv, '', long_options,
+                                           address_of_int (option_index));
+    if getopt_return_val <> -1
+    then begin
+      if getopt_return_val = "?"
+      then uexit (1); {|getopt| has already given an error message.}
+
+      if argument_is ('charcode-format')
+      then begin
+        if strcmp (optarg, 'ascii') = 0
+        then charcode_format := charcode_ascii
+        else if strcmp (optarg, 'octal') = 0
+        then charcode_format := charcode_octal
+        else print ('Bad character code format', optarg, '.');
+      end
+      
+      else
+        {It was just a flag; |getopt| has already done the assignment.}
+        do_nothing;
+
+    end;
+  until getopt_return_val = -1;
+
+  {Now |optind| is the index of first non-option on the command line.}
+end
+
+
+@ The array of information we pass in.  The type |getopt_struct| is
+defined in C, to avoid type clashes.  We also need to know the return
+value from getopt, and the index of the current option.
+
+@<Local var...@> =
+@!long_options: array[0..n_options] of getopt_struct;
+@!getopt_return_val: integer;
+@!option_index: c_int_type;
+@!current_option: 0..n_options;
+
+@ Here is the first of the options we allow.
+@.-verbose@>
+
+@<Define the option...@> =
+current_option := 0;
+long_options[0].name := 'verbose';
+long_options[0].has_arg := 0;
+long_options[0].flag := address_of_int (verbose);
+long_options[0].val := 1;
+incr (current_option);
+
+@ The global variable |verbose| determines whether or not we print
+progress information.
+
+@<Glob...@> =
+@!verbose: c_int_type;
+
+@ It starts off |false|.
+
+@<Initialize the option...@> =
+verbose := false;
+
+
+@ Here is an option to change how we output character codes.
+@.-charcode-format@>
+
+@<Define the option...@> =
+long_options[current_option].name := 'charcode-format';
+long_options[current_option].has_arg := 1;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+incr (current_option);
+
+@ We use an ``enumerated'' type to store the information.
+
+@<Type...@> =
+@!charcode_format_type = charcode_ascii..charcode_default;
+
+@
+@<Const...@> =
+@!charcode_ascii = 0;
+@!charcode_octal = 1;
+@!charcode_default = 2;
+
+@
+@<Global...@> =
+@!charcode_format: charcode_format_type;
+
+@ It starts off as the default, that is, we output letters and digits as
+ASCII characters, everything else in octal.
+
+@<Initialize the option...@> =
+charcode_format := charcode_default;
+
+
+@ An element with all zeros always ends the list.
+
+@<Define the option...@> =
+long_options[current_option].name := 0;
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := 0;
+long_options[current_option].val := 0;
+
+
+@ Pascal compilers won't count the number of elements in an array
+constant for us.  This doesn't include the zero-element at the end,
+because this array starts at index zero.
+
+@<Constants...@> =
+@!n_options = 2;
+@!arg_options = 1;
+
+@ We need some routines for handling kanji character.
+
+@<Constants...@>=
+@!max_kanji=7237; {maximum number of kanji characters - 1}
+
+@ @<Types...@>=
+ASCII_code = -128..127; {8 bit value, used to output kanji}
+
+@ @<Glob...@>=
+this_code : integer; {to hold jis code of the current kanji character}
+this_type : integer; {to hold |char_type| of the current kanji character}
+type_index : integer; {index into |char_type| table}
+type_num : integer; {index into |char_info| table}
+type_count : integer; {number of chars with the same type}
+kanji_index : integer; {index into |kanji_type| array}
+
+@ @<Output a glue step@>=
+begin
+  if nonexistent(tfm[k+1]) then correct_bad_char('Glue step for')(k+1)
+@.Glue step for nonexistent...@>
+  else begin
+    left; out('GLUE'); out_char(tfm[k+1]);
+    if tfm[k+3]>=ng then begin bad('Glue index too large.');
+@.Glue index too large@>
+      out(' R 0.0 R 0.0 R 0.0');
+    end else begin
+      out_fix(glue(3*tfm[k+3]));
+      out_fix(glue(3*tfm[k+3]+1));
+      out_fix(glue(3*tfm[k+3]+2));
+    end;
+    right;
+  end;
+end;
+
+@ list the |char_type| table in a similar way to the type table
+
+@<list |char_type| table@>=
+this_code := tfm[4*type_base + 0] * 256 + tfm[4*type_base + 1];
+this_type := tfm[4*type_base + 2] * 256 + tfm[4*type_base + 3];
+if (this_code <> 0) or (this_type <> 0) then
+  begin
+  bad('the first entry in char_type is not zero. I''ll zero it.');
+  print_ln('Jis code is ', this_code:1, '. Type is ', this_type:1, '.');
+  end;
+@#
+for kanji_index := 0 to max_kanji do
+  kanji_type[kanji_index] := -1;
+@#
+for type_index := 1 to nt - 1 do
+  begin
+  this_code := tfm[4*type_base + type_index * 4 + 0] * 256 +
+	       tfm[4*type_base + type_index * 4 + 1];
+  this_type := tfm[4*type_base + type_index * 4 + 2] * 256 +
+               tfm[4*type_base + type_index * 4 + 3];
+  if not valid_jis_code(this_code) then
+    bad('jis code ', this_code:1,
+	' in char_type table entry ', type_index:1,
+	' is not valid. Ignoring it.')
+  else if (this_type <= 0) or (this_type > ec) then
+    bad('type ', this_type:1, ' of jis code ', this_code:1,
+        ' in char_type table is not valid. Ignoring character.')
+  else
+    kanji_type[jis_to_index(this_code)] := this_type;
+  end;
+@#
+for type_num := 1 to ec do
+  begin
+  left;
+  out('CHARSINTYPE');
+  tfm[0] := type_num;
+  out_octal(0,1);
+  out_ln;
+  type_count := 0;
+  for kanji_index := 0 to max_kanji do
+    if kanji_type[kanji_index] = type_num then
+      begin
+      incr(type_count);
+      if (type_count mod 14) = 0 then
+	out_ln;
+      out_kanji(index_to_jis(kanji_index));
+      out(' ');
+      end;
+  if type_count = 0 then
+    bad('type ', type_num:1, 'has no characters in it!');
+  out_ln;
+  right;
+  end;
+
+@ Some subroutines to handle kanji codes and i/o
+
+@ @<declare kanji conversion functions@>=
+procedure out_kanji(jis_code : integer); { prints a kanji character }
+begin
+ifdef('EUC')
+  out(xchr(jis_code div 256 + 128));
+  out(xchr(jis_code mod 256 + 128));
+endif('EUC')
+ifdef('SJIS')
+  out(xchr(JIStoSJIS(jis_code) div 256));
+  out(xchr(JIStoSJIS(jis_code) mod 256));
+endif('SJIS')
+end;
+
+@ @<declare kanji conversion functions@>=
+function valid_jis_code(jis : integer) : boolean;
+var
+  first_byte, second_byte : integer; { jis code bytes }
+begin
+  valid_jis_code := true;
+
+  first_byte := jis div 256;
+  if (first_byte < 33) or
+     (first_byte > 40) and (first_byte < 48) or
+     (first_byte > 116) then
+    valid_jis_code := false;
+
+  second_byte := jis mod 256;
+  if (second_byte < 33) or
+     (second_byte > 126) then
+    valid_jis_code := false;
+end;
+
+@ @<declare kanji conversion functions@>=
+function index_to_jis(kanji_index : integer) : integer;
+begin
+  if kanji_index <= 8 * 94 + 94 - 1 then
+    index_to_jis := (kanji_index div 94 + 33) * 256 + (kanji_index mod 94 + 33)
+  else
+    index_to_jis := ((kanji_index + 7 * 94) div 94 + 33) * 256 +
+      ((kanji_index + 7 * 94) mod 94 + 33)
+end;
+
+@ @<declare kanji conversion functions@>=
+function jis_to_index(jis : integer) : integer;
+var
+  first_byte, second_byte : integer; { jis code bytes }
+begin
+  first_byte := jis div 256 - 33;
+  second_byte := jis mod 256 - 33;
+  if first_byte <= 8 then
+    jis_to_index := first_byte * 94 + second_byte
+  else
+    jis_to_index := (first_byte - 7) * 94 + second_byte;
+end
+@z
