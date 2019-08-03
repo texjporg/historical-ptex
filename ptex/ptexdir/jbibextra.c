@@ -111,7 +111,7 @@ boolean inputline(f)
   in = (*(ki->in_ln))(f,ki);
   if (in == EOF && last == 0)
     return false;
-  if (in != EOF && in != '\n')
+  if (in != EOF && in != '\n' && in != '\r')
     return false;
 
   /* Don't bother using xord if we don't need to.  */
@@ -281,7 +281,7 @@ int in_ln_ascii(f, ki)
 {
   register int i;
 
-  while ( last < bufsize && ((i = getc(f)) != EOF) && i != '\n') {
+  while ( last < bufsize && ((i = getc(f)) != EOF) && i != '\n' && i != '\r') {
 #ifdef	NONASCII
     buffer[last++] = i;
 #else
@@ -345,7 +345,7 @@ int in_ln_gen(f, ki, checkkanji, makekanji)
 {
   register int i;
 
-  while ( last < bufsize && ((i = getc(f)) != EOF) && i != '\n') {
+  while ( last < bufsize && ((i = getc(f)) != EOF) && i != '\n' && i !='\r') {
     if (ki->kstat == KAN_ASCII) {
       if (i == ESC) {
 	if ((i = getc(f)) == '$') {

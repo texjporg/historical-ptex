@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.3
+% This is a change file for pTeX 3.1.4
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -10,6 +10,7 @@
 %    Makoto Kobayashi (makoto@lloem.fujidenki.co.jp),
 %    Yoshihiro Aoki (aoki@tokyo-shoseki-ptg.co.jp),
 %    Akira Kakuto (kakuto@fsci.fuk.kindai.ac.jp).
+%    Koich Inoue (inoue@ma.ns.musashi-tech.ac.jp).
 %
 % (??/??/87) RKS jTeX 2.9 -- j1.0
 % (??/??/89) RKS jTeX 2.93 -- j1.3
@@ -35,13 +36,14 @@
 % (11/13/2000) KN  pTeX p2.1.10
 % (05/22/2001) KN  pTeX p2.1.11
 % (03/10/2001) KN  pTeX p3.0 (modified BSD licence)
+% (09/02/2004) ST  pTeX p3.1.4
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.1.3' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.1.3' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1.4' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1.4' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -1480,12 +1482,11 @@ begin switch: if loc<=limit then {current line not yet finished}
 @^inner loop@>
 begin switch: if loc<=limit then {current line not yet finished}
   begin cur_chr:=buffer[loc]; incr(loc);
-  reswitch:
-    if (iskanji1(cur_chr))and(iskanji2(buffer[loc])) then
+    if (iskanji1(cur_chr))and(loc<=limit)and(iskanji2(buffer[loc])) then
       begin cur_cmd:=kcat_code(cur_chr); cur_chr:=cur_chr*@'400+buffer[loc];
       incr(loc);
       end
-    else cur_cmd:=cat_code(cur_chr);
+    else reswitch: cur_cmd:=cat_code(cur_chr);
 @z
 
 @x [24.344] l.7264 - pTeX: ASCII-KANJI space handling
@@ -1559,17 +1560,17 @@ else  begin start_cs: k:=loc; cur_chr:=buffer[k]; cat:=cat_code(cur_chr);
 @<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin start_cs: k:=loc; cur_chr:=buffer[k]; incr(k);
-  if (iskanji1(cur_chr))and(iskanji2(buffer[k])) then
+  if (iskanji1(cur_chr))and(k<=limit)and(iskanji2(buffer[k])) then
     begin cat:=kcat_code(cur_chr); incr(k);
     end
   else cat:=cat_code(cur_chr);
   if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
   else if cat=spacer then state:=skip_blanks
   else state:=mid_line;
-  if (cat=other_kchar)and(k<=limit+1) then
+  if cat=other_kchar then
     begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
     end
-  else if ((cat=letter)or(cat=kanji)or(cat=kana))and(k<=limit+1) then
+  else if ((cat=letter)or(cat=kanji)or(cat=kana))and(k<=limit) then
 @z
 
 @x [24.356] l.7437 - pTeX: scan control sequence (cont)
@@ -1586,7 +1587,7 @@ end
 @y
 @ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; incr(k);
-  if (iskanji1(cur_chr))and(iskanji2(buffer[k])) then
+  if (iskanji1(cur_chr))and(k<=limit)and(iskanji2(buffer[k])) then
     begin cat:=kcat_code(cur_chr); incr(k);
     end
   else cat:=cat_code(cur_chr);
@@ -1825,7 +1826,7 @@ else scanned_result(eqtb[m+cur_val].int)(int_val);
 if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m=kcat_code_base then scanned_result(equiv(m+Hi(cur_val)))(int_val)
 else if m<math_code_base then
-  begin if iskanji1(cur_val) then
+  begin if iskanji1(Hi(cur_val)) then
   scanned_result(equiv(m+Hi(cur_val)))(int_val)
   else scanned_result(equiv(m+cur_val))(int_val)
   end
@@ -1953,7 +1954,7 @@ else if scan_keyword("sp") then goto done
   if t=" " then t:=space_token
   else t:=other_token+t;
 @y
-  if t>=128 then
+  if (iskanji1(t))and(k+1<pool_ptr)and(iskanji2(str_pool[k+1])) then
     begin t:=t*@'400+str_pool[k+1]; incr(k);
     end
   else if t=" " then t:=space_token
@@ -5159,12 +5160,11 @@ mmode+letter,mmode+other_char,mmode+char_given:
 mmode+kanji,mmode+kana,mmode+other_kchar: begin
     cx:=cur_chr; set_math_kchar(KANJI(cx));
   end;
-mmode+char_num: begin scan_char_num;
+mmode+char_num: begin scan_char_num; cur_chr:=cur_val;
   if (cur_chr>=0)and(cur_chr<256) then
-  begin cur_chr:=cur_val;
     if cur_chr<128 then set_math_char(ho(math_code(cur_chr)))
-    else set_math_char(cur_chr);
-  end else set_math_kchar(cur_chr);
+    else set_math_char(cur_chr)
+  else set_math_kchar(cur_chr);
   end;
 @z
 
@@ -5779,7 +5779,7 @@ inserting a space between 2byte-char and 1byte-char.
 
 @ @<Put each...@>=
 primitive("inhibitglue",inhibit_glue,0);
-@!@:inhibitglue_}{\.{\\inhibitglue} primitive@>
+@!@:inhibit_glue_}{\.{\\inhibitglue} primitive@>
 primitive("inhibitxspcode",assign_inhibit_xsp_code,inhibit_xsp_code_base);
 @!@:inhibit_xsp_code_}{\.{\\inhibitxspcode} primitive@>
 
