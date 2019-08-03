@@ -1,3 +1,8 @@
+2005/03/07: (p3.1.8)
+	Makefile.in: make install の最後に mktexlsr の実行を追加
+	Makefile.in, INSTALL.txt: teTeX-3.0のTEXMFディレクトリの変更に伴い修正
+	    (ありがとうございます、角藤さん)。
+
 2004/12/14: (p3.1.8)
 	ptex: コントロールシーケンス名の処理誤りを修正。
 		(例：\Te^^5e^58 ⇒ \Te^^58 となり、\TeX として評価されない)

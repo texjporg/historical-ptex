@@ -168,7 +168,7 @@ formats: $(formats)
 texmf.cnf: $(kpathsea_dir)/texmf.cnf
 	$(SHELL) $(thisdir)/mkconf $(kpathsea_dir)/texmf.cnf > texmf.cnf
 
-dumpenv = TEXMFCNF=$(thisdir) TEXMF=$(texmf)
+dumpenv = TEXMFCNF=$(thisdir)
 
 ptex-euc.fmt: ptex texmf.cnf
 	$(dumpenv) $(MAKE) progname=ptex files="ptex.tex min10.tfm" prereq-check
@@ -207,6 +207,7 @@ $(kpathsea_dir)/kpsewhich: $(kpathsea)
 
 # 
 install: install-exec install-data
+	$(top_srcdir)/kpathsea/mktexlsr
 install-exec:: install-links
 install-data:: install-formats
 
