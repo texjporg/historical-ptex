@@ -33,11 +33,12 @@
 % (03/26/98) KN  pTeX p2.1.8 (Web2c 7.2)
 % (02/21/2000) KN  pTeX p2.1.9 (Web2c 7.3.1)
 % (11/13/2000) KN  pTeX p2.1.10
+% (05/22/2001) KN  pTeX p2.1.11
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.10, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p2.1.11, based on TeX, Version 3.14159'
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -2097,7 +2098,7 @@ in the |glue_kern| array. And a \.{JFM} not used |tag=2| and |tag=3|.
   {has a character from this font actually appeared in the output?}
 @!font_dir: ^eight_bits;
   {pTeX: direction of fonts, 0 is default, 1 is Yoko, 2 is Tate}
-@!font_num_ext: ^eight_bits;
+@!font_num_ext: ^integer;
   {pTeX: number of the |char_type| table.}
 @z
 

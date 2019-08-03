@@ -55,7 +55,7 @@ Usage: pdvitype [option] dvifile\n\n\
   -output-level=1..4         verbosity level.\n\
                                  1: terse, 2: medium-level, 3: verbose,\n\
                                  4: plus check for postamble(default).\n\
-  -page-start=PAGE           type, e.g., `1.*.-5' to specify the first page\\n
+  -page-start=PAGE           type, e.g., `1.*.-5' to specify the first page\n\
                              with \\count0=1, \\count2=4.\n\
                              (see the TeX book chapter 15).\n\
   -show-opcodes              show opcodes in dicimal.\n\
