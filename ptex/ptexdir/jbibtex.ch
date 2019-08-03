@@ -910,7 +910,7 @@ if (total_fields > max_fields) then
                    total_fields + MAX_FIELDS);
     {Initialize to |missing|.}
     for f_ptr := start_fields to max_fields do begin
-      field_info[fptr] := missing;
+      field_info[f_ptr] := missing;
     end;
 @z
 

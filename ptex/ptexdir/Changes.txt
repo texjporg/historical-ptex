@@ -1,3 +1,13 @@
+1998/04/09 (p2.1.8)
+1998/03/26 (p2.1.8.beta1)
+	correspond to TeX 3.14159 with Web2c 7.2.
+
+1998/03/19 (p2.1.7)
+    fix bug: \leaders
+
+1998/02/26 (p2.1.6)
+    fix bug: \inhibitxspcode
+
 1997/08/27 (p2.1.5)
     official release.
 

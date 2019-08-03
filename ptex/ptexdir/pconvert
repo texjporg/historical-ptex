@@ -17,7 +17,6 @@ usage () {
 convert_ptex () {
 	cat $web2cdir/common.defines $web2cdir/texmf.defines \
 		./kanji.defines ./ptex.p \
-	| sed -f $web2cdir/cvttex.sed \
 	| $web2cdir/web2c -t -h../texmfmp.h -ctexcoerce \
 	| $web2cdir/fixwrites tex \
 	| $web2cdir/splitup tex

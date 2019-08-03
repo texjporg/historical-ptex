@@ -5,7 +5,7 @@
 void
 usage P2C(int, status,  const_string, str)
 {
-  extern string this_bug_address; /* from localconf.h */
+  extern string this_bug_address;  /* from maintain.h */
   if (status == 0) {
     fputs (str, stdout);
     putchar ('\n');
@@ -91,8 +91,6 @@ printversionandexit P3C(const_string, banner,
   puts (".");
   puts ("For more information about these matters, see the files");
   printf ("named COPYING and the %s source.\n", prog_name);
-  printf ("Primary author of %s: %s; Web2c maintainer: K. Berry.\n",
-          prog_name, author);
   printf ("Nihongo l10n maintainer: %s.\n", local_maintainer);
 
   uexit (0);

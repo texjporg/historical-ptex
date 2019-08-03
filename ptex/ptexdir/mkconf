@@ -24,6 +24,7 @@ if [ ! -f "${cnffile}.old" ]; then
 fi
 mv -f $cnffile ${cnffile}.old
 sed -e '/^% ptex, platex, platex209 macros paths./d
+/^% pTeX./d
 /^platex209_inputs *=/d
 /^platex2e_inputs *=/d
 /^ptex_inputs *=/d
@@ -34,19 +35,21 @@ sed -e '/^% ptex, platex, platex209 macros paths./d
 /^TEXINPUTS.iniptex *=/d
 /^BIBINPUTS.jbibtex *=/d
 /^BSTINPUTS.jbibtex *=/d' ${cnffile}.old | \
-sed -e '/^TEXINPUTS.texinfo *=/ a\
-% ptex, platex, platex209 macros paths.\
-platex209_inputs = .:$dbtex/{platex209,latex209,platex,latex,generic}//\
-platex2e_inputs = .:$dbtex/{platex,latex,platex209,latex209,generic}//\
-ptex_inputs = .:$dbtex/{ptex,plain}//:$dbtex//\
+sed -e '/^TEXINPUTS.jadetex =/ a\
+\
+% pTeX.\
+platex209_inputs = .:$TEXMF/tex/{platex209:latex209:platex:latex:generic:}//\
+platex2e_inputs = .:$TEXMF/tex/{platex:latex:platex209:latex209:generic:}//\
+ptex_inputs = .:$TEXMF/tex/{ptex:plain}//:$TEXMF/tex//\
 TEXINPUTS.platex209 = $platex209_inputs\
 TEXINPUTS.platex2e = $platex2e_inputs\
 TEXINPUTS.platex = $platex2e_inputs\
 TEXINPUTS.ptex = $ptex_inputs\
-TEXINPUTS.iniptex = $ptex_inputs
+TEXINPUTS.iniptex = $ptex_inputs\
+
 /^% BibTeX bibliographies and style files./ a\
-BIBINPUTS.jbibtex = .:$TEXMF/jbibtex/bib//:$TEXMF/bibtex/bib//\
-BSTINPUTS.jbibtex = .:$TEXMF/jbibtex/bst//:$TEXMF/bibtex/bst//\
-' > ${cnffile}
+BIBINPUTS.jbibtex = .:$TEXMF/{jbibtex:bibtex}/bib//\
+BSTINPUTS.jbibtex = .:$TEXMF/{jbibtex:bibtex}/bst//\
+' | uniq > ${cnffile}
 
 ### EOT ###

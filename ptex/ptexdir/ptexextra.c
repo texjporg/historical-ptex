@@ -13,14 +13,20 @@
    Makefile rule.  */
 #include "texd.h"
 
+#include <kpathsea/config.h>
 #include <kpathsea/c-ctype.h>
 #include <kpathsea/line.h>
 #include <kpathsea/readable.h>
 #include <kpathsea/variable.h>
+#include <kpathsea/absolute.h>
 
 #include <time.h> /* For `struct tm'.  */
 #ifndef WIN32
 extern struct tm *localtime ();
+#endif
+
+#if defined(__STDC__)
+#include <locale.h>
 #endif
 
 #include <signal.h> /* Catch interrupts.  */
@@ -29,9 +35,16 @@ extern struct tm *localtime ();
    Unfortunately there's no way to get the banner into this code, so
    just repeat the text.  */
 #ifdef TeX
+#if defined (eTeX)
+#include <etexdir/etexextra.h>
+#elif defined (PDFTeX)
+#include <pdftexdir/pdftexextra.h>
+#elif defined (Omega)
+#include <omegadir/omegaextra.h>
+#else
 const_string local_maintainer="Ken Nakano";
 const_string this_bug_address="www-ptex@ascii.co.jp";
-#define BANNER "This is pTeX, Version p2.1.7, based on TeX, Version 3.14159"
+#define BANNER "This is pTeX, Version p2.1.8, based on TeX, Version 3.14159"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP TEXHELP
@@ -42,11 +55,12 @@ const_string this_bug_address="www-ptex@ascii.co.jp";
 #define INPUT_FORMAT kpse_tex_format
 #define INI_PROGRAM "iniptex"
 #define VIR_PROGRAM "virptex"
-#define edit_var "TEXEDIT"
 #if defined(Xchr)
 #undef Xchr
 #endif
 #define Xchr(x) ((unsigned char) (x))
+#endif
+#define edit_var "TEXEDIT"
 #endif /* TeX */
 #ifdef MF
 #define BANNER "This is Metafont, Version 2.718"
@@ -67,7 +81,7 @@ const_string this_bug_address="www-ptex@ascii.co.jp";
 #define edit_var "MFEDIT"
 #endif /* MF */
 #ifdef MP
-#define BANNER "This is MetaPost, Version 0.632"
+#define BANNER "This is MetaPost, Version 0.64"
 #define COPYRIGHT_HOLDER "AT&T Bell Laboratories"
 #define AUTHOR "John Hobby"
 #define PROGRAM_HELP MPHELP
@@ -94,16 +108,23 @@ static string user_progname;
 static string dump_name;
 
 /* The main body of the WEB is transformed into this procedure.  */
-extern void mainbody ();
+extern void mainbody P1H(void);
 
 static void maybe_set_dump_default_from_input P1H(string *);
 static void parse_options P2H(int, string *);
 
+#if defined(WIN32)
+  /* if _DEBUG is not defined, these macros will result in nothing. */
+   SETUP_CRTDBG;
+   /* Set the debug-heap flag so that freed blocks are kept on the
+    linked list, to catch any inadvertent use of freed memory */
+   SET_CRT_DEBUG_FIELD( _CRTDBG_DELAY_FREE_MEM_DF );
+#endif
 
 /* The entry point: set up for reading the command line, which will
    happen in `topenin', then call the main body.  */
 
-void
+int
 main P2C(int, ac,  string *, av)
 {
 #ifdef __EMX__
@@ -115,10 +136,12 @@ main P2C(int, ac,  string *, av)
   argc = ac;
   argv = av;
 
-#ifdef TeX
-  /* parse_options is the only thing that can override this, so
-     must initialize here; doing it in the web would be too late.  */
-  extendjobname = 1;
+  /* Must be initialized before options are parsed.  */
+  interactionoption = 4;
+
+#if defined(__STDC__)
+  /* "" means: get value from env. var LC_ALL, LC_CTYPE, or LANG */
+  setlocale(LC_CTYPE, "");
 #endif
 
   /* If the user says --help or --version, we need to notice early.  And
@@ -126,9 +149,10 @@ main P2C(int, ac,  string *, av)
      the web (which would read the base file, etc.).  */
   parse_options (ac, av);
   
-  /* Do this early so we can inspect program_invocation_short_name
-     below, and because we have to do this before any path searching.  */
-  kpse_set_progname (user_progname ? user_progname : argv[0]);
+  /* Do this early so we can inspect program_invocation_name and
+     kpse_program_name below, and because we have to do this before
+     any path searching.  */
+  kpse_set_program_name (argv[0], user_progname);
 
   /* If no dump default yet, and we're not doing anything special on
      this run, look at the first line of the main input file for a
@@ -142,31 +166,40 @@ main P2C(int, ac,  string *, av)
   if (readyalready != 314159) {
     /* The `ini_version' variable is declared/used in the change files.  */
     boolean virversion = false;
-    if (STREQ (program_invocation_short_name, INI_PROGRAM)) {
+    if (FILESTRCASEEQ (kpse_program_name, INI_PROGRAM)) {
       iniversion = true;
-    } else if (STREQ (program_invocation_short_name, VIR_PROGRAM)) {
+    } else if (FILESTRCASEEQ (kpse_program_name, VIR_PROGRAM)) {
       virversion = true;
-    } 
 #ifdef TeX
-      else if (STREQ (program_invocation_short_name, "mltex")) {
+#ifndef Omega
+    } else if (FILESTRCASEEQ (kpse_program_name, "mltex")) {
       mltexp = true;
-    }
+#endif /* !Omega */
+#ifdef eTeX /* For e-TeX compatibility mode... */
+    } else if (FILESTRCASEEQ (kpse_program_name, "iniptex")) {
+      iniversion = true;
+    } else if (FILESTRCASEEQ (kpse_program_name, "virptex")) {
+      virversion = true;
+#endif /* eTeX */
 #endif /* TeX */
+    }
 
     if (!dump_name) {
-      /* If {ini,vir}{mf,tex,mpost} use `plain'.  (Actually, ini*
-         does not look for an implicit format.)  Otherwise, use the
+      /* If called as *vir{mf,tex,mpost} use `plain'.  Otherwise, use the
          name we were invoked under.  */
-      dump_name = concat (iniversion || virversion
-                          ? "plain" : program_invocation_short_name, DUMP_EXT);
+      dump_name = (virversion ? "plain" : kpse_program_name);
     }
   }
 
   /* If we've set up the fmt/base default in any of the various ways
      above, also set its length.  */
   if (dump_name) {
-    DUMP_VAR = concat (" ", dump_name); /* adjust array for Pascal */
+    /* adjust array for Pascal and provide extension */
+    DUMP_VAR = concat3 (" ", dump_name, DUMP_EXT);
     DUMP_LENGTH_VAR = strlen (DUMP_VAR + 1);
+  } else {
+    /* For dump_name to be NULL is a bug.  */
+    abort();
   }
 
   /* Additional initializations.  No particular reason for doing them
@@ -177,22 +210,27 @@ main P2C(int, ac,  string *, av)
                             kpse_src_compile);
 #endif /* MF */
 #ifdef TeX
-  kpse_set_program_enabled (kpse_tfm_format, MAKE_TEX_TFM_BY_DEFAULT,
-                            kpse_src_compile);
-  kpse_set_program_enabled (kpse_tex_format, MAKE_TEX_TEX_BY_DEFAULT,
-                            kpse_src_compile);
 #ifdef Omega
   kpse_set_program_enabled (kpse_ocp_format, MAKE_OMEGA_OCP_BY_DEFAULT,
                             kpse_src_compile);
   kpse_set_program_enabled (kpse_ofm_format, MAKE_OMEGA_OFM_BY_DEFAULT,
                             kpse_src_compile);
-#endif /* Omega */
+  kpse_set_program_enabled (kpse_tfm_format, false, kpse_src_compile);
+  kpse_set_program_enabled (kpse_tex_format, MAKE_TEX_TEX_BY_DEFAULT,
+                            kpse_src_compile);
+#else
+  kpse_set_program_enabled (kpse_tfm_format, MAKE_TEX_TFM_BY_DEFAULT,
+                            kpse_src_compile);
+  kpse_set_program_enabled (kpse_tex_format, MAKE_TEX_TEX_BY_DEFAULT,
+                            kpse_src_compile);
+#endif /* !Omega */
   if (!shellenabledp) {
     string shell_escape = kpse_var_value ("shell_escape");
-    if (shell_escape && *shell_escape && *shell_escape != 'n'
-        && *shell_escape != '0')
-      shellenabledp = true;
-  }
+    shellenabledp = (shell_escape
+                     && (*shell_escape == 't'
+                         || *shell_escape == 'y'
+                         || *shell_escape == '1'));
+ }
   if (!outputcomment) {
     outputcomment = kpse_var_value ("output_comment");
   }
@@ -200,6 +238,7 @@ main P2C(int, ac,  string *, av)
 
   /* Call the real main program.  */
   mainbody ();
+  return EXIT_SUCCESS;
 } 
 
 
@@ -243,9 +282,11 @@ topenin P1H(void)
 
   /* One more time, this time converting to TeX's internal character
      representation.  */
+#ifndef Omega
 #ifdef NONASCII
   for (i = first; i < last; i++)
     buffer[i] = xord[buffer[i]];
+#endif
 #endif
 }
 
@@ -279,7 +320,9 @@ struct msg
 {
   short namelength; /* length of auxiliary data */
   int eof;   /* new eof for dvi file */
+#if 0 /* see usage of struct msg below */
   char more_data[0]; /* where the rest of the stuff goes */ 
+#endif
 };
 
 static char *ipc_name;
@@ -390,7 +433,9 @@ ipc_snd P3C(int, n,  int, is_eof,  char *, data)
 
 
 /* This routine notifies the server if there is an eof, or the filename
-   if a new DVI file is starting.  This is the routine called by TeX.  */
+   if a new DVI file is starting.  This is the routine called by TeX.
+   Omega defines str_start(#) as str_start_ar(# - biggest_char), with
+   biggest_char = 65535 ([4.38], [1.12] om16bit.c). */
 
 void
 ipcpage P1C(int, is_eof)
@@ -404,9 +449,18 @@ ipcpage P1C(int, is_eof)
     string cwd = xgetcwd ();
     
     ipc_open_out ();
+#ifndef Omega
     len = strstart[outputfilename + 1] - strstart[outputfilename];
+#else
+    len = strstartar[outputfilename + 1 - 65535L] -
+            strstartar[outputfilename - 65535L];
+#endif
     name = xmalloc (len + 1);
+#ifndef Omega
     strncpy (name, &strpool[strstart[outputfilename]], len);
+#else
+    strncpy (name, &strpool[strstartar[outputfilename - 65535L]], len);
+#endif
     name[len] = 0;
     
     /* Have to pass whole filename to the other end, since it may have
@@ -415,6 +469,7 @@ ipcpage P1C(int, is_eof)
     p = concat3 (cwd, DIR_SEP_STRING, name);
     free (name);
     len = strlen(p);
+    begun = true;
   }
   ipc_snd (len, is_eof, p);
   
@@ -427,6 +482,7 @@ ipcpage P1C(int, is_eof)
 #if 0 /* TCX files are probably a bad idea, since they make TeX source
          documents unportable.  Try the inputenc LaTeX package.  */
 #ifdef TeX
+#ifndef Omega  /* TCX and Omega get along like sparks and gunpowder. */
 /* The filename for dynamic character translation, or NULL.  */
 static string translate_filename;
 
@@ -560,6 +616,7 @@ setupcharset P1H(void)
     }
   }
 }  
+#endif /* !Omega */
 #endif /* TeX [character translation] */
 #endif /* 0, no TCX files, please */
 
@@ -575,6 +632,7 @@ static struct option long_options[]
   = { { DUMP_OPTION,            1, 0, 0 },
       { "help",                 0, 0, 0 },
       { "ini",                  0, (int *) &iniversion, 1 },
+      { "interaction",          1, 0, 0 },
       { "kpathsea-debug",       1, 0, 0 },
       { "progname",             1, 0, 0 },
       { "version",              0, 0, 0 },
@@ -583,19 +641,22 @@ static struct option long_options[]
       { "ipc",                  0, (int *) &ipcon, 1 },
       { "ipc-start",            0, (int *) &ipcon, 2 },
 #endif /* IPC */
-      { "extend-jobname",       1, 0, 0 },
+#ifndef Omega
       { "mltex",                0, (int *) &mltexp, 1 },
+#endif /* !Omega */
       { "output-comment",       1, 0, 0 },
       { "shell-escape",         0, (int *) &shellenabledp, 1 },
 #if 0 /* TCX files are probably a bad idea */
+#ifndef Omega
 #ifdef NONASCII
       { "translate-file",       1, 0, 0 },
-#endif
+#endif /* NONASCII */
+#endif /* !Omega */
 #endif /* 0 */
 #endif /* TeX */
 #if defined (TeX) || defined (MF)
-      { "maketex",              1, 0, 0 },
-      { "no-maketex",           1, 0, 0 },
+      { "mktex",              1, 0, 0 },
+      { "no-mktex",           1, 0, 0 },
 #endif /* TeX or MF */
 #ifdef MP
       { "T",                    0, (int *) &troffmode, 1 },
@@ -630,20 +691,9 @@ parse_options P2C(int, argc,  string *, argv)
 
     } else if (ARGUMENT_IS (DUMP_OPTION)) {
       dump_name = user_progname = optarg;
+      dumpoption = true;
 
 #ifdef TeX
-    } else if (ARGUMENT_IS ("extend-jobname")) {
-      /* These numbers match @d's in tex.ch.  */
-      if (STREQ (optarg, "never")) {
-        extendjobname = 0;
-      } else if (STREQ (optarg, "maybe")) {
-        extendjobname = 1;
-      } else if (STREQ (optarg, "always")) {
-        extendjobname = 2;
-      } else {
-        WARNING1 ("Ignoring unknown argument `%s' to -extend-jobname", optarg);
-      }
-
     } else if (ARGUMENT_IS ("output-comment")) {
       unsigned len = strlen (optarg);
       if (len < 256) {
@@ -678,12 +728,26 @@ parse_options P2C(int, argc,  string *, argv)
 #endif /* TeX */
 
 #if defined (TeX) || defined (MF)
-    } else if (ARGUMENT_IS ("maketex")) {
+    } else if (ARGUMENT_IS ("mktex")) {
       kpse_maketex_option (optarg, true);
 
-    } else if (ARGUMENT_IS ("no-maketex")) {
+    } else if (ARGUMENT_IS ("no-mktex")) {
       kpse_maketex_option (optarg, false);
 #endif /* TeX or MF */
+
+    } else if (ARGUMENT_IS ("interaction")) {
+        /* These numbers match @d's in *.ch */
+      if (STREQ (optarg, "batchmode")) {
+        interactionoption = 0;
+      } else if (STREQ (optarg, "nonstopmode")) {
+        interactionoption = 1;
+      } else if (STREQ (optarg, "scrollmode")) {
+        interactionoption = 2;
+      } else if (STREQ (optarg, "errorstopmode")) {
+        interactionoption = 3;
+      } else {
+        WARNING1 ("Ignoring unknown argument `%s' to --interaction", optarg);
+      }
 
     } else if (ARGUMENT_IS ("help")) {
       string help = PROGRAM_HELP;
@@ -704,7 +768,9 @@ parse_options P2C(int, argc,  string *, argv)
 /* If the first thing on the command line (we use the globals `argv' and
    `optind') is a normal filename (i.e., does not start with `&' or
    `\'), and if we can open it, and if its first line is %&FORMAT, and
-   FORMAT is a readable dump file, then set DUMP_VAR to FORMAT. */
+   FORMAT is a readable dump file, then set DUMP_VAR to FORMAT.
+   Also call kpse_reset_program_name to ensure the correct paths for the
+   format are used.  */
 
 static void
 maybe_set_dump_default_from_input P1C(string *, dump_var)
@@ -724,12 +790,17 @@ maybe_set_dump_default_from_input P1C(string *, dump_var)
       /* %&ini is special.  */
       if (first_line && first_line[0] == '%' && first_line[1] == '&') {
         if (strncmp (first_line + 1, "ini", 3) == 0) {
-          iniversion = 1;
+          iniversion = true;
         } else {
-          string d_name = kpse_find_file (first_line + 2, DUMP_FORMAT, false);
+          string f_name = concat (first_line+2, DUMP_EXT);
+          string d_name = kpse_find_file (f_name, DUMP_FORMAT, false);
           if (d_name && kpse_readable_file (d_name)) {
-            dump_name = d_name;
+            dump_name = xstrdup (first_line + 2);
+            kpse_reset_program_name (dump_name);
+            /* Tell TeX/MF/MP we have a %&name line... */
+            dumpline = true;
           }
+          free (f_name);
         }
       }
       
@@ -745,22 +816,61 @@ maybe_set_dump_default_from_input P1C(string *, dump_var)
 boolean
 openoutnameok P1C(const_string, fname)
 {
-  boolean ret = true;
-  /* If the user says to be unsafe, allow anything.  */
-  string openout_any = kpse_var_value ("openout_any");
-  if (!(openout_any && *openout_any && *openout_any != 'n'
-         && *openout_any != '0')) {
-#ifdef unix
+  /* We distinguish three cases:
+     'a' (any)        allows any file to be opened for writing.
+     'r' (restricted) means disallowing special file names.
+     'p' (paranoid)   means being really paranoid: disallowing special file
+                      names and restricting output files to be in or below
+                      the working directory or $TEXMFOUTPUT.
+     We default to "paranoid".
+     This function contains several return statements...  */
+
+  const_string openout_any = kpse_var_value ("openout_any");
+
+  if (openout_any && (*openout_any == 'a'
+                      || *openout_any == 'y'
+                      || *openout_any == '1'))
+    return true;
+
+#if defined (unix) && !defined (MSDOS)
+  {
     const_string base = basename (fname);
     /* Disallow .rhosts, .login, etc.  Allow .tex (for LaTeX).  */
-    if (*base == 0 || (*base == '.' && !STREQ (base, ".tex"))) {
-      ret = false;
-    }
-#else
-    ; /* Other OS's don't have special names.  */
-#endif
+    if (*base == 0 || (*base == '.' && !STREQ (base, ".tex")))
+      return false;
   }
-  return ret;
+#else
+  /* Other OSs don't have special names? */
+#endif
+
+  if (openout_any && (*openout_any == 'r'
+                      || *openout_any == 'n'
+                      || *openout_any == '0'))
+    return true;
+
+  /* Paranoia supplied by Charles Karney...  */
+  if (kpse_absolute_p (fname, false)) {
+    const_string texmfoutput = kpse_var_value ("TEXMFOUTPUT");
+    /* Absolute pathname is only OK if TEXMFOUTPUT is set, it's not empty,
+       fname begins the TEXMFOUTPUT, and is followed by / */
+    if (!texmfoutput || *texmfoutput == '\0'
+        || fname != strstr (fname, texmfoutput)
+        || fname[strlen(texmfoutput)] != DIR_SEP)
+      return false;
+  }
+  /* For all pathnames, we disallow "../" at the beginning or "/../"
+     anywhere.  */
+  if (fname[0] == '.' && fname[1] == '.' && fname[2] == DIR_SEP) {
+    return false;
+  } else {
+    const_string dotpair = strstr (fname, "..");
+    /* If dotpair[2] == DIR_SEP, then dotpair[-1] is well-defined. */
+    if (dotpair && dotpair[2] == DIR_SEP && dotpair[-1] == DIR_SEP)
+      return false;
+  }
+
+  /* We passed all tests.  */
+  return true;
 }
 #endif /* TeX or MP */
 
@@ -771,8 +881,15 @@ openoutnameok P1C(const_string, fname)
 BOOL WINAPI
 catch_interrupt (DWORD arg)
 {
-  interrupt = 1;
-  return TRUE;
+  switch (arg) {
+  case CTRL_C_EVENT:
+  case CTRL_BREAK_EVENT:
+    interrupt = 1;
+    return TRUE;
+  default:
+    /* No need to set interrupt as we are exiting anyway */
+    return FALSE;
+  }
 }
 #else /* not WIN32 */
 static RETSIGTYPE
@@ -844,12 +961,12 @@ get_date_and_time P4C(integer *, minutes,  integer *, day,
 boolean
 input_line P1C(FILE *, f)
 {
-  register int i;
+  int i;
 
+  /* Recognize either LF or CR as a line terminator.  */
   last = first;
-
 #if defined(KANJI)
-  while (last < bufsize-3 && ((i = getc(f)) != EOF) && i != '\n') {
+  while (last < bufsize-3 && (i = getc (f)) != EOF && i != '\n' && i != '\r') {
     static int injis=0;
     if (i == '\033') { /* ESC */
       if ((i = getc(f)) == '$') { /* Kanji-In */
@@ -890,7 +1007,7 @@ input_line P1C(FILE *, f)
     }
   }
 #else /* KANJI */
-  while (last < bufsize && (i = getc (f)) != EOF && i != '\n')
+  while (last < bufsize && (i = getc (f)) != EOF && i != '\n' && i != '\r')
     buffer[last++] = i;
 #endif /* KANJI */
 
@@ -898,11 +1015,10 @@ input_line P1C(FILE *, f)
       return false;
 
   /* We didn't get the whole line because our buffer was too small.  */
-  if (i != EOF && i != '\n')
-    {
+  if (i != EOF && i != '\n' && i != '\r') {
       fprintf (stderr, "! Unable to read an entire line---bufsize=%u.\n",
                      (unsigned) bufsize);
-      fprintf (stderr, "Please alter the configuration file.\n");
+      fputs ("Please increase buf_size in texmf.cnf.\n", stderr);
       uexit (1);
     }
 
@@ -910,16 +1026,24 @@ input_line P1C(FILE *, f)
   if (last >= maxbufstack)
     maxbufstack = last;
 
+  /* If next char is LF of a CRLF, read it.  */
+  if (i == '\r') {
+    i = getc (f);
+    if (i != '\n')
+      ungetc (i, f);
+  }
+
   /* Trim trailing whitespace.  */
-  while (last > first
-         && (isblank (buffer[last - 1]) || buffer[last - 1] == '\r'))
+  while (last > first && isblank (buffer[last - 1]))
     --last;
 
   /* Don't bother using xord if we don't need to.  */
+#ifndef Omega
 #ifdef NONASCII
   for (i = first; i <= last; i++)
      buffer[i] = xord[buffer[i]];
-#endif /* NONASCII */
+#endif
+#endif
 
     return true;
 }
@@ -1156,8 +1280,8 @@ setupboundvariable P3C(integer *, var,  const_string, var_name,  integer, dflt)
     } else {
       *var = conf_val; /* We'll make further checks later.  */
     }
+    free (expansion);
   }
-  free (expansion);
 }
 
 #ifdef MP
@@ -1184,7 +1308,7 @@ callmakempx P2C(string, mpname,  string, mpxname)
     /* We will invoke something. Compile-time default if nothing else.  */
     string cmd;
     if (!cnf_cmd)
-      cnf_cmd = MPXCOMMAND;
+      cnf_cmd = xstrdup (MPXCOMMAND);
 
     cmd = concatn (cnf_cmd, troffmode ? " -troff " : " ",
                    mpname, " ", mpxname, NULL);
@@ -1204,7 +1328,9 @@ callmakempx P2C(string, mpname,  string, mpxname)
 #ifdef __sun__
 #define NO_MF_ASM
 #endif
-#if defined (__i386__) && defined (__GNUC__) && !defined (NO_MF_ASM)
+#if defined(WIN32) && !defined(NO_MF_ASM)
+#include "lib/mfmpw32.c"
+#elif defined (__i386__) && defined (__GNUC__) && !defined (NO_MF_ASM)
 #include "lib/mfmpi386.asm"
 #else
 /* Replace fixed-point fraction routines from mf.web and mp.web with
@@ -1392,52 +1518,75 @@ integer p,q;
    connected to a terminal for us to do any graphics.  */
 
 #ifdef AMIGAWIN
-extern int mf_amiga_initscreen ();
-extern void mf_amiga_updatescreen (), mf_amiga_blankrectangle (),
-            mf_amiga_paintrow ();
+extern int mf_amiga_initscreen P1H(void);
+extern void mf_amiga_updatescreen P1H(void);
+extern void mf_amiga_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_amiga_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
+#endif
+#ifdef EPSFWIN
+extern int mf_epsf_initscreen P1H(void);
+extern void mf_epsf_updatescreen P1H(void);
+extern void mf_epsf_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_epsf_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef HP2627WIN
-extern int mf_hp2627_initscreen ();
-extern void mf_hp2627_updatescreen (), mf_hp2627_blankrectangle (),
-            mf_hp2627_paintrow ();
+extern int mf_hp2627_initscreen P1H(void);
+extern void mf_hp2627_updatescreen P1H(void);
+extern void mf_hp2627_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_hp2627_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef MFTALKWIN
-extern int mf_mftalk_initscreen ();
-extern void mf_mftalk_updatescreen (), mf_mftalk_blankrectangle (),
-            mf_mftalk_paintrow ();
+extern int mf_mftalk_initscreen P1H(void);
+extern void mf_mftalk_updatescreen P1H(void);
+extern void mf_mftalk_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_mftalk_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef NEXTWIN
-extern int mf_next_initscreen ();
-extern void mf_next_updatescreen (), mf_next_blankrectangle (),
-            mf_next_paintrow ();
+extern int mf_next_initscreen P1H(void);
+extern void mf_next_updatescreen P1H(void);
+extern void mf_next_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_next_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef REGISWIN
-extern int mf_regis_initscreen ();
-extern void mf_regis_updatescreen (), mf_regis_blankrectangle (),
-            mf_regis_paintrow ();
+extern int mf_regis_initscreen P1H(void);
+extern void mf_regis_updatescreen P1H(void);
+extern void mf_regis_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_regis_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef SUNWIN
-extern int mf_sun_initscreen ();
-extern void mf_sun_updatescreen (), mf_sun_blankrectangle (),
-            mf_sun_paintrow ();
+extern int mf_sun_initscreen P1H(void);
+extern void mf_sun_updatescreen P1H(void);
+extern void mf_sun_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_sun_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef TEKTRONIXWIN
-extern int mf_tektronix_initscreen ();
-extern void mf_tektronix_updatescreen (), mf_tektronix_blankrectangle (),
-            mf_tektronix_paintrow ();
+extern int mf_tektronix_initscreen P1H(void);
+extern void mf_tektronix_updatescreen P1H(void);
+extern void mf_tektronix_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_tektronix_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef UNITERMWIN
-extern int mf_uniterm_initscreen ();
-extern void mf_uniterm_updatescreen (), mf_uniterm_blankrectangle (), 
-            mf_uniterm_paintrow ();
+extern int mf_uniterm_initscreen P1H(void);
+extern void mf_uniterm_updatescreen P1H(void);
+extern void mf_uniterm_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_uniterm_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
+#endif
+#ifdef WIN32WIN
+extern int mf_win32_initscreen P1H(void);
+extern void mf_win32_updatescreen P1H(void);
+extern void mf_win32_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_win32_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
 #ifdef X11WIN
-extern int mf_x11_initscreen ();
-extern void mf_x11_updatescreen (), mf_x11_blankrectangle (),
-            mf_x11_paintrow ();
+extern int mf_x11_initscreen P1H(void);
+extern void mf_x11_updatescreen P1H(void);
+extern void mf_x11_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_x11_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 #endif
-extern int mf_trap_initscreen ();
-extern void mf_trap_updatescreen (), mf_trap_blankrectangle (), mf_trap_paintrow ();
+extern int mf_trap_initscreen P1H(void);
+extern void mf_trap_updatescreen P1H(void);
+extern void mf_trap_blankrectangle P4H(screencol, screencol, screenrow, screenrow);
+extern void mf_trap_paintrow P4H(screenrow, pixelcolor, transspec, screencol);
 
 
 /* This variable, `mfwsw', contains the dispatch tables for each
@@ -1449,15 +1598,19 @@ extern void mf_trap_updatescreen (), mf_trap_blankrectangle (), mf_trap_paintrow
 struct mfwin_sw
 {
   char *mfwsw_type;             /* Name of terminal a la TERMCAP.  */
-  int (*mfwsw_initscreen) ();
-  void (*mfwsw_updatescrn) ();
-  void (*mfwsw_blankrect) ();
-  void (*mfwsw_paintrow) ();
+  int (*mfwsw_initscreen) P1H(void);
+  void (*mfwsw_updatescrn) P1H(void);
+  void (*mfwsw_blankrect) P4H(screencol, screencol, screenrow, screenrow);
+  void (*mfwsw_paintrow) P4H(screenrow, pixelcolor, transspec, screencol);
 } mfwsw[] =
 {
 #ifdef AMIGAWIN
   { "amiterm", mf_amiga_initscreen, mf_amiga_updatescreen,
     mf_amiga_blankrectangle, mf_amiga_paintrow },
+#endif
+#ifdef EPSFWIN
+  { "epsf", mf_epsf_initscreen, mf_epsf_updatescreen,
+    mf_epsf_blankrectangle, mf_epsf_paintrow },
 #endif
 #ifdef HP2627WIN
   { "hp2627", mf_hp2627_initscreen, mf_hp2627_updatescreen,
@@ -1486,6 +1639,10 @@ struct mfwin_sw
 #ifdef UNITERMWIN
    { "uniterm", mf_uniterm_initscreen, mf_uniterm_updatescreen,
      mf_uniterm_blankrectangle, mf_uniterm_paintrow },
+#endif
+#ifdef WIN32WIN
+  { "win32term", mf_win32_initscreen, mf_win32_updatescreen,
+    mf_win32_blankrectangle, mf_win32_paintrow },
 #endif
 #ifdef X11WIN
   { "xterm", mf_x11_initscreen, mf_x11_updatescreen, 
@@ -1523,12 +1680,13 @@ initscreen P1H(void)
   
   if (tty_type == NULL)
     { 
-#ifdef AMIGA
+#if defined (AMIGA)
       tty_type = "amiterm";
-#else /* not AMIGA */
-#if defined (OS2) || defined (WIN32)
+#elif defined (WIN32)
+      tty_type = "win32term";
+#elif defined (OS2) || defined (__DJGPP__) /* not AMIGA nor WIN32 */
       tty_type = "mftalk";
-#else /* not (OS2 or WIN32) */
+#else /* not (OS2 or WIN32 or __DJGPP__ or AMIGA) */
       /* If DISPLAY is set, we are X11; otherwise, who knows.  */
       boolean have_display = getenv ("DISPLAY") != NULL;
       tty_type = have_display ? "xterm" : getenv ("TERM");
@@ -1538,8 +1696,7 @@ initscreen P1H(void)
       if (tty_type == NULL
           || (!STREQ (tty_type, "trap") && !isatty (fileno (stdout))))
         return 0;
-#endif /* not (OS2 or WIN32) */
-#endif /* not AMIGA */
+#endif /* not (OS2 or WIN32 or __DJGPP__ or AMIGA) */
   }
 
   /* Test each of the terminals given in `mfwsw' against the terminal

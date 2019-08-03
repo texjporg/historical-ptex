@@ -15,9 +15,8 @@ maintain.h
 mkconf
 pconvert
 pdvitype.ch
-pltotf.chg
-ptex.chg.2.1.5
+pltotf.ch
+ptex218.ch
 ptexextra.c
-ptexskip.tex
-tftopl.chg
+tftopl.ch
 version.c

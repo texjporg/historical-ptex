@@ -1,17 +1,14 @@
 # Makefile for ptex -- ken-na@ascii.co.jp, Public domain.
-version = 7.0
+version = @WEB2CVERSION@
 
 kanjicode = @kanjicode@
 
-default : programs
+default : programs formats
 
 programs=ptex tftopl pltotf pdvitype jbibtex
-fmts=ptex.fmt
+formats=ptex.fmt platex.fmt
 
 ac_include ../../make/paths.make
-
-# Used for installation.
-LN = @LN_S@
 
 # Used for triptrap.
 DIFF = diff
@@ -20,19 +17,19 @@ DIFFFLAGS =
 .SUFFIXES: # get rid of .p.o
 ac_include ../../make/common.make
 ac_include ../../make/programs.make
-##ifeq ($(CC), gcc)
-##XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat -D__USE_FIXED_PROTOTYPES__
-##endif
+@MAINT@ifeq ($(CC), gcc)
+@MAINT@XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat -D__USE_FIXED_PROTOTYPES__
+@MAINT@endif
 
 # With --enable-ipc, TeX may need to link with -lsocket.
 socketlibs = @socketlibs@
-
-proglib = ../lib/lib.a
 
 common_makeargs = $(MFLAGS) CC='$(CC)' CFLAGS='$(CFLAGS)' $(XMAKEARGS)
 install_makeargs = INSTALL='$(INSTALL)' INSTALL_DATA='$(INSTALL_DATA)' \
   INSTALL_PROGRAM='$(INSTALL_PROGRAM)' \
   $(makevars) $(common_makeargs)
+
+proglib = ../lib/lib.a
 
 # The sh script that does the conversion:
 web2c = srcdir=$(thisdir) $(shared_env) $(SHELL) $(thisdir)/pconvert
@@ -76,19 +73,18 @@ programs: $(programs)
 ptex: $(ptex_o) $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) $(ptex_o) $(plib_o) $(socketlibs) $(LOADLIBES)
 
-$(ptex_o): $(ptex_c) texcoerce.h texd.h kanji.h
+$(ptex_o): $(ptex_c) texcoerce.h texd.h kanji.h maintain.h
 
 $(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_texmf)
 	$(web2c) ptex
 
 ptex.p: ptex.web ptex.ch
 
-ptex.ch: ptex.chg.2.1.7
-	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
-			/^#ifdef JPN/d; /^#endif JPN/d;" ptex.chg.2.1.7 > $@
+ptex.web: ../tex.web ../tex.ch
+	../tie -m ptex.web ../tex.web ../tex.ch
 
-ptex.web:
-	$(LN) ../tex.web ptex.web
+ptex.ch: ptex.web ptex218.ch
+	../tie -c ptex.ch ptex.web ptex218.ch
 
 ### TFtoPL
 tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
@@ -96,11 +92,8 @@ tftopl: tftopl.o $(plib_o) $(kpathsea) $(proglib)
 tftopl.o: tftopl.c kanji.h maintain.h
 tftopl.c: tftopl.p $(web2c_aux)
 tftopl.p: tftopl.web tftopl.ch
-tftopl.ch: tftopl.chg
-	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
-			/^#ifdef JPN/d; /^#endif JPN/d;" tftopl.chg > $@
-tftopl.web:
-	$(LN) ../tftopl.web tftopl.web
+tftopl.web: ../tftopl.web ../tftopl.ch
+	rm -f tftopl.web && ../tie -m tftopl.web ../tftopl.web ../tftopl.ch
 
 ### PLtoTF
 pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
@@ -108,11 +101,8 @@ pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
 pltotf.o: pltotf.c kanji.h maintain.h
 pltotf.c: pltotf.p $(web2c_aux)
 pltotf.p: pltotf.web pltotf.ch
-pltotf.ch: pltotf.chg
-	sed -e "/^#ifndef JPN/,/^#else JPN/d;\
-			/^#ifdef JPN/d; /^#endif JPN/d;" pltotf.chg > $@
-pltotf.web:
-	$(LN) ../pltotf.web pltotf.web
+pltotf.web: ../pltotf.web ../pltotf.ch
+	rm -f pltotf.web && ../tie -m pltotf.web ../pltotf.web ../pltotf.ch
 
 ### pDVItype
 pdvitype: pdvitype.o $(plib_o) $(kpathsea) $(proglib)
@@ -128,7 +118,7 @@ pdvitype.web:
 jbibtex: jbibtex.o jbibextra.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) jbibtex.o jbibextra.o $(plib_o) $(LOADLIBES)
 
-jbibtex.o: jbibtex.c kanji.h jbibextra.h
+jbibtex.o: jbibtex.c kanji.h maintain.h jbibextra.h
 	$(compile) -DBIBTEX $<
 jbibtex.c jbibd.h: jbibtex.p $(web2c_aux) jbibd.sed
 jbibtex.p: jbibtex.web jbibtex.ch
@@ -138,13 +128,13 @@ jbibextra.o: jbibd.h kanji.h maintain.h
 
 # Additional dependencies for recompiling the C code are generated
 # automatically, included at the end.
-kanji.o: kanji.c kanji.h
+kanji.o: kanji.c kanji.h maintain.h
 version.o: version.c kanji.h
 
-texini.o: texini.c texcoerce.h texd.h kanji.h
-tex0.o: tex0.c texcoerce.h texd.h kanji.h
-tex1.o: tex1.c texcoerce.h texd.h kanji.h
-tex2.o: tex2.c texcoerce.h texd.h kanji.h
+texini.o: texini.c texcoerce.h texd.h kanji.h maintain.h
+tex0.o: tex0.c texcoerce.h texd.h kanji.h maintain.h
+tex1.o: tex1.c texcoerce.h texd.h kanji.h maintain.h
+tex2.o: tex2.c texcoerce.h texd.h kanji.h maintain.h
 ptexextra.o: ptexextra.c texcoerce.h texd.h kanji.h maintain.h
 
 # Additional dependencies for relinking.
@@ -165,20 +155,26 @@ $(kpathsea):
 
 # 
 # Making formats and bases.
-formats: $(fmts)
-all_fmts=$(fmts)
+formats: $(formats)
+all_fmts=$(formats)
 
-ptex.fmt: ptex
-	$(MAKE) files="ptex.tex min10.tfm" prereq-check
-	./ptex -ini \\input ptex \\dump </dev/null
+texmf.cnf: ../../kpathsea/texmf.cnf
+	cp $< texmf.cnf
+	$(SHELL) $(thisdir)/mkconf $(thisdir)
 
-platex.fmt: ptex
-	$(MAKE) files=platex.ltx prereq-check
-	./ptex -ini \\input platex.ltx </dev/null
+dumpenv = TEXMFCNF=$(thisdir) TEXMF=$(texmf) 
+
+ptex.fmt: ptex texmf.cnf
+	$(dumpenv) $(MAKE) $(makeargs) files="ptex.tex min10.tfm" prereq-check
+	$(dumpenv) ./ptex -ini \\input ptex \\dump </dev/null
+
+platex.fmt: ptex texmf.cnf
+	$(dumpenv) $(MAKE) $(makeargs) files=platex.ltx prereq-check
+	$(dumpenv) ./ptex -ini \\input platex.ltx </dev/null
 
 # This is meant to be called recursively, with $(files) set.
 prereq-check: $(kpathsea_dir)/kpsewhich
-	$(kpathsea_dir)/kpsewhich $(files) >/dev/null \
+	$(dumpenv) $(kpathsea_dir)/kpsewhich $(files) >/dev/null \
 		|| $(MAKE) prereq-lose >/dev/null
 
 prereq-lose:
@@ -203,7 +199,7 @@ install-data:: install-formats
 
 # The actual binary executables and pool files.
 install-programs: $(programs)
-	$(SHELL) $(top_srcdir)/mkdirchain $(bindir) $(texpooldir)
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(bindir) $(texpooldir)
 	for p in $(programs); do $(INSTALL_LIBTOOL_PROG) $(bindir) $$p; done
 
 # The links to ptex for each format and for {ini,vir}ptex.
@@ -215,17 +211,15 @@ install-links: install-programs
 # Always do plain.*, so examples from the TeXbook (etc.) will work.
 install-formats: install-fmts
 install-fmts: $(all_fmts)
-	$(SHELL) $(top_srcdir)/mkdirchain $(fmtdir)
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(fmtdir)
 	for f in $(all_fmts); do $(INSTALL_DATA) $$f $(fmtdir)/$$f; done
-
-configbak = texmf.cnf.bak
 
 # Auxiliary files.
 install-data::
-	$(SHELL) $(top_srcdir)/mkdirchain \
+	$(SHELL) $(top_srcdir)/mkinstalldirs \
 		$(texpooldir) $(web2cdir) $(fontnamedir)
 	$(INSTALL_DATA) ptex.pool $(texpooldir)/ptex.pool
-	$(SHELL) $(thisdir)/mkconf $(web2cdir)
+	$(INSTALL_DATA) texmf.cnf $(web2cdir)/texmf.cnf
 # tcx files are a bad idea
 #	cd $(srcdir)/share && for f in *.tcx; do \
 #	  $(INSTALL_DATA) $$f $(web2cdir)/$$f; done
@@ -299,8 +293,10 @@ installcheck:
 
 # 
 # Cleaning.
-clean::
-	rm -f *.aux *.dvi *.fot *.log *.pl *.tfm *.typ *.fmt
+mostryclean::
+	rm -f *.o
+
+clean:: mostryclean
 	rm -f texcoerce.h texd.h jbibd.h jbibtex.h
 	rm -f $(ptex_c) $(ptex_o) $(plib_o) $(programs)
 	rm -f tftopl.h tftopl.c tftopl.o
@@ -316,10 +312,19 @@ distclean:: clean
 	rm -f jbibtex.web jbibtex.p
 	rm -f Makefile kanji.h
 extraclean:: distclean
+	rm -f ptex.fmt platex.fmt
+	rm -f *.aux *.bak *.bbl *.blg *.dvi *.log *.pl *.tfm *.vf *.vpl
+	rm -f *.*pk *.*gf *.mpx *.i *.s *~ *.orig *.rej *\#*
+	rm -f CONTENTS.tex a.out core mfput.* texput.* mpout.*
 	rm -f trip.tex trap.mf mtrap.mp trap.mp trap.mpx
 	rm -f trip.* tripin.* tripos.tex 8terminal.tex
 	rm -f trap.* mftrap.* mftrapin.* mptrap.* mptrapin.*
 	rm -f trapf.* mtrap.* writeo* missfont.log
+
+ptex218.tar.gz:: Files
+	sed -e 's!^!ptex218/!' Files > /tmp/pfile
+	(cd .. ; tar zcvf ptex218.tar.gz -T /tmp/pfile) && rm -f /tmp/pfile
+	mv ../ptex218.tar.gz .
 
 # Makefile.
 Makefile: configure $(srcdir)/config.status $(thisdir)/Makefile.in

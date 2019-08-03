@@ -1,113 +1,37 @@
-% pltotf.ch for C compilation with web2c.
+% This is a change file for TFtoPL
 %
-% 04/04/83 (PC)  Original version, made to work with version 1.2 of PLtoTF.
-% 04/16/83 (PC)  Brought up to version 1.3 of PLtoTF.
-% 06/30/83 (HWT) Revised changefile format for version 1.7 Tangle
-% 07/28/83 (HWT) Brought up to version 2
-% 12/19/86 (ETM) Brought up to version 2.1
-% 07/05/87 (ETM) Brought up to version 2.3
-% 03/22/88 (ETM) Converted for use with WEB to C
-% 11/29/89 (KB)  Version 3.
-% 01/16/90 (SR)  Version 3.2.
-% (more recent changes in the ChangeLog)
-
-@x [0] WEAVE: print changes only.
-\pageno=\contentspagenumber \advance\pageno by 1
-@y
-\pageno=\contentspagenumber \advance\pageno by 1
-\let\maybe=\iffalse
-#ifndef JPN
+% (03/27/1998) KN PLtoTF p1.3 (3.5, Web2c 7.2)
+%
+@x [0] l.52 - pTeX:
 \def\title{PL$\,$\lowercase{to}$\,$TF changes for C}
-#else JPN
+@y
 \def\title{PL$\,$\lowercase{to}$\,$TF changes for C, and for KANJI}
-#endif JPN
 @z
 
-#ifdef JPN
-@x [2] l.67 - pTeX:
+@x [2] l.69 - pTeX:
 @d banner=='This is PLtoTF, Version 3.5' {printed when the program starts}
 @y
-@d banner=='This is Nihongo PLtoTF, Version p1.2, based on PLtoTF, Version 3.5'
+@d banner=='This is Nihongo PLtoTF, Version p1.3, based on PLtoTF, Version 3.5'
   {printed when the program starts}
 @z
-#endif JPN
 
-@x [still 2] No banner unless verbose.
-procedure initialize; {this procedure gets things started properly}
-  var @<Local variables for initialization@>@/
-  begin print_ln(banner);@/
-@y
-@<Define |parse_arguments|@>
-procedure initialize; {this procedure gets things started properly}
-  var @<Local variables for initialization@>@/
-begin
-  kpse_set_progname (argv[0]);
-  parse_arguments;
-@z
-
-@x [3] Larger constants.
-@!buf_size=60; {length of lines displayed in error messages}
-@y
-@!buf_size=3000; {max input line length, output error line length}
-@z
-@x
-@!max_lig_steps=5000;
-  {maximum length of ligature program, must be at most $32767-257=32510$}
-@!max_kerns=500; {the maximum number of distinct kern values}
-@!hash_size=5003; {preferably a prime number, a bit larger than the number
-  of character pairs in lig/kern steps}
-@y
-@!max_lig_steps=32500;
-  {maximum length of ligature program, must be at most $32767-257=32510$}
-@!max_kerns=15000; {the maximum number of distinct kern values}
-@!hash_size=15077; {preferably a prime number, a bit larger than the number
-  of character pairs in lig/kern steps}
-@z
-
-@x [6] Open PL file.
-reset(pl_file);
-@y
-reset (pl_file, pl_name);
-if verbose then begin
-  print (banner);
-#ifndef JPN
+@x [6] l.140 - pTeX:
   print_ln (version_string);
-#else JPN
+@y
   print (version_string);
   ifdef('OUTEUC') print_ln(' (EUC)'); endif('OUTEUC');
   ifdef('OUTSJIS') print_ln(' (SJIS)'); endif('OUTSJIS');
   ifdef('OUTJIS') print_ln(' (JIS)'); endif('OUTJIS');
-#endif JPN
-end;
 @z
 
-@x [16] Open TFM file.
-@ On some systems you may have to do something special to write a
-packed file of bytes. For example, the following code didn't work
-when it was first tried at Stanford, because packed files have to be
-opened with a special switch setting on the \PASCAL\ that was used.
-@^system dependencies@>
-
-@<Set init...@>=
-rewrite(tfm_file);
-@y
-@ On some systems you may have to do something special to write a
-packed file of bytes.  It's no problem in C.
-@^system dependencies@>
-
-@<Set init...@>=
-rewritebin (tfm_file, tfm_name);
-@z
-
-#ifdef JPN
-@x [18] l.488 - pTeX:
+@x [18] l.495 - pTeX:
 @!xord:array[char] of ASCII_code; {conversion table}
 @y
 @!xord:array[char] of ASCII_code; {conversion table}
 @!xchr:array[char] of byte; {specifiles conversion of output character}
 @z
 
-@x [19] l.499 - pTeX:
+@x [19] l.506 - pTeX:
 for k:=first_ord to last_ord do xord[chr(k)]:=invalid_code;
 @y
 for k:=0 to @'37 do xchr[k]:='?';
@@ -115,34 +39,38 @@ for k:=@'40 to 255 do xchr[k]:=k;
 for k:=first_ord to last_ord do xord[chr(k)]:=invalid_code;
 @z
 
-@x [27] l.580 - pTeX: to convert putc of web2c
+@x [27] l.587 - pTeX: to convert putc of web2c
 for k:=1 to loc do print(buffer[k]); {print the characters already scanned}
 @y
 for k:=1 to loc do print(xchr[buffer[k]]);
   {print the characters already scanned}
 @z
-@x [27] l.584 - pTeX: to convert putc of web2c
+
+@x [27] l.591 - pTeX: to convert putc of web2c
 for k:=loc+1 to limit do print(buffer[k]); {print the characters yet unseen}
 @y
 for k:=loc+1 to limit do print(xchr[buffer[k]]);
   {print the characters yet unseen}
 @z
 
-@x [28] l.603 - pTeX: Read JIS kanji code.
+@x [28] l.610 - pTeX: Read JIS kanji code.
 @p procedure fill_buffer;
 begin left_ln:=right_ln; limit:=0; loc:=0;
 @y
 @p procedure fill_buffer;
 var @!c_a,@!c_b:byte;
-@!kmode:byte;
+@!cx:integer;
+@!kmode:0..1; {|1| denotes in JIS kanji strings}
 begin left_ln:=right_ln; limit:=0; loc:=0; kmode:=0;
 @z
-@x [28] l.612 - pTeX:
+
+@x [28] l.619 - pTeX:
 else  begin while (limit<buf_size-1)and(not eoln(pl_file)) do
     begin incr(limit); read(pl_file,buffer[limit]);
     end;
 @y
-else  begin while (limit<buf_size-3)and(not eoln(pl_file)) do
+else  begin kmode:=0;
+  while (limit<buf_size-3)and(not eoln(pl_file)) do
     begin read(pl_file,c_a);
     if c_a=@'33 then @<Store JIS code characters to buffer@>
     else
@@ -150,10 +78,10 @@ else  begin while (limit<buf_size-3)and(not eoln(pl_file)) do
         begin incr(limit); buffer[limit]:=c_a;
         end
       else  begin read(pl_file,c_b);
-        ifdef('EUCPTEX') c_a:=JIStoEUC(c_a*@'400+c_b); endif('EUCPTEX')@/
-        ifdef('SJISPTEX') c_a:=JIStoSJIS(c_a*@'400+c_b); endif('SJISPTEX')@/
-        incr(limit); buffer[limit]:=c_a div @'400;
-        incr(limit); buffer[limit]:=c_a mod @'400;
+        ifdef('EUCPTEX') cx:=JIStoEUC(c_a*@'400+c_b); endif('EUCPTEX')@/
+        ifdef('SJISPTEX') cx:=JIStoSJIS(c_a*@'400+c_b); endif('SJISPTEX')@/
+        incr(limit); buffer[limit]:=cx div @'400;
+        incr(limit); buffer[limit]:=cx mod @'400;
         end;
       end;
     end;
@@ -167,7 +95,7 @@ else  begin while (limit<buf_size-3)and(not eoln(pl_file)) do
 %      This bug may be found in other routines so...
 %      Fix: add some (more?) space at the end of each line, in fill_buffer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x [28] l.615 - pTeX:
+@x [28] l.622 - pTeX:
   buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
   if left_ln then @<Set |loc| to the number of leading blanks in
     the buffer, and check the indentation@>;
@@ -205,10 +133,7 @@ else  begin
 end
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [36] May have to increase some numbers to fit new commands
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x [36] l.747 - pTeX:
+@x [36] l.754 - pTeX: May have to increase some numbers to fit new commands
 @d max_name_index=88 {upper bound on the number of keywords}
 @d max_letters=600 {upper bound on the total length of all keywords}
 @y
@@ -216,10 +141,7 @@ end
 @d max_letters=700 {upper bound on the total length of all keywords}
 @z
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [44] Add kanji related codes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x [44] l.832 - pTeX:
+@x [44] l.839 - pTeX: Add kanji related codes
 @d character_code=12
 @y
 @d character_code=12
@@ -228,7 +150,8 @@ end
 @d chars_in_type_code=15   {|CHARSINTYPE| property}
 @d dir_code=16             {|DIRECTION| property}
 @z
-@x [44] l.849 - pTeX:
+
+@x [44] l.856 - pTeX:
 @d lig_code=74
 @y
 @d lig_code=74
@@ -240,28 +163,21 @@ end
 @d jfm_format=3 {Yoko-kumi \.{JFM} file format}
 @d vfm_format=4 {Tate-kumi \.{JFM} file format}
 @z
-#endif JPN
 
-@x [79] `index' might be a library routine.
-|k|th element of its list.
-@y
-|k|th element of its list.
-@d index == index_var
-@z
-
-#ifdef JPN
-@x [84] l.1535 - pTeX: Change valid property code.
+@x [84] l.1542 - pTeX: Change valid property code.
+if cur_code=comment_code then skip_to_end_of_item
 else if cur_code>character_code then
   flush_error('This property name doesn''t belong on the outer level')
 @.This property name doesn't belong...@>
 @y
+if cur_code=comment_code then skip_to_end_of_item
 else if (cur_code>dir_code)or
         ((file_format=tfm_format)and(cur_code>character_code)) then
   flush_error('This property name doesn''t belong on the outer level')
 @.This property name doesn't belong...@>
 @z
 
-@x [85] l.1557 - pTeX: Added some property codes.
+@x [85] l.1565 - pTeX: Added some property codes.
 character_code: read_char_info;
 @y
 character_code: read_char_info;
@@ -270,16 +186,8 @@ glue_kern_code: read_glue_kern;
 chars_in_type_code: read_chars_in_type;
 dir_code: read_direction;
 @z
-#endif JPN
 
-@x [103] No output (except errors) unless verbose.
-@<Print |c| in octal notation@>;
-@y
-if verbose then @<Print |c| in octal notation@>;
-@z
-
-#ifdef JPN
-@x [110] l.1907 - pTeX: there are no charlists in kanji format files.
+@x [110] l.1915 - pTeX: there are no charlists in kanji format files.
 for c:=0 to 255 do
   @<Make sure that |c| is not the largest element of a charlist cycle@>;
 @y
@@ -287,31 +195,8 @@ if file_format=tfm_format then
   for c:=0 to 255 do
     @<Make sure that |c| is not the largest element of a charlist cycle@>;
 @z
-#endif JPN
 
-@x [115] Output of reals.
-@ @d round_message(#)==if delta>0 then print_ln('I had to round some ',
-@.I had to round...@>
-  #,'s by ',(((delta+1) div 2)/@'4000000):1:7,' units.')
-@y
-@ @d round_message(#)==if delta>0 then begin print('I had to round some ',
-@.I had to round...@>
-  #,'s by '); print_real((((delta+1) div 2)/@'4000000),1,7);
-  print_ln(' units.'); end
-@z
-
-% [118] Change the name of the variable `class', since AIX 3.1's <math.h>
-% defines a function by that name.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-@x
-@d pending=4 {$f(x,y)$ is being evaluated}
-@y
-@d pending=4 {$f(x,y)$ is being evaluated}
-@d class == class_var  {Avoid problems with AIX \.{<math.h>}}
-@z
-
-#ifdef JPN
-@x [120] l.2027 - pTeX: when checking glue_kern prog check glues as well
+@x [120] l.2037 - pTeX: when checking glue_kern prog check glues as well
     begin if lig_exam<>bchar then
       check_existence(lig_exam)('LIG character examined by');
 @.LIG character examined...@>
@@ -333,33 +218,8 @@ if file_format=tfm_format then
   else check_existence(lig_exam)('GLUE character generated by');
   end
 @z
-#endif JPN
 
-% [123] web2c can't handle these mutually recursive procedures.
-% But let's do a fake definition of f here, so that it gets into web2c's
-% symbol table...
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-@x
-@p function f(@!h,@!x,@!y:indx):indx; forward;@t\2@>
-  {compute $f$ for arguments known to be in |hash[h]|}
-@y
-@p 
-ifdef('notdef') 
-function f(@!h,@!x,@!y:indx):indx; begin end;@t\2@>
-  {compute $f$ for arguments known to be in |hash[h]|}
-endif('notdef')
-@z
-
-% [124] ... and then really define it now.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-@x
-@p function f;
-@y
-@p function f(@!h,@!x,@!y:indx):indx; 
-@z
-
-#ifdef JPN
-@x [126] l.2165 - pTeX: Fix up output of bytes.
+@x [126] l.2178 - pTeX: Fix up output of bytes.
 @<Doublecheck...@>=
 if nl>0 then for lig_ptr:=0 to nl-1 do
   if lig_kern[lig_ptr].b2<kern_flag then
@@ -371,16 +231,8 @@ if nl>0 then for lig_ptr:=0 to nl-1 do
 @y
 @<Doublecheck...@>=
 @z
-#endif JPN
 
-@x [127] Fix up output of bytes.
-@d out(#)==write(tfm_file,#)
-@y
-@d out(#)==putbyte(#,tfm_file)
-@z
-
-#ifdef JPN
-@x [128] l.2194 - pTeX: Decide the |file_format|.
+@x [128] l.2207 - pTeX: Decide the |file_format|.
 @<Do the output@>=
 @y
 @<Do the output@>=
@@ -393,13 +245,15 @@ jfm_format: print_ln('Input file is in kanji YOKO-kumi format.');
 vfm_format: print_ln('Input file is in kanji TATE-kumi format.');
 end;
 @z
-@x [128] l.2198 - pTeX: Output kanji character
+
+@x [128] l.2211 - pTeX: Output kanji character
 @<Output the character info@>;
 @y
 if file_format<>tfm_format then @<Output the kanji character type info@>;
 @<Output the character info@>;
 @z
-@x [128] l.2200 - pTeX: Output glue/kern programs
+
+@x [128] l.2213 - pTeX: Output glue/kern programs
 @<Output the ligature/kern program@>;
 @y
 @<Output the ligature/kern program@>;
@@ -411,7 +265,7 @@ if (file_format<>tfm_format)and(ng>0) then
     end;
 @z
 
-@x [130] l.2223 - pTeX:
+@x [130] l.2238 - pTeX:
 not_found:=true; bc:=0;
 while not_found do
   if (char_wd[bc]>0)or(bc=255) then not_found:=false
@@ -440,7 +294,8 @@ else  begin not_found:=true; bc:=0;
   if bc>ec then bc:=1;
   end;
 @z
-@x [130] l.2237 - pTeX:
+
+@x [130] l.2250 - pTeX:
 lf:=6+lh+(ec-bc+1)+memory[width]+memory[height]+memory[depth]+
 memory[italic]+nl+lk_offset+nk+ne+np;
 @y
@@ -452,7 +307,7 @@ else
     memory[italic]+nl+lk_offset+nk+ne+np;
 @z
 
-@x [131] l.2243 - pTeX:
+@x [131] l.2256 - pTeX:
 out_size(lf); out_size(lh); out_size(bc); out_size(ec);
 out_size(memory[width]); out_size(memory[height]);
 out_size(memory[depth]); out_size(memory[italic]);
@@ -474,46 +329,8 @@ else begin out_size(ne);
   end;
 out_size(np);
 @z
-#endif JPN
 
-@x [136] Fix output of reals.
-@p procedure out_scaled(x:fix_word); {outputs a scaled |fix_word|}
-var @!n:byte; {the first byte after the sign}
-@!m:0..65535; {the two least significant bytes}
-begin if abs(x/design_units)>=16.0 then
-  begin print_ln('The relative dimension ',x/@'4000000:1:3,
-    ' is too large.');
-@.The relative dimension...@>
-  print('  (Must be less than 16*designsize');
-  if design_units<>unity then print(' =',design_units/@'200000:1:3,
-      ' designunits');
-@y
-@p procedure out_scaled(x:fix_word); {outputs a scaled |fix_word|}
-var @!n:byte; {the first byte after the sign}
-@!m:0..65535; {the two least significant bytes}
-begin if fabs(x/design_units)>=16.0 then
-  begin print('The relative dimension ');
-    print_real(x/@'4000000,1,3);
-    print_ln(' is too large.');
-@.The relative dimension...@>
-  print('  (Must be less than 16*designsize');
-  if design_units<>unity then begin print(' =');
-	print_real(design_units/@'200000,1,3);
-	print(' designunits');
-  end;
-@z
-
-% [141] char_remainder[c] is unsigned, and label_table[sort_ptr].rr
-% might be -1, and if -1 is coerced to being unsigned, it will be bigger
-% than anything else.
-@x
-  while label_table[sort_ptr].rr>char_remainder[c] do
-@y
-  while label_table[sort_ptr].rr>toint(char_remainder[c]) do
-@z
-
-#ifdef JPN
-@x [146] l.2460 - pTeX:
+@x [146] l.2476 - pTeX:
 @p procedure param_enter;
 @y
 @p
@@ -521,7 +338,7 @@ begin if fabs(x/design_units)>=16.0 then
 procedure param_enter;
 @z
 
-@x [146] l.2472 - pTeX: LIGTABLE command can not be used in JPL.
+@x [146] l.2488 - pTeX: LIGTABLE command can not be used in JPL.
 begin @<Read ligature/kern list@>;
 end;
 @y
@@ -530,7 +347,7 @@ begin @<If is jfm or vfm then print error@>;
 end;
 @z
 
-@x [146] l.2477 - pTeX: CHARACTER command can not be used in JPL.
+@x [146] l.2493 - pTeX: CHARACTER command can not be used in JPL.
 begin @<Read character info list@>;
 end;
 @y
@@ -539,7 +356,7 @@ begin @<If is jfm or vfm then print error@>;
 end;
 @z
 
-@x [146] l.2490 - pTeX:
+@x [146] l.2506 - pTeX:
 begin @<Correct and check the information@>
 end;
 @y
@@ -571,126 +388,10 @@ begin @<If is tfm then print error@>;
 @<Read direction@>;
 end;
 @z
-#endif JPN
 
-@x [147] Be quiet unless verbose. 
-read_input; print_ln('.');@/
+@x [148] l.2620 - pTeX:
+@* Index.
 @y
-read_input;
-if verbose then print_ln('.');
-@z
-
-@x [148] System-dependent changes.
-This section should be replaced, if necessary, by changes to the program
-that are necessary to make \.{PLtoTF} work at a particular installation.
-It is usually best to design your change file so that all changes to
-previous sections preserve the section numbering; then everybody's version
-will be consistent with the printed program. More extensive changes,
-which introduce new sections, can be inserted here; then only the index
-itself will get a new section number.
-@^system dependencies@>
-@y
-Parse a Unix-style command line.
-
-@d argument_is (#) == (strcmp (long_options[option_index].name, #) = 0)
-
-@<Define |parse_arguments|@> =
-procedure parse_arguments;
-const n_options = 3; {Pascal won't count array lengths for us.}
-var @!long_options: array[0..n_options] of getopt_struct;
-    @!getopt_return_val: integer;
-    @!option_index: c_int_type;
-    @!current_option: 0..n_options;
-begin
-  @<Initialize the option variables@>;
-  @<Define the option table@>;
-  repeat
-    getopt_return_val := getopt_long_only (argc, argv, '', long_options,
-                                           address_of (option_index));
-    if getopt_return_val = -1 then begin
-      {End of arguments; we exit the loop below.} ;
-
-    end else if getopt_return_val = "?" then begin
-      usage (1, 'pltotf');
-
-    end else if argument_is ('help') then begin
-      usage (0, PLTOTF_HELP);
-
-    end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth');
-
-    end; {Else it was a flag; |getopt| has already done the assignment.}
-  until getopt_return_val = -1;
-
-  {Now |optind| is the index of first non-option on the command line.
-   We must have one or two remaining arguments.}
-  if (optind + 1 <> argc) and (optind + 2 <> argc) then begin
-    write_ln (stderr, 'pltotf: Need one or two file arguments.');
-    usage (1, 'pltotf');
-  end;
-  
-  pl_name := extend_filename (cmdline (optind), 'pl');
-
-  {If an explicit output filename isn't given, construct it from |pl_name|.}
-  if optind + 2 = argc then begin
-    tfm_name := extend_filename (cmdline (optind + 1), 'tfm');
-  end else begin
-    tfm_name := basename_change_suffix (pl_name, '.pl', '.tfm');
-  end;
-end;
-
-@ Here are the options we allow.  The first is one of the standard GNU options.
-@.-help@>
-
-@<Define the option...@> =
-current_option := 0;
-long_options[current_option].name := 'help';
-long_options[current_option].has_arg := 0;
-long_options[current_option].flag := 0;
-long_options[current_option].val := 0;
-incr (current_option);
-
-@ Another of the standard options.
-@.-version@>
-
-@<Define the option...@> =
-long_options[current_option].name := 'version';
-long_options[current_option].has_arg := 0;
-long_options[current_option].flag := 0;
-long_options[current_option].val := 0;
-incr (current_option);
-
-@ Print progress information?
-
-@<Define the option...@> =
-long_options[current_option].name := 'verbose';
-long_options[current_option].has_arg := 0;
-long_options[current_option].flag := address_of (verbose);
-long_options[current_option].val := 1;
-incr (current_option);
-
-@ 
-@<Glob...@> =
-@!verbose: c_int_type;
-
-@
-@<Initialize the option...@> =
-verbose := false;
-
-@ An element with all zeros always ends the list.
-
-@<Define the option...@> =
-long_options[current_option].name := 0;
-long_options[current_option].has_arg := 0;
-long_options[current_option].flag := 0;
-long_options[current_option].val := 0;
-
-@ Global filenames.
-
-@<Global...@> =
-@!tfm_name,@!pl_name:c_string;
-
-#ifdef JPN
 @* For Japanese Font Metric routines.
 We need to include some routines for handling kanji characters.
 
@@ -1010,5 +711,6 @@ else if iskanji1(ch) then
 else jis_code:=-1;
 get_kanji:=jis_code;
 end;
-#endif JPN
+
+@* Index.
 @z
