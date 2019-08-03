@@ -47,6 +47,7 @@
 %       >>> (03/20/95) KN pTeX p2.0 (based on 3.1415)
 %       >>> (09/08/95) KN pTeX p2.1
 %       >>> (09/20/95) KN pTeX p2.1.1
+%       >>> (11/21/95) KN pTeX p2.1.4
 % 
 % The module numbers in this change file refer to the published text in
 % TeX: The Program, Volume B of Computers&Typesetting.
@@ -73,7 +74,7 @@
 #ifndef JPN
 @d banner=='This is TeX, Version 3.1415' {more is printed later}
 #else JPN
-@d banner=='This is pTeX, Version 3.1415 p2.1.1 (output-kanji-code)' {more is printed later}
+@d banner=='This is pTeX, Version 3.1415 p2.1.4 (output-kanji-code)' {more is printed later}
 #endif JPN
 @z
 
@@ -2255,6 +2256,7 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 %p[17.230] cur_tfont_loc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
+@d math_font_base=cur_font_loc+1 {table of 48 math font numbers}
 @d cat_code_base=math_font_base+48
   {table of 256 command codes (the ``catcodes'')}
 @d lc_code_base=cat_code_base+256 {table of 256 lowercase mappings}
@@ -2263,6 +2265,7 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 @d math_code_base=sf_code_base+256 {table of 256 math mode mappings}
 @d int_base=math_code_base+256 {beginning of region 5}
 @y
+@d math_font_base=cur_font_loc+1 {table of 48 math font numbers}
 @d cur_jfont_loc=math_font_base+48
 @d cur_tfont_loc=cur_jfont_loc+1
 @d auto_spacing_code=cur_tfont_loc+1
@@ -3091,7 +3094,7 @@ done1:
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%j[24.343] input external file
+%j[24.343] input external file (koko)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
   begin cur_chr:=buffer[loc]; incr(loc);
@@ -4118,12 +4121,19 @@ in environment variables.
 %p[29.516] more_name
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
+@p function more_name(@!c:ASCII_code):boolean;
+begin if c=" " then more_name:=false
 else  begin str_room(1); append_char(c); {contribute |c| to the current string}
   if (c=">")or(c=":") then
     begin area_delimiter:=cur_length; ext_delimiter:=0;
     end
   else if (c=".")and(ext_delimiter=0) then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+end;
 @y
+@p function more_name(@!c:ASCII_code):boolean;
+begin if c=" " then more_name:=false
 else  begin str_room(1); append_char(c); {contribute |c| to the current string}
 #ifndef JPN
   if (c="/") then
@@ -4133,6 +4143,9 @@ else  begin str_room(1); append_char(c); {contribute |c| to the current string}
     begin area_delimiter:=cur_length; ext_delimiter:=0;
     end
   else if c="." then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+end;
 @z
 #ifdef JPN
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4297,14 +4310,15 @@ begin name_in_progress:=true; begin_name;
 @<Get the next non-blank non-call...@>;
 skip_mode:=false;
 loop@+begin
-  if ((cur_cmd>other_char)and((cur_cmd<kanji)or(cur_cmd>other_kchar)))
-       or(cur_chr>255) then begin {not a character}
-    back_input; goto done;
-  end;
-  if (cur_cmd>=kanji)and(cur_cmd<=other_kchar) then begin
-    str_room(2); append_char(cur_chr);
-    get_x_token; append_char(cur_chr);
-  end else if not more_name(cur_chr) then goto done;
+  if (cur_cmd>=kanji)and(cur_cmd<=other_kchar) then {is kanji}
+    begin str_room(2);
+      append_char(cur_chr div 256); {kanji upper byte}
+      append_char(cur_chr mod 256); {kanji lower byte}
+    end
+  else if (cur_cmd>other_char)or(cur_chr>255) then {not a alphabet}
+    begin back_input; goto done;
+    end
+  else if not more_name(cur_chr) then goto done;
   get_x_token;
   end;
 done: end_name; name_in_progress:=false; skip_mode:=true;
@@ -5675,17 +5689,21 @@ end
 @d supscr(#)==#+2 {the |supscr| field of a noad}
 @d subscr(#)==#+3 {the |subscr| field of a noad}
 @y
+\yskip\hang In Japanese, |math_type(q)=math_jchar| means that |fam(q)|
+refers to one of the sixteen kanji font families, and |KANJI(q)| is the
+internal kanji code number.
+@^Japanese extentions@>
+
 @d noad_size=5 {number of words in a normal noad}
 @d nucleus(#)==#+1 {the |nucleus| field of a noad}
 @d supscr(#)==#+2 {the |supscr| field of a noad}
 @d subscr(#)==#+3 {the |subscr| field of a noad}
 @d kcode_noad(#)==#+4
 @d math_kcode(#)==info(#+4) {the |kanji character| field of a noad}
-
 @d kcode_noad_nucleus(#)==#+3
 @d math_kcode_nucleus(#)==info(#+3)
 	{the |kanji character| field offset from nucleus}
-
+@#
 @d math_jchar=5
 @d math_text_jchar=6
 @z
@@ -5845,11 +5863,22 @@ if is_char_node(q) then
 %j[36.722] fetch
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
+@p procedure fetch(@!a:pointer); {unpack the |math_char| field |a|}
+begin cur_c:=character(a); cur_f:=fam_fnt(fam(a)+cur_size);
 if cur_f=null_font then
   @<Complain about an undefined family and set |cur_i| null@>
 else  begin if (qo(cur_c)>=font_bc[cur_f])and(qo(cur_c)<=font_ec[cur_f]) then
     cur_i:=char_info(cur_f)(cur_c)
+  else cur_i:=null_character;
+  if not(char_exists(cur_i)) then
+    begin char_warning(cur_f,qo(cur_c));
+    math_type(a):=empty;
+    end;
+  end;
+end;
 @y
+@p procedure fetch(@!a:pointer); {unpack the |math_char| field |a|}
+begin cur_c:=character(a); cur_f:=fam_fnt(fam(a)+cur_size);
 if cur_f=null_font then
   @<Complain about an undefined family and set |cur_i| null@>
 else
@@ -5857,6 +5886,13 @@ else
     cur_c:=qi(get_jfm_pos(math_kcode_nucleus(a),cur_f));
   if (qo(cur_c)>=font_bc[cur_f])and(qo(cur_c)<=font_ec[cur_f]) then
     cur_i:=char_info(cur_f)(cur_c)
+  else cur_i:=null_character;
+  if not(char_exists(cur_i)) then
+    begin char_warning(cur_f,qo(cur_c));
+    math_type(a):=empty;
+    end;
+  end;
+end;
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -6773,6 +6809,46 @@ else  case type(s) of
   disp_node: do_nothing;
   othercases confusion("disc3")
 @:this can't happen disc3}{\quad disc3@>
+  endcases
+@z
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%j[39.872] add kanji char width
+%p[39.872] add dir_node width, disp_node
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@x
+@ @<Add the width of node |s| to |act_width|@>=
+if is_char_node(s) then
+  begin f:=font(s);
+  act_width:=act_width+char_width(f)(char_info(f)(character(s)));
+  end
+else  case type(s) of
+  ligature_node: begin f:=font(lig_char(s));
+    act_width:=act_width+
+      char_width(f)(char_info(f)(character(lig_char(s))));
+    end;
+  hlist_node,vlist_node,rule_node,kern_node:
+    act_width:=act_width+width(s);
+  othercases confusion("disc4")
+@:this can't happen disc4}{\quad disc4@>
+  endcases
+@y
+@ @<Add the width of node |s| to |act_width|@>=
+if is_char_node(s) then
+  begin f:=font(s);
+  act_width:=act_width+char_width(f)(char_info(f)(character(s)));
+  if font_dir[f]<>dir_default then s:=link(s)
+  end
+else  case type(s) of
+  ligature_node: begin f:=font(lig_char(s));
+    act_width:=act_width+
+      char_width(f)(char_info(f)(character(lig_char(s))));
+    end;
+  hlist_node,vlist_node,dir_node,rule_node,kern_node:
+    act_width:=act_width+width(s);
+  disp_node: do_nothing;
+  othercases confusion("disc4")
+@:this can't happen disc4}{\quad disc4@>
   endcases
 @z
 #endif JPN
@@ -8825,9 +8901,15 @@ hlist_node,vlist_node,dir_node,rule_node: begin d:=width(p); goto found;
 %j[48.1150] scan_math
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
+@<Cases of |main_control| that build...@>=
+mmode+left_brace: begin tail_append(new_noad);
   back_input; scan_math(nucleus(tail));
+  end;
 @y
+@<Cases of |main_control| that build...@>=
+mmode+left_brace: begin tail_append(new_noad);
   back_input; scan_math(nucleus(tail),kcode_noad(tail));
+  end;
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
