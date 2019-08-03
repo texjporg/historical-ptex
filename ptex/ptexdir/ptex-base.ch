@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1
+% This is a change file for pTeX 3.1.2
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -40,8 +40,8 @@
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.1.1' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.1.1' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1.2' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1.2' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -858,7 +858,9 @@ kern_node,disp_node,math_node,penalty_node:
    \.{\\postbreakpenalty} )}
 @d assign_inhibit_xsp_code=assign_kinsoku+1
   {user-defined inhibit xsp character ( \.{\\inhibitxspcode} )}
-@d set_aux=assign_inhibit_xsp_code+1
+@d set_kansuji_char=assign_inhibit_xsp_code+1
+  {user-defined kansuji character ( \.{\\kansujichar} )}
+@d set_aux=set_kansuji_char+1
   {specify state info ( \.{\\spacefactor}, \.{\\prevdepth} )}
 @d set_prev_graf=set_aux+1 {specify state info ( \.{\\prevgraf} )}
 @d set_page_dimen=set_prev_graf+1 {specify state info ( \.{\\pagegoal}, etc.~)}
@@ -1021,7 +1023,8 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 @d auto_xsp_code_base=kcat_code_base+256 {table of 256 auto spacer flag}
 @d inhibit_xsp_code_base=auto_xsp_code_base+256
 @d kinsoku_base=inhibit_xsp_code_base+256 {table of 256 kinsoku mappings}
-@d lc_code_base=kinsoku_base+256 {table of 256 lowercase mappings}
+@d kansuji_base=kinsoku_base+256 {table of 10 kansuji mappings}
+@d lc_code_base=kansuji_base+10 {table of 256 lowercase mappings}
 @z
 
 @x [17.230] l.4782 - pTeX:
@@ -1041,6 +1044,7 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 @d inhibit_xsp_code(#)==equiv(inhibit_xsp_code_base+#)
 @d kinsoku_type(#)==eq_type(kinsoku_base+#)
 @d kinsoku_code(#)==equiv(kinsoku_base+#)
+@d kansuji_char(#)==equiv(kansuji_base+#)
 @z
 
 @x [17.232] l.4810 - pTeX: initialize cat_code, cur_jfont, cur_tfont
@@ -1084,6 +1088,16 @@ for k:="0" to "9" do
   begin math_code(k):=hi(k+var_code);
   auto_xsp_code(k):=3;
   end;
+kansuji_char(0):=@"213B;
+kansuji_char(1):=@"306C;
+kansuji_char(2):=@"4673;
+kansuji_char(3):=@"3B30;
+kansuji_char(4):=@"3B4D;
+kansuji_char(5):=@"385E;
+kansuji_char(6):=@"4F3B;
+kansuji_char(7):=@"3C37;
+kansuji_char(8):=@"482C;
+kansuji_char(9):=@"3665;
 for k:="A" to "Z" do
   begin cat_code(k):=letter; cat_code(k+"a"-"A"):=letter;@/
   math_code(k):=hi(k+var_code+@"100);
@@ -1956,14 +1970,15 @@ else if scan_keyword("sp") then goto done
 @y
 @d number_code=0 {command code for \.{\\number}}
 @d roman_numeral_code=1 {command code for \.{\\romannumeral}}
-@d string_code=2 {command code for \.{\\string}}
-@d meaning_code=3 {command code for \.{\\meaning}}
-@d font_name_code=4 {command code for \.{\\fontname}}
-@d euc_code=5 {command code for \.{\\euc}}
-@d sjis_code=6 {command code for \.{\\sjis}}
-@d jis_code=7 {command code for \.{\\jis}}
-@d kuten_code=8 {command code for \.{\\kuten}}
-@d job_name_code=9 {command code for \.{\\jobname}}
+@d kansuji_code=2 {command code for \.{\\kansuji}}
+@d string_code=3 {command code for \.{\\string}}
+@d meaning_code=4 {command code for \.{\\meaning}}
+@d font_name_code=5 {command code for \.{\\fontname}}
+@d euc_code=6 {command code for \.{\\euc}}
+@d sjis_code=7 {command code for \.{\\sjis}}
+@d jis_code=8 {command code for \.{\\jis}}
+@d kuten_code=9 {command code for \.{\\kuten}}
+@d job_name_code=10 {command code for \.{\\jobname}}
 @z
 
 @x [27.468] l.9212 - pTeX:
@@ -1972,6 +1987,8 @@ primitive("fontname",convert,font_name_code);@/
 @y
 primitive("fontname",convert,font_name_code);@/
 @!@:font_name_}{\.{\\fontname} primitive@>
+primitive("kansuji",convert,kansuji_code);
+@!@:kansuji_}{\.{\\kansuji} primitive@>
 primitive("euc",convert,euc_code);
 @!@:euc_}{\.{\\euc} primitive@>
 primitive("sjis",convert,sjis_code);
@@ -1986,6 +2003,7 @@ primitive("kuten",convert,kuten_code);
   font_name_code: print_esc("fontname");
 @y
   font_name_code: print_esc("fontname");
+  kansuji_code: print_esc("kansuji");
   euc_code:print_esc("euc");
   sjis_code:print_esc("sjis");
   jis_code:print_esc("jis");
@@ -2012,8 +2030,8 @@ string_code, meaning_code: begin save_scanner_status:=scanner_status;
 @ @<Scan the argument for command |c|@>=
 KANJI(cx):=0;
 case c of
-number_code,roman_numeral_code,euc_code,sjis_code,jis_code,kuten_code:
-  scan_int;
+number_code,roman_numeral_code,
+kansuji_code,euc_code,sjis_code,jis_code,kuten_code: scan_int;
 string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token;
   if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
@@ -2048,6 +2066,7 @@ kuten_code: begin
   if (proc_kanji_code=sjis_enc) then cur_val:=KUTENtoSJIS(cur_val)
   else cur_val:=KUTENtoEUC(cur_val);
   print_int(cur_val); end;
+kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else if KANJI(cx)=0 then print_char(cur_chr)
   else begin print_char(Hi(cx)); print_char(Lo(cx)); end;
@@ -5275,6 +5294,7 @@ any_mode(assign_int),
 any_mode(assign_kinsoku),
 any_mode(assign_inhibit_xsp_code),
 any_mode(set_auto_spacing),
+any_mode(set_kansuji_char),
 any_mode(toks_register),
 any_mode(assign_toks),
 any_mode(assign_int),
@@ -5632,6 +5652,56 @@ end else begin
   t:=height_depth(orig_char_info(cur_jfont)(qi(0)));
   v:=char_height(cur_jfont)(t)+char_depth(cur_jfont)(t);
 end
+
+@ set a kansuji character.
+
+@ @<Put each...@>=
+primitive("kansujichar",set_kansuji_char,0);
+@!@:kansujichar_}{\.{\\kansujichar} primitive@>
+
+@ @<Cases of |print_cmd_chr|...@>=
+set_kansuji_char: print_esc("kansujichar");
+
+@ @<Assignments@>=
+set_kansuji_char:
+begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
+if not check_kanji(cur_val) then
+  begin print_err("Invalid KANSUJI char ("); print_hex(n); print_char(")");
+@.Invalid KANSUJI char@>
+  help1("I'm skip this control sequences.");@/
+  error; return;
+  end
+else if (n<0)or(n>9) then
+  begin print_err("Invalid KANSUJI number ("); print_int(n); print_char(")");
+@.Invalid KANSUJI number@>
+  help1("I'm skip this control sequences.");@/
+  error; return;
+  end
+else
+  begin
+    define(kansuji_base+n,n,tokanji(cur_val));
+  end;
+end;
+
+@ |print_kansuji| procedure converts a number to KANJI number.
+
+@ @<Declare procedures needed in |scan_something|@>=
+procedure print_kansuji(@!n:integer);
+var @!k:0..23; {index to current digit; we assume that $|n|<10^{23}$}
+@!cx: KANJI_code; {temporary register for KANJI}
+begin k:=0;
+  if n<0 then return; {nonpositive input produces no output}
+  repeat dig[k]:=n mod 10; n:=n div 10; incr(k);
+  until n=0;
+  begin while k>0 do
+    begin decr(k);
+	cx:=kansuji_char(dig[k]);
+	if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(cx)
+	else if (proc_kanji_code=euc_enc) then cx:=JIStoEUC(cx);
+    print_char(Hi(cx)); print_char(Lo(cx));
+    end;
+  end;
+end;
 
 @ pTeX inserts a glue specified by \.{\\kanjiskip} between 2byte-characters,
 automatically, if \.{\\autospacing}.  This glue is suppressed by

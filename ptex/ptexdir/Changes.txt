@@ -1,3 +1,8 @@
+2003/02/18: (p3.1.2)
+    ptex: \kansuji プリミティブを復活させた。
+	ptex: \kansujichar プリミティブにより、\kansuji で出力される文字を設定
+	  可能にした。
+
 2003/02/14: (p3.1.1)
     ptex: 漢字が ^^ 形式でコンソールに表示されるのを修正。
 	ptex: \uppercase, \lowercase で core を出す場合があるのを修正。
