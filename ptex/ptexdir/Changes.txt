@@ -1,3 +1,21 @@
+2000/08/17
+	mkconf: modify path separator to semicolon(;)
+
+2000/03/18
+    README.txt: fixed web2c-7.2 -> teTeX-1.0 (l.77)
+
+2000/03/01 (p2.1.9)
+	ptexextra-plain.c, ptexextra-src-special.c: version number 2.1.8 -> 2.1.9
+
+2000/02/29 (p2.1.9)
+	README.txt: rewrite.
+
+2000/02/28 (p2.1.9)
+	correspond to TeX 3.14159 with Web2c 7.3.1 and tex-src-special.
+	Makefile.in: distclean cleans tftopl.ch and pltotf.ch
+	ptexextra-plain.c, ptexextra-src-special.c: newfile
+	COPYING: newfile
+
 1998/04/09 (p2.1.8)
 1998/03/26 (p2.1.8.beta1)
 	correspond to TeX 3.14159 with Web2c 7.2.

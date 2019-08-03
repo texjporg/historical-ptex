@@ -2,6 +2,7 @@
 #include "kanji.h"
 
 /*** lib/usage.c:  Output a help message (from help.h). ***/
+#if 0
 void
 usage P2C(int, status,  const_string, str)
 {
@@ -15,6 +16,7 @@ usage P2C(int, status,  const_string, str)
   }
   uexit (status);
 }
+#endif
 
 /*** lib/printversion.c:  Output for the option --version. ***/
 void
@@ -22,8 +24,8 @@ printversionandexit P3C(const_string, banner,
                         const_string, copyright_holder,  const_string, author)
 {
   extern const_string local_maintainer;   /* from maintain.h */
-  extern DllImport string versionstring;  /* from web2c/lib/version.c */
-  extern DllImport string kpathsea_version_string;/* from kpathsea/version.c */
+  extern string versionstring;  /* from web2c/lib/version.c */
+  extern KPSEDLL string kpathsea_version_string;/* from kpathsea/version.c */
   string prog_name, prog_version;
   string based_prog_name, based_prog_version;
   string work_banner, token_start, token_end;

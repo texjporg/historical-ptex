@@ -30,9 +30,9 @@
 @z
 
 @x
-@d banner=='This is DVItype, Version 3.5' {printed when the program starts}
+@d banner=='This is DVItype, Version 3.6' {printed when the program starts}
 @y
-@d banner=='This is PDVItype, Version 0.3, based on DVItype, Version 3.5'
+@d banner=='This is PDVItype, Version 0.3, based on DVItype, Version 3.6'
   {printed when the program starts}
 @z
 
@@ -172,26 +172,26 @@ end;
 @x [27] Make get_n_bytes routines work with 16-bit math.
 get_two_bytes:=a*256+b;
 @y
-get_two_bytes:=a*toint(256)+b;
+get_two_bytes:=a*intcast(256)+b;
 @z
 @x
 get_three_bytes:=(a*256+b)*256+c;
 @y
-get_three_bytes:=(a*toint(256)+b)*256+c;
+get_three_bytes:=(a*intcast(256)+b)*256+c;
 @z
 @x
 if a<128 then signed_trio:=(a*256+b)*256+c
 else signed_trio:=((a-256)*256+b)*256+c;
 @y
-if a<128 then signed_trio:=(a*toint(256)+b)*256+c
-else signed_trio:=((a-toint(256))*256+b)*256+c;
+if a<128 then signed_trio:=(a*intcast(256)+b)*256+c
+else signed_trio:=((a-intcast(256))*256+b)*256+c;
 @z
 @x
 if a<128 then signed_quad:=((a*256+b)*256+c)*256+d
 else signed_quad:=(((a-256)*256+b)*256+c)*256+d;
 @y
-if a<128 then signed_quad:=((a*toint(256)+b)*256+c)*256+d
-else signed_quad:=(((a-256)*toint(256)+b)*256+c)*256+d;
+if a<128 then signed_quad:=((a*intcast(256)+b)*256+c)*256+d
+else signed_quad:=(((a-256)*intcast(256)+b)*256+c)*256+d;
 @z
 
 @x [28] dvi_length and move_to_byte.
@@ -281,14 +281,14 @@ end;
 read_tfm_word; lh:=b2*256+b3;
 read_tfm_word; font_bc[nf]:=b0*256+b1; font_ec[nf]:=b2*256+b3;
 @y
-read_tfm_word; lh:=b0*toint(256)+b1;
+read_tfm_word; lh:=b0*intcast(256)+b1;
 if (lh = 11) or (lh = 9) then
   begin
     print(' (JFM');
     fnt_jfm_p[nf] := true;
     if lh = 9 then print(' tate');
     print(')');
-    nt:=b2*toint(256)+b3;
+    nt:=b2*intcast(256)+b3;
     read_tfm_word;
   end
 else
@@ -296,15 +296,15 @@ else
     nt:=0;
     fnt_jfm_p[nf] := false;
   end;
-lh:=b2*toint(256)+b3;
-read_tfm_word; font_bc[nf]:=b0*toint(256)+b1; font_ec[nf]:=b2*toint(256)+b3;
+lh:=b2*intcast(256)+b3;
+read_tfm_word; font_bc[nf]:=b0*intcast(256)+b1; font_ec[nf]:=b2*intcast(256)+b3;
 @z
 @x
     if b0<128 then tfm_check_sum:=((b0*256+b1)*256+b2)*256+b3
     else tfm_check_sum:=(((b0-256)*256+b1)*256+b2)*256+b3
 @y
-    if b0<128 then tfm_check_sum:=((b0*toint(256)+b1)*256+b2)*256+b3
-    else tfm_check_sum:=(((b0-256)*toint(256)+b1)*256+b2)*256+b3
+    if b0<128 then tfm_check_sum:=((b0*intcast(256)+b1)*256+b2)*256+b3
+    else tfm_check_sum:=(((b0-256)*intcast(256)+b1)*256+b2)*256+b3
 @z
 @x JFM
       tfm_design_size:=round(tfm_conv*(((b0*256+b1)*256+b2)*256+b3))
@@ -317,8 +317,8 @@ read_tfm_word; font_bc[nf]:=b0*toint(256)+b1; font_ec[nf]:=b2*toint(256)+b3;
 for k:=1 to nt do
   begin
     read_tfm_word;
-    jfm_char_code[jfm_char_type_count]:=b0*toint(256)+b1;
-    jfm_char_type[jfm_char_type_count]:=b2*toint(256)+b3;
+    jfm_char_code[jfm_char_type_count]:=b0*intcast(256)+b1;
+    jfm_char_type[jfm_char_type_count]:=b2*intcast(256)+b3;
     jfm_char_font[jfm_char_type_count]:=nf;
     jfm_h:= { hash value }
       (jfm_char_code[jfm_char_type_count]+nf) mod jfm_hash_size;
@@ -423,7 +423,7 @@ out_mode:=the_works; input_ln;
 if buffer[0]<>" " then
   if (buffer[0]>="0")and(buffer[0]<="4") then out_mode:=buffer[0]-"0"
   else  begin write(term_out,'Type 4 for complete listing,');
-    write(term_out,' 0 for errors only,');
+    write(term_out,' 0 for errors and fonts only,');
     write_ln(term_out,' 1 or 2 or 3 for something in between.');
     goto 1;
     end

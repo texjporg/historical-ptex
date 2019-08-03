@@ -21,7 +21,7 @@ convert_ptex () {
 	| $web2cdir/fixwrites tex \
 	| $web2cdir/splitup tex
 	sleep 2
-	cat texcoerce.h $web2cdir/coerce.tex > xtexcoerce.h
+	cat texcoerce.h $web2cdir/coerce.h > xtexcoerce.h
 	echo '#include "kanji.h"' >> xtexcoerce.h
 	mv xtexcoerce.h texcoerce.h
 	touch texd.h

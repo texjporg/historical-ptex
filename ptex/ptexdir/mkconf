@@ -1,28 +1,16 @@
 #!/bin/sh
-texmfcnf="texmf.cnf"
 
 if [ -z "$1" ]; then
-	echo "Usage: mkconf DIRECTORY"
-	echo "(The DIRECTORY is place of ${texmfcnf})"
+	echo "Usage: mkconf texmf.cnf"
 	exit 2
 fi
 
-dir="$1"
-if [ ! -d "$dir" ]; then
-	echo "The $dir is not directory."
-	exit 2
-fi
-
-cnffile="$dir/$texmfcnf"
+cnffile="$1"
 if [ ! -f "$cnffile" ]; then
-	echo "The $cnffile is not found."
+	echo "Error: $cnffile is not found"
 	exit 2
 fi
 
-if [ ! -f "${cnffile}.old" ]; then
-	rm -f ${cnffile}.old
-fi
-mv -f $cnffile ${cnffile}.old
 sed -e '/^% ptex, platex, platex209 macros paths./d
 /^% pTeX./d
 /^platex209_inputs *=/d
@@ -34,22 +22,21 @@ sed -e '/^% ptex, platex, platex209 macros paths./d
 /^TEXINPUTS.ptex *=/d
 /^TEXINPUTS.iniptex *=/d
 /^BIBINPUTS.jbibtex *=/d
-/^BSTINPUTS.jbibtex *=/d' ${cnffile}.old | \
+/^BSTINPUTS.jbibtex *=/d' ${cnffile} | \
 sed -e '/^TEXINPUTS.jadetex =/ a\
 \
 % pTeX.\
-platex209_inputs = .:$TEXMF/tex/{platex209:latex209:platex:latex:generic:}//\
-platex2e_inputs = .:$TEXMF/tex/{platex:latex:platex209:latex209:generic:}//\
-ptex_inputs = .:$TEXMF/tex/{ptex:plain}//:$TEXMF/tex//\
+ptex_inputs = .;$TEXMF/{ptex,tex}/{plain,generic,}//\
+platex209_inputs = .;$TEXMF/{ptex,tex}/{platex209,plain,platex,}//\
+platex2e_inputs = .;$TEXMF/{ptex,tex}/{platex,latex,generic,}//\
 TEXINPUTS.platex209 = $platex209_inputs\
-TEXINPUTS.platex2e = $platex2e_inputs\
 TEXINPUTS.platex = $platex2e_inputs\
 TEXINPUTS.ptex = $ptex_inputs\
 TEXINPUTS.iniptex = $ptex_inputs\
 
 /^% BibTeX bibliographies and style files./ a\
-BIBINPUTS.jbibtex = .:$TEXMF/{jbibtex:bibtex}/bib//\
-BSTINPUTS.jbibtex = .:$TEXMF/{jbibtex:bibtex}/bst//\
-' | uniq > ${cnffile}
+BIBINPUTS.jbibtex = .;$TEXMF/{jbibtex,bibtex}/bib//\
+BSTINPUTS.jbibtex = .;$TEXMF/{jbibtex,bibtex}/bst//\
+' | uniq
 
 ### EOT ###

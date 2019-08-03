@@ -1,4 +1,4 @@
-% This is a change file for pTeX 2.1.8.
+% This is a change file for pTeX 2.1.9.
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -7,7 +7,9 @@
 %    Hiroto Kagotani (kagotani@in.it.okayama-u.ac.jp),
 %    Takashi Kakiuchi (kakiuchi@sy6.isl.mei.co.jp),
 %    Yoichi Kawabata (kawabata@canon.co.jp),
-%    Makoto Kobayashi (makoto@lloem.fujidenki.co.jp).
+%    Makoto Kobayashi (makoto@lloem.fujidenki.co.jp),
+%    Yoshihiro Aoki (aoki@tokyo-shoseki-ptg.co.jp),
+%    Akira Kakuto (kakuto@fsci.fuk.kindai.ac.jp).
 %
 % (??/??/87) RKS jTeX 2.9 -- j1.0
 % (??/??/89) RKS jTeX 2.93 -- j1.3
@@ -29,11 +31,12 @@
 % (02/26/98) KN  pTeX p2.1.6
 % (03/19/98) KN  pTeX p2.1.7
 % (03/26/98) KN  pTeX p2.1.8 (Web2c 7.2)
+% (02/21/2000) KN  pTeX p2.1.9 (Web2c 7.3.1)
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p2.1.8, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p2.1.9, based on TeX, Version 3.14159'
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -79,7 +82,7 @@ var k,@!l:KANJI_code; {small indices or counters}
 
 @x [4.49] l.1296 - pTeX:
 @<Character |k| cannot be printed@>=
-   (((k<" ")or(k>"~")) and not(isprint(xord[k])))
+   not is_printable[k]
 @y
 @<Character |k| cannot be printed@>=
    (((k<" ")or(k>"~")) and not(check_kanji(k)) and not(isprint(xord[k])))

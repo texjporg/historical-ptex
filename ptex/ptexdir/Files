@@ -1,7 +1,8 @@
+COPYING
 Changes.txt
 Files
 Makefile.in
-README.euc
+README.txt
 configure
 jbibd.sed
 jbibextra.c
@@ -16,7 +17,8 @@ mkconf
 pconvert
 pdvitype.ch
 pltotf.ch
-ptex218.ch
-ptexextra.c
+ptex219.ch
+ptexextra-src-special.c
+ptexextra-plain.c
 tftopl.ch
 version.c
