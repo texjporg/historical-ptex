@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 progname=`basename $0`
-kanjicode=
+termcode=
 configopt=
 
 printUsage () {
@@ -18,15 +18,20 @@ fi
 # 引数チェック
 test -z "$*" && printUsage
 case $1 in
-	[Ss][Jj][Ii][Ss]) kanjicode=SJIS ;;
-	[Ee][Uu][Cc])  kanjicode=EUC  ;;
-	[Jj][Ii][Ss])  kanjicode=JIS  ;;
+	[Ss][Jj][Ii][Ss]) termcode="SJIS" ;;
+	[Jj][Ii][Ss])  termcode="JIS"  ;;
+	[Ee][Uu][Cc])  termcode="EUC"  ;;
 	*) echo "unknown option $1"; printUsage ;;
 esac
 
 CONFIGSED=config.sed 
 echo "s%@configopt@%$*%g" > $CONFIGSED
-echo "s%@kanjicode@%$kanjicode%g" >> $CONFIGSED
+echo "s%@TERMCODE@%$termcode%g" >> $CONFIGSED
+case $termcode in
+  "SJIS") echo "s%@configkcode@%sjis%g" >> $CONFIGSED ;;
+  "JIS")  echo "s%@configkcode@%jis%g" >> $CONFIGSED ;;
+  *)      echo "s%@configkcode@%euc%g" >> $CONFIGSED ;;
+esac
 echo "creating kanji.h"
 sed -f $CONFIGSED kanji.h.in > kanji.h
 

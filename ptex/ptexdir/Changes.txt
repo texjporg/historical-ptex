@@ -1,3 +1,19 @@
+2003/02/13: (p3.1)
+	ptex: main_memory、hash_extra を大きくし、膨大なマクロ定義をすると、
+	  「!Missing control sequence inserted.」のエラーになるのを修正。
+
+2003/02/03: (p3.0.6)
+	ptex: tetex-2.0 への対応
+	ptex: sjis 動作以外のとき、\char\sjis が正しく動かないのを修正
+	ptex: 実験的に入れてあったプリミティブ（\kansuji、\tozen）を取り除いた
+	ptexextra.h: BANNER 文字列の更新
+	ptexextra.c: tetex-2.0 への対応
+
+2002/11/22:
+	Makefile.in: euc(jis), sjis 用フォーマットを作成するよう修正
+		platex 用のリンクを作成するようにした
+	mkconf: iniptex の記述を削除
+
 2002/11/15: (p3.0.5)
 	ptexextra.c: web2c-7.3.11 (teTeX-beta-20021114) への対応
 

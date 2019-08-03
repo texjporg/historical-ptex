@@ -12,7 +12,7 @@
 #define SJIS  2
 
 /* 端末に出力する漢字コードを EUC, JIS, SJIS のいずれかで指定する。*/
-#define TERM_CODE @kanjicode@
+#define TERM_CODE @TERMCODE@
 
 /* OUTJIS, OUTSJIS, OUTEUC は端末とログファイルへの出力コードを示す。*/
 #if TERM_CODE == JIS

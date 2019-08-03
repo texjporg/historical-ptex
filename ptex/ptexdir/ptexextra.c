@@ -160,13 +160,13 @@ maininit P2C(int, ac, string *, av)
   interactionoption = 4;
 #ifdef KANJI
 #ifdef OUTJIS
-prockanjicode = 0;
+prockanjicode = JIS;
 #endif /* OUTJIS */
 #ifdef OUTEUC
-prockanjicode = 1;
+prockanjicode = EUC;
 #endif /* OUTEUC */
 #ifdef OUTSJIS
-prockanjicode = 2;
+prockanjicode = SJIS;
 #endif /* OUTSJIS */
 #endif /* KANJI */
 
@@ -673,7 +673,13 @@ setupcharset P1H(void)
   /* The expansion is nonempty if the variable is set.  */
   if (translate_filename) {
     read_char_translation_file ();
-  } else {
+  }
+  /* Code to set the isprintable array based on the locale.  The code
+   * was removed because in this form it affected not just output to
+   * the terminal and log file, but also the results of \write.
+   */
+#if 0
+  else {
     /* Use the locale to adjust the isprintable array. */
     for (c = 0; c <= 255; c++) {
       if (!isprintable[c] && isprint(c)) {
@@ -681,6 +687,7 @@ setupcharset P1H(void)
       }
     }
   }
+#endif
 }  
 #endif /* !Omega */
 #endif /* TeX || MF || MP [character translation] */
@@ -804,7 +811,7 @@ parse_options P2C(int, argc,  string *, argv)
     } else if (ARGUMENT_IS ("src-specials")) {
        last_source_name = xstrdup("");
        /* Option `--src" without any value means `auto' mode. */
-       if (optarg == 0) {
+       if (optarg == NULL) {
          insertsrcspecialeverypar = true;
          insertsrcspecialauto = true;
          srcspecialsoption = true;
@@ -856,11 +863,11 @@ parse_options P2C(int, argc,  string *, argv)
     } else if (ARGUMENT_IS ("kanji")) {
         /* These numbers match @d's in *.ch */
       if (STREQ (optarg, "jis")) {
-        prockanjicode = 0;
+        prockanjicode = JIS;
       } else if (STREQ (optarg, "euc")) {
-        prockanjicode = 1;
+        prockanjicode = EUC;
       } else if (STREQ (optarg, "sjis")) {
-        prockanjicode = 2;
+        prockanjicode = SJIS;
       } else {
         WARNING1 ("Ignoring unknown argument `%s' to --kanji", optarg);
       }
@@ -1246,7 +1253,7 @@ input_line P1C(FILE *, f)
         buffer[last++] = i;
       } else {
         /* JIS encoding */
-        if (prockanjicode==2) i = JIStoSJIS(i << 8 | getc(f));
+        if (prockanjicode==SJIS) i = JIStoSJIS(i << 8 | getc(f));
 		else i = JIStoEUC(i << 8 | getc(f));
         buffer[last++] = (i >> 8) & 0xff;
         buffer[last++] = i & 0xff;
@@ -1599,7 +1606,7 @@ compare_paths P2C(const_string, p1, const_string, p2)
 string
 gettexstring P1C(strnumber, s)
 {
-  size_t i, len;
+  poolpointer i, len;
   string name;
 #ifndef Omega
   len = strstart[s + 1] - strstart[s];
@@ -1620,7 +1627,6 @@ gettexstring P1C(strnumber, s)
 boolean
 isnewsource P2C(strnumber, srcfilename, int, lineno)
 {
-  size_t len;
   char *name = gettexstring(srcfilename);
   return (compare_paths(name, last_source_name) != 0 || lineno != last_lineno);
 }
@@ -1629,8 +1635,6 @@ void
 remembersourceinfo P2C(strnumber, srcfilename,
                                           int, lineno)
 {
-  size_t len;
-
   if (last_source_name)
        free(last_source_name);
   last_source_name = gettexstring(srcfilename);

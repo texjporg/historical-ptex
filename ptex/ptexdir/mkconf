@@ -32,7 +32,6 @@ platex2e_inputs = .;$TEXMF/{ptex,tex}/{platex,latex,generic,}//\
 TEXINPUTS.platex209 = $platex209_inputs\
 TEXINPUTS.platex = $platex2e_inputs\
 TEXINPUTS.ptex = $ptex_inputs\
-TEXINPUTS.iniptex = $ptex_inputs\
 
 /^% BibTeX bibliographies and style files./ a\
 BIBINPUTS.jbibtex = .;$TEXMF/{jbibtex,bibtex}/bib//\

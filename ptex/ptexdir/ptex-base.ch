@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.0.5
+% This is a change file for pTeX 3.1
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -40,8 +40,8 @@
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.0.5' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.0.5' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -63,7 +63,7 @@
 @y
 @ All of the file opening functions are defined in C.
 
-@ Kanji code handling for input routines.
+@ Kanji code handling.
 
 @d jis_enc=0 {denotes JIS X 2022 kanji encoding}
 @d euc_enc=1 {denotes EUC kanji encoding}
@@ -90,7 +90,7 @@ var k,@!l:KANJI_code; {small indices or counters}
    not is_printable[k]
 @y
 @<Character |k| cannot be printed@>=
-   (((k<" ")or(k>"~")) and not(check_kanji(k)) and not(isprint(xord[k])))
+   not is_printable[k] and not check_kanji(k)
 @z
 
 @x [4.51] l.1325 - pTeX:
@@ -123,7 +123,7 @@ begin if eof(pool_file) then bad_pool('! ptex.pool has no check sum.');
   bad_pool('! ptex.pool doesn''t match; tangle me again (or fix the path).');
 @z
 
-@x [5.54] l.1426 - pTeX:
+@x [5.54] l.1426 - pTeX: Global variables
 @!trick_buf:array[0..ssup_error_line] of ASCII_code; {circular buffer for
   pseudoprinting}
 @y
@@ -548,10 +548,12 @@ else  case type(p) of
 @z
 
 @x [12.184] l.3704 - pTeX: display dir_node.
+@ @<Display box |p|@>=
 begin if type(p)=hlist_node then print_esc("h")
 else if type(p)=vlist_node then print_esc("v")
 else print_esc("unset");
 @y
+@ @<Display box |p|@>=
 begin case type(p) of
   hlist_node: print_esc("h");
   vlist_node: print_esc("v");
@@ -559,7 +561,6 @@ begin case type(p) of
   othercases print_esc("unset")
   endcases@/;
 @z
-
 @x [12.184] l.3712 - pTeX: display dir_node.
   if shift_amount(p)<>0 then
     begin print(", shifted "); print_scaled(shift_amount(p));
@@ -574,18 +575,22 @@ begin case type(p) of
 @z
 
 @x [12.188] l.3763 - pTeX: Display insertion and ins_dir.
+@ @<Display insertion |p|@>=
 begin print_esc("insert"); print_int(qo(subtype(p)));
 print(", natural size "); print_scaled(height(p));
 @y
+@ @<Display insertion |p|@>=
 begin print_esc("insert"); print_int(qo(subtype(p)));
 print_dir(ins_dir(p));
 print(", natural size "); print_scaled(height(p));
 @z
 
 @x [12.194] l.3828 - pTeX: Display penalty usage
+@ @<Display penalty |p|@>=
 begin print_esc("penalty "); print_int(penalty(p));
 end
 @y
+@ @<Display penalty |p|@>=
 begin print_esc("penalty "); print_int(penalty(p));
 if subtype(p)=widow_pena then print("(for \jchrwidowpenalty)")
 else if subtype(p)=kinsoku_pena then print("(for kinsoku)");
@@ -604,7 +609,6 @@ end
       free_node(p,box_node_size); goto done;
       end;
 @z
-
 @x [13.202] l.3922 - pTeX:
     kern_node,math_node,penalty_node: do_nothing;
 @y
@@ -612,6 +616,8 @@ end
 @z
 
 @x [14.206] l.3989 - pTeX: space_ptr, xspace_ptr, dir_node, disp_node
+@ @<Case statement to copy...@>=
+case type(p) of
 hlist_node,vlist_node,unset_node: begin r:=get_node(box_node_size);
   mem[r+6]:=mem[p+6]; mem[r+5]:=mem[p+5]; {copy the last two words}
   list_ptr(r):=copy_node_list(list_ptr(p)); {this affects |mem[r+5]|}
@@ -625,6 +631,8 @@ ins_node: begin r:=get_node(ins_node_size); mem[r+4]:=mem[p+4];
   words:=ins_node_size-1;
   end;
 @y
+@ @<Case statement to copy...@>=
+case type(p) of
 hlist_node,vlist_node,dir_node,unset_node:
   begin r:=get_node(box_node_size);
   mem[r+7]:=mem[p+7];
@@ -642,7 +650,6 @@ ins_node: begin r:=get_node(ins_node_size);
   words:=ins_node_size-2;
   end;
 @z
-
 @x [14.206] l.4006 - pTeX: disp_node
 kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
   words:=small_node_size;
@@ -873,8 +880,12 @@ kern_node,disp_node,math_node,penalty_node:
 @z
 
 @x [16.212] l.4304 - pTeX: last_jchr, direction, adjust direction
+@<Types...@>=
+@!list_state_record=record@!mode_field:-mmode..mmode;@+
   @!head_field,@!tail_field: pointer;
 @y
+@<Types...@>=
+@!list_state_record=record@!mode_field:-mmode..mmode;@+
   @!dir_field,@!adj_dir_field: -dir_dtou..dir_dtou;
   @!pdisp_field: scaled;
   @!head_field,@!tail_field,@!pnode_field,@!last_jchr_field: pointer;
@@ -949,7 +960,7 @@ end;
 @d med_mu_skip_code=18 {medium space in math formula}
 @d thick_mu_skip_code=19 {thick space in math formula}
 @d jfm_skip=20 {space refer from JFM}
-@d glue_pars=20 {total number of glue parameters}
+@d glue_pars=21 {total number of glue parameters}
 @z
 
 @x [17.224] l.4596 - kanji_skip, xkanji_skip
@@ -998,8 +1009,7 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
   {table of 256 command codes for the wchar's catcodes }
 @d auto_xsp_code_base=kcat_code_base+256 {table of 256 auto spacer flag}
 @d inhibit_xsp_code_base=auto_xsp_code_base+256
-@d tozen_code_base=inhibit_xsp_code_base+256 {table of 256 tozencode mappings}
-@d kinsoku_base=tozen_code_base+256 {table of 256 kinsoku codes and types}
+@d kinsoku_base=inhibit_xsp_code_base+256 {table of 256 kinsoku mappings}
 @d lc_code_base=kinsoku_base+256 {table of 256 lowercase mappings}
 @z
 
@@ -1020,7 +1030,6 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 @d inhibit_xsp_code(#)==equiv(inhibit_xsp_code_base+#)
 @d kinsoku_type(#)==eq_type(kinsoku_base+#)
 @d kinsoku_code(#)==equiv(kinsoku_base+#)
-@d tozen_code(#)==equiv(tozen_code_base+#)
 @z
 
 @x [17.232] l.4810 - pTeX: initialize cat_code, cur_jfont, cur_tfont
@@ -1047,10 +1056,8 @@ for k:=0 to 255 do
   math_code(k):=hi(k); sf_code(k):=1000;
   auto_xsp_code(k):=0; inhibit_xsp_code(k):=0; inhibit_xsp_type(k):=0;
   kinsoku_code(k):=0; kinsoku_type(k):=0;
-  tozen_code(k):=0;
   end;
 @z
-
 @x [17.232] l.4822 - pTeX: initialize cat_code, cur_jfont, cur_tfont
 for k:="0" to "9" do math_code(k):=hi(k+var_code);
 for k:="A" to "Z" do
@@ -1065,7 +1072,6 @@ for k:="A" to "Z" do
 for k:="0" to "9" do
   begin math_code(k):=hi(k+var_code);
   auto_xsp_code(k):=3;
-  tozen_code(k):=@"A3B0+k-"0";
   end;
 for k:="A" to "Z" do
   begin cat_code(k):=letter; cat_code(k+"a"-"A"):=letter;@/
@@ -1075,7 +1081,6 @@ for k:="A" to "Z" do
   uc_code(k):=k; uc_code(k+"a"-"A"):=k;@/
   auto_xsp_code(k):=3; auto_xsp_code(k+"a"-"A"):=3;@/
   sf_code(k):=999;
-  tozen_code(k):=@"A3C1+k-"A"; tozen_code(k+"a"-"A"):=@"A3E1+k-"A";
   end;
 if (proc_kanji_code=sjis_enc) then begin
   @t\hskip10pt@>kcat_code(129):=other_kchar;
@@ -1273,15 +1278,16 @@ def_tfont: print_esc("tfont");
 @d cs_token_flag==@'7777 {amount added to the |eqtb| location in a
   token that stands for a control sequence; is a multiple of~256, less~1}
 @y
-@d cs_token_flag==@'12777 {amount added to the |eqtb| location in a
-  token that stands for a control sequence; is a multiple of~256, less~1}
-@d kanji_token_base=@'10000 {$2^8\cdot|kanji|$}
-@d jother_token=@'11000 {$2^8\cdot|other_kchar|$}
-@d kanji_token_end=@'11400 {$2^8\cdot|other_kchar|+1$}
-@d wchar_token_base==@'100000 {$2^15\cdot|kanji|$}
+@d cs_token_flag==@"FFFF {amount added to the |eqtb| location in a
+token that stands for a control sequence; is a multiple of~256, less~1}
 @z
 
 @x [20.293] l.6255 - pTeX: show_token_list
+@ @<Display token |p|...@>=
+if (p<hi_mem_min) or (p>mem_end) then
+  begin print_esc("CLOBBERED."); return;
+@.CLOBBERED@>
+  end;
 if info(p)>=cs_token_flag then print_cs(info(p)-cs_token_flag)
 else  begin m:=info(p) div @'400; c:=info(p) mod @'400;
   if info(p)<0 then print_esc("BAD.")
@@ -1289,18 +1295,22 @@ else  begin m:=info(p) div @'400; c:=info(p) mod @'400;
   else @<Display the token $(|m|,|c|)$@>;
   end
 @y
-if (info(p)>=cs_token_flag)and(info(p)<wchar_token_base) then
-  print_cs(info(p)-cs_token_flag)
+@ @<Display token |p|...@>=
+if (p<hi_mem_min) or (p>mem_end) then
+  begin print_esc("CLOBBERED."); return;
+@.CLOBBERED@>
+  end;
+if info(p)>=cs_token_flag then print_cs(info(p)-cs_token_flag) {wchar_token}
 else  begin
-  if info(p)>=wchar_token_base then
-    begin m:=kcat_code(Hi(KANJI(info(p)))); c:=info(p);
+  if check_kanji(info(p)) then {wchar_token}
+    begin m:=kcat_code(Hi(info(p))); c:=info(p);
     end
-  else begin m:=info(p) div @'400; c:=info(p) mod @'400;
+  else  begin m:=info(p) div @'400; c:=info(p) mod @'400;
     end;
   if (m<kanji)and(c>256) then print_esc("BAD.")
 @.BAD@>
   else @<Display the token $(|m|,|c|)$@>;
-  end
+end
 @z
 
 @x [20.294] l.6266 - pTeX: show_token_list
@@ -1351,30 +1361,33 @@ kanji,kana,other_kchar: begin print("kanji character ");
 @x [22.311] l.6738 - pTeX: label
 @p procedure show_context; {prints where the scanner is}
 label done;
+var old_setting:0..max_selector; {saved |selector| setting}
 @y
 @p procedure show_context; {prints where the scanner is}
 label done, done1;
-@z
-
-@x [22.315] l.6857 - pTeX: local vavariable
-@!q: integer; {temporary index}
-@y
-@!q: integer; {temporary index}
+var old_setting:0..max_selector; {saved |selector| setting}
 @!s: pointer; {temporary pointer}
 @z
 
 @x [22.316] l.6863 - pTeX: init kcode_pos
+@d begin_pseudoprint==
   begin l:=tally; tally:=0; selector:=pseudo;
+  trick_count:=1000000;
+  end
 @y
+@d begin_pseudoprint==
   begin l:=tally; tally:=0; selector:=pseudo; kcode_pos:=0;
+  trick_count:=1000000;
+  end
 @z
-
 @x [22.316] l.6866 - pTeX: kcode_pos
+@d set_trick_count==
   begin first_count:=tally;
   trick_count:=tally+1+error_line-half_error_line;
   if trick_count<error_line then trick_count:=error_line;
   end
 @y
+@d set_trick_count==
   begin first_count:=tally;
   if (first_count>0)and(trick_buf2[(first_count-1)mod error_line]=1) then
       incr(first_count);
@@ -1400,17 +1413,18 @@ if trick_buf2[(p-1) mod error_line]=1 then p:=p-1;
 @z
 
 @x [22.319] l.6907 - pTeX: adjust kanji code token
+@ @<Pseudoprint the token list@>=
+begin_pseudoprint;
 if token_type<macro then show_token_list(start,loc,100000)
 else show_token_list(link(start),loc,100000) {avoid reference count}
 @y
+@ @<Pseudoprint the token list@>=
+begin_pseudoprint;
 if token_type<macro then
   begin  if (token_type=backed_up)and(loc<>null) then
-    begin  if (link(start)=null)
-        and(info(start)>kanji_token_base)
-        and(info(start)<kanji_token_end) then
+    begin  if (link(start)=null)and(check_kanji(info(start))) then {wchar_token}
       begin cur_input:=input_stack[base_ptr-1];
       s:=get_avail; info(s):=(buffer[loc] mod @'400);
-                  {|info(s):=mk_tok(0,buffer[loc]);|}
       cur_input:=input_stack[base_ptr];
       link(start):=s;
       show_token_list(start,loc,100000);
@@ -1431,9 +1445,15 @@ done1:
 @z
 
 @x [24.343] l.7242 - pTeX: input external file
+@ @<Input from external file, |goto restart| if no input found@>=
+@^inner loop@>
+begin switch: if loc<=limit then {current line not yet finished}
   begin cur_chr:=buffer[loc]; incr(loc);
   reswitch: cur_cmd:=cat_code(cur_chr);
 @y
+@ @<Input from external file, |goto restart| if no input found@>=
+@^inner loop@>
+begin switch: if loc<=limit then {current line not yet finished}
   begin cur_chr:=buffer[loc]; incr(loc);
   reswitch:
     if (iskanji1(cur_chr))and(iskanji2(buffer[loc])) then
@@ -1502,6 +1522,7 @@ skip_mode:=true;
 @z
 
 @x [24.354] l.7389 - pTeX: scan control sequence
+@<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin start_cs: k:=loc; cur_chr:=buffer[k]; cat:=cat_code(cur_chr);
   incr(k);
@@ -1510,6 +1531,7 @@ else  begin start_cs: k:=loc; cur_chr:=buffer[k]; cat:=cat_code(cur_chr);
   else state:=mid_line;
   if (cat=letter)and(k<=limit) then
 @y
+@<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin start_cs: k:=loc; cur_chr:=buffer[k]; incr(k);
   if (iskanji1(cur_chr))and(iskanji2(buffer[k])) then
@@ -1526,6 +1548,7 @@ else  begin start_cs: k:=loc; cur_chr:=buffer[k]; incr(k);
 @z
 
 @x [24.356] l.7437 - pTeX: scan control sequence (cont)
+@ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; cat:=cat_code(cur_chr); incr(k);
 until (cat<>letter)or(k>limit);
 @<If an expanded...@>;
@@ -1536,6 +1559,7 @@ if k>loc+1 then {multiletter control sequence has been scanned}
   end;
 end
 @y
+@ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; incr(k);
   if (iskanji1(cur_chr))and(iskanji2(buffer[k])) then
     begin cat:=kcat_code(cur_chr); incr(k);
@@ -1544,8 +1568,7 @@ begin repeat cur_chr:=buffer[k]; incr(k);
 until not((cat=letter)or(cat=kanji)or(cat=kana))or(k>limit);
 @<If an expanded...@>;
 if not((cat=letter)or(cat=kanji)or(cat=kana)) then decr(k);
-if cat=other_kchar then decr(k);
-  {now |k| points to first nonletter}
+if cat=other_kchar then decr(k); {now |k| points to first nonletter}
 if k>loc+1 then {multiletter control sequence has been scanned}
   begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
   end;
@@ -1553,93 +1576,193 @@ end
 @z
 
 @x [24.357] l.7454 - pTeX: input from token list
+@<Input from token list, |goto restart| if end of list or
+  if a parameter needs to be expanded@>=
+if loc<>null then {list not exhausted}
+@^inner loop@>
+  begin t:=info(loc); loc:=link(loc); {move to next}
   if t>=cs_token_flag then {a control sequence token}
     begin cur_cs:=t-cs_token_flag;
     cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
-@y
-  if (t>=cs_token_flag)and(t<wchar_token_base) then {a control sequence token}
-    begin cur_cs:=t-cs_token_flag;
-    cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
-@z
-
-@x [24.357] l.7462 - pTeX:
+    if cur_cmd>=outer_call then
+      if cur_cmd=dont_expand then
+        @<Get the next token, suppressing expansion@>
+      else check_outer_validity;
+    end
   else  begin cur_cmd:=t div @'400; cur_chr:=t mod @'400;
     case cur_cmd of
     left_brace: incr(align_state);
+    right_brace: decr(align_state);
+    out_param: @<Insert macro parameter and |goto restart|@>;
+    othercases do_nothing
+    endcases;
+    end;
+  end
+else  begin {we are done with this token list}
+  end_token_list; goto restart; {resume previous level}
+  end
 @y
-  else if t>=wchar_token_base then
+@<Input from token list, |goto restart| if end of list or
+  if a parameter needs to be expanded@>=
+if loc<>null then {list not exhausted}
+@^inner loop@>
+  begin t:=info(loc); loc:=link(loc); {move to next}
+  if t>=cs_token_flag then {a control sequence token}
+    begin cur_cs:=t-cs_token_flag;
+    cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
+    if cur_cmd>=outer_call then
+      if cur_cmd=dont_expand then
+        @<Get the next token, suppressing expansion@>
+      else check_outer_validity;
+    end
+  else if check_kanji(t) then {wchar_token}
     begin cur_chr:=t; cur_cmd:=kcat_code(Hi(t));
     end
   else
-    begin cur_cmd:=t div @'400; cur_chr:=t mod @'400; {|get_cmd|}
+    begin cur_cmd:=t div @'400; cur_chr:=t mod @'400;
     case cur_cmd of
     left_brace: incr(align_state);
+    right_brace: decr(align_state);
+    out_param: @<Insert macro parameter and |goto restart|@>;
+    othercases do_nothing
+    endcases;
+    end;
+  end
+else  begin {we are done with this token list}
+  end_token_list; goto restart; {resume previous level}
+  end
 @z
 
 @x [24.365] l.7606 - pTeX: get_token
+@p procedure get_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|}
+begin no_new_control_sequence:=false; get_next; no_new_control_sequence:=true;
+@^inner loop@>
 if cur_cs=0 then cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 end;
 @y
+@p procedure get_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|}
+begin no_new_control_sequence:=false; get_next; no_new_control_sequence:=true;
+@^inner loop@>
 if cur_cs=0 then
-  if cur_chr>=wchar_token_base then
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
     cur_tok:=cur_chr
-  else cur_tok:=(cur_cmd*@'400)+(cur_chr mod @'400) {|set_tok|}
+  else cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 end;
 @z
 
-@x [25.367] l.7690 - pTeX: expand
-back_input; {now |start| and |loc| point to the backed-up token |t|}
-if t>=cs_token_flag then
-  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
-  link(p):=loc; start:=p; loc:=p;
-  end;
-@y
-back_input; {now |start| and |loc| point to the backed-up token |t|}
-if (t>=cs_token_flag)and(t<wchar_token_base) then
-  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
-  link(p):=loc; start:=p; loc:=p;
-  end;
-@z
+%@x [25.367] l.7690 - pTeX: expand
+%@<Suppress expansion...@>=
+%begin save_scanner_status:=scanner_status; scanner_status:=normal;
+%get_token; scanner_status:=save_scanner_status; t:=cur_tok;
+%back_input; {now |start| and |loc| point to the backed-up token |t|}
+%if t>=cs_token_flag then
+%  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
+%  link(p):=loc; start:=p; loc:=p;
+%  end;
+%end
+%@y
+%@<Suppress expansion...@>=
+%begin save_scanner_status:=scanner_status; scanner_status:=normal;
+%get_token; scanner_status:=save_scanner_status; t:=cur_tok;
+%back_input; {now |start| and |loc| point to the backed-up token |t|}
+%if t>=cs_token_flag then
+%  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
+%  link(p):=loc; start:=p; loc:=p;
+%  end;
+%end
+%@z
 
 @x [25.374] l.7748 - pTeX: get_chr
+@ @<Look up the characters of list |r| in the hash table...@>=
+j:=first; p:=link(r);
+while p<>null do
+  begin if j>=max_buf_stack then
+    begin max_buf_stack:=j+1;
+    if max_buf_stack=buf_size then
+      overflow("buffer size",buf_size);
 @:TeX capacity exceeded buffer size}{\quad buffer size@>
     end;
   buffer[j]:=info(p) mod @'400; incr(j); p:=link(p);
+  end;
 @y
+@ @<Look up the characters of list |r| in the hash table...@>=
+j:=first; p:=link(r);
+while p<>null do
+  begin if j>=max_buf_stack then
+    begin max_buf_stack:=j+1;
+    if max_buf_stack=buf_size then
+      overflow("buffer size",buf_size);
 @:TeX capacity exceeded buffer size}{\quad buffer size@>
     end;
-  if info(p)>=wchar_token_base then
+  if check_kanji(info(p)) then {wchar_token}
     begin buffer[j]:=Hi(info(p)); incr(j);
-    buffer[j]:=Lo(info(p)); incr(j);
-    p:=link(p);
+    buffer[j]:=Lo(info(p)); incr(j); p:=link(p);
     end
   else
     begin buffer[j]:=info(p) mod @'400; incr(j); p:=link(p);
     end;
+  end;
 @z
-%    begin buffer[j]:=get_chr(info(p)); {info(p) mod @@'400;}
 
 @x [25.380] l.7812 - pTeX: get_x_token
+@p procedure get_x_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|,
+  and expands macros}
+label restart,done;
+begin restart: get_next;
+@^inner loop@>
+if cur_cmd<=max_command then goto done;
+if cur_cmd>=call then
+  if cur_cmd<end_template then macro_call
+  else  begin cur_cs:=frozen_endv; cur_cmd:=endv;
+    goto done; {|cur_chr=null_list|}
+    end
+else expand;
+goto restart;
 done: if cur_cs=0 then cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 end;
 @y
+@p procedure get_x_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|,
+  and expands macros}
+label restart,done;
+begin restart: get_next;
+@^inner loop@>
+if cur_cmd<=max_command then goto done;
+if cur_cmd>=call then
+  if cur_cmd<end_template then macro_call
+  else  begin cur_cs:=frozen_endv; cur_cmd:=endv;
+    goto done; {|cur_chr=null_list|}
+    end
+else expand;
+goto restart;
 done: if cur_cs=0 then
-  if cur_cmd>=kanji then cur_tok:=cur_chr
-  else cur_tok:=(cur_cmd*@'400)+(cur_chr mod @'400) {|set_tok|}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
+    cur_tok:=cur_chr
+  else cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 end;
 @z
 
 @x [25.381] l.7824 - pTeX: x_token
+@p procedure x_token; {|get_x_token| without the initial |get_next|}
+begin while cur_cmd>max_command do
+  begin expand;
+  get_next;
+  end;
 if cur_cs=0 then cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 @y
+@p procedure x_token; {|get_x_token| without the initial |get_next|}
+begin while cur_cmd>max_command do
+  begin expand;
+  get_next;
+  end;
 if cur_cs=0 then
-  if cur_cmd>=kanji then cur_tok:=cur_chr
-  else cur_tok:=(cur_cmd*@'400)+(cur_chr mod @'400) {|set_tok|}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
+    cur_tok:=cur_chr
+  else cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 @z
 
@@ -1714,7 +1837,7 @@ end;
 @y
 procedure scan_char_num;
 begin scan_int;
-if ((cur_val<0)or(cur_val>255))and(cur_val<wchar_token_base) then
+if ((cur_val<0)or(cur_val>255))and(not check_kanji(cur_val)) then {wchar_token}
   begin print_err("Bad character code");
 @.Bad character code@>
   help2("A character number must be between 0 and 255, or KANJI code.")@/
@@ -1723,16 +1846,15 @@ if ((cur_val<0)or(cur_val>255))and(cur_val<wchar_token_base) then
 end;
 @z
 
-@x [26.440] l.8688 - pTeX: scan_int
-@!OK_so_far:boolean; {has an error message been issued?}
-begin radix:=0; OK_so_far:=true;@/
-@y
-@!OK_so_far:boolean; {has an error message been issued?}
-@!cx:KANJI_code; {temporary register for KANJI}
-begin cx:=0; radix:=0; OK_so_far:=true;@/
-@z
-
 @x [26.442] l.8710 - pTeX: KANJI character scanning
+@<Scan an alphabetic character code into |cur_val|@>=
+begin get_token; {suppress macro expansion}
+if cur_tok<cs_token_flag then
+  begin cur_val:=cur_chr;
+  if cur_cmd<=right_brace then
+    if cur_cmd=right_brace then incr(align_state)
+    else decr(align_state);
+  end
 else if cur_tok<cs_token_flag+single_base then
   cur_val:=cur_tok-cs_token_flag-active_base
 else cur_val:=cur_tok-cs_token_flag-single_base;
@@ -1746,14 +1868,21 @@ if cur_val>255 then
 else @<Scan an optional space@>;
 end
 @y
-else if cur_tok>=wchar_token_base then
-  begin skip_mode:=false;
-  cur_val:=tonum(cur_chr); cx:=cur_chr;
+@<Scan an alphabetic character code into |cur_val|@>=
+begin get_token; {suppress macro expansion}
+if cur_tok<cs_token_flag then
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
+    begin skip_mode:=false; cur_val:=tonum(cur_chr);
+    end
+  else begin cur_val:=cur_chr;
+  if cur_cmd<=right_brace then
+    if cur_cmd=right_brace then incr(align_state)
+    else decr(align_state);
   end
 else if cur_tok<cs_token_flag+single_base then
   cur_val:=cur_tok-cs_token_flag-active_base
 else cur_val:=cur_tok-cs_token_flag-single_base;
-if (cur_val>255)and(cx=0) then
+if (cur_val>255)and(cur_cmd<kanji) then
   begin print_err("Improper alphabetic or KANJI constant");
 @.Improper alphabetic constant@>
   help2("A one-character control sequence belongs after a ` mark.")@/
@@ -1816,15 +1945,14 @@ else if scan_keyword("sp") then goto done
 @y
 @d number_code=0 {command code for \.{\\number}}
 @d roman_numeral_code=1 {command code for \.{\\romannumeral}}
-@d kansuji_code=2 {command code for \.{\\kansuji}}
-@d string_code=3 {command code for \.{\\string}}
-@d meaning_code=4 {command code for \.{\\meaning}}
-@d font_name_code=5 {command code for \.{\\fontname}}
-@d euc_code=6 {command code for \.{\\euc}}
-@d sjis_code=7 {command code for \.{\\sjis}}
-@d jis_code=8 {command code for \.{\\jis}}
-@d kuten_code=9 {command code for \.{\\kuten}}
-@d job_name_code=10 {command code for \.{\\jobname}}
+@d string_code=2 {command code for \.{\\string}}
+@d meaning_code=3 {command code for \.{\\meaning}}
+@d font_name_code=4 {command code for \.{\\fontname}}
+@d euc_code=5 {command code for \.{\\euc}}
+@d sjis_code=6 {command code for \.{\\sjis}}
+@d jis_code=7 {command code for \.{\\jis}}
+@d kuten_code=8 {command code for \.{\\kuten}}
+@d job_name_code=9 {command code for \.{\\jobname}}
 @z
 
 @x [27.468] l.9212 - pTeX:
@@ -1833,8 +1961,6 @@ primitive("fontname",convert,font_name_code);@/
 @y
 primitive("fontname",convert,font_name_code);@/
 @!@:font_name_}{\.{\\fontname} primitive@>
-primitive("kansuji",convert,kansuji_code);@/
-@!@:kansuji_}{\.{\\kansuji} primitive@>
 primitive("euc",convert,euc_code);
 @!@:euc_}{\.{\\euc} primitive@>
 primitive("sjis",convert,sjis_code);
@@ -1842,14 +1968,13 @@ primitive("sjis",convert,sjis_code);
 primitive("jis",convert,jis_code);
 @!@:jis_}{\.{\\jis} primitive@>
 primitive("kuten",convert,kuten_code);
-@!@:kuten_}{\.{\\jis} primitive@>
+@!@:kuten_}{\.{\\kuten} primitive@>
 @z
 
 @x [27.469] l.9222 - pTeX:
   font_name_code: print_esc("fontname");
 @y
   font_name_code: print_esc("fontname");
-  kansuji_code: print_esc("kansuji");
   euc_code:print_esc("euc");
   sjis_code:print_esc("sjis");
   jis_code:print_esc("jis");
@@ -1857,37 +1982,47 @@ primitive("kuten",convert,kuten_code);
 @z
 
 @x [27.470] l.9234 - pTeX: convert KANJI code continue
+@p procedure conv_toks;
 var old_setting:0..max_selector; {holds |selector| setting}
 @y
+@p procedure conv_toks;
 var old_setting:0..max_selector; {holds |selector| setting}
 @!cx:KANJI_code; {temporary register for KANJI}
 @z
 
 @x [27.471] l.9242 - pTeX: convert KANJI code continue
+@ @<Scan the argument for command |c|@>=
 case c of
 number_code,roman_numeral_code: scan_int;
 string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token; scanner_status:=save_scanner_status;
   end;
 @y
+@ @<Scan the argument for command |c|@>=
 KANJI(cx):=0;
 case c of
-number_code,roman_numeral_code,
-kansuji_code,euc_code,sjis_code,jis_code,kuten_code: scan_int;
-string_code, meaning_code:
-  begin save_scanner_status:=scanner_status;
+number_code,roman_numeral_code,euc_code,sjis_code,jis_code,kuten_code:
+  scan_int;
+string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token;
-  if cur_tok>=wchar_token_base then
-    begin cx:=cur_chr; scanner_status:=save_scanner_status;
-    end;
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
+    KANJI(cx):=cur_tok;
   scanner_status:=save_scanner_status;
   end;
 @z
 
 @x [27.471] l.9255 - pTeX: convert KANJI code continue
+@ @<Print the result of command |c|@>=
+case c of
+number_code: print_int(cur_val);
+roman_numeral_code: print_roman_int(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else print_char(cur_chr);
 @y
+@ @<Print the result of command |c|@>=
+case c of
+number_code: print_int(cur_val);
+roman_numeral_code: print_roman_int(cur_val);
 jis_code: begin
   if (proc_kanji_code=sjis_enc) then cur_val:=JIStoSJIS(cur_val)
   else cur_val:=JIStoEUC(cur_val);
@@ -1896,16 +2031,15 @@ euc_code: begin
   if (proc_kanji_code=sjis_enc) then cur_val:=EUCtoSJIS(cur_val);
   print_int(cur_val); end;
 sjis_code: begin
-  if (not proc_kanji_code=sjis_enc) then cur_val:=SJIStoEUC(cur_val);
+  if (proc_kanji_code<>sjis_enc) then cur_val:=SJIStoEUC(cur_val);
   print_int(cur_val); end;
 kuten_code: begin
   if (proc_kanji_code=sjis_enc) then cur_val:=KUTENtoSJIS(cur_val)
   else cur_val:=KUTENtoEUC(cur_val);
   print_int(cur_val); end;
-kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
-  else begin if KANJI(cx) <> 0 then print_char(Hi(cx));
-     print_char(cur_chr); end;
+  else if KANJI(cx)=0 then print_char(cur_chr)
+  else begin print_char(Hi(cx)); print_char(Lo(cx)); end;
 @z
 
 @x [28.487] l.9516 - pTeX: iftdir, ifydir, iftbox, ifybox
@@ -2028,7 +2162,7 @@ done: end_name; name_in_progress:=false;
 @y
 skip_mode:=false;
 loop@+begin
-  if (cur_cmd>=kanji)and(cur_cmd<=other_kchar) then {is kanji}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {is kanji}
     begin str_room(2);
     append_char(cur_chr div 256); {kanji upper byte}
     append_char(cur_chr mod 256); {kanji lower byte}
@@ -2111,17 +2245,11 @@ in the |glue_kern| array. And a \.{JFM} not used |tag=2| and |tag=3|.
 @z
 
 @x [30.549] l.10826 - pTeX:
+@<Glob...@>=
 @!font_info: ^fmemory_word;
 @y
+@<Glob...@>=
 @!font_info: ^memory_word; {pTeX: use halfword for |char_type| table.}
-@z
-
-@x [30.549] l.10826 - pTeX:
-@!font_used: ^boolean;
-  {has a character from this font actually appeared in the output?}
-@y
-@!font_used: ^boolean;
-  {has a character from this font actually appeared in the output?}
 @!font_dir: ^eight_bits;
   {pTeX: direction of fonts, 0 is default, 1 is Yoko, 2 is Tate}
 @!font_num_ext: ^integer;
@@ -2315,7 +2443,6 @@ for k:=char_base[f]+bc to width_base[f]-1 do
     end;
 @z
 
-
 @x [30.574] l.11141 - pTeX: read jfm exten
 for k:=exten_base[f] to param_base[f]-1 do
   begin store_four_quarters(font_info[k].qqqq);
@@ -2348,7 +2475,6 @@ else if cur_cmd=def_font then f:=cur_font
 @d set1=128 {typeset a character and move right}
 @d set2=129 {typeset a character and move right}
 @z
-
 @x [31.586] l.11794 - pTeX: define dirchg
 @d post_post=249 {postamble ending}
 @y
@@ -2401,15 +2527,18 @@ dvi_dir:=dir_yoko; cur_dir:=dvi_dir;
 @z
 
 @x [32.619] l.12296 - pTeX: hlist_out Kanji, disp_node
+procedure hlist_out; {output an |hlist_node| box}
+label reswitch, move_past, fin_rule, next_p, continue, found;
 var base_line: scaled; {the baseline coordinate for this box}
 @y
+procedure hlist_out; {output an |hlist_node| box}
+label reswitch, move_past, fin_rule, next_p, continue, found;
 var base_line: scaled; {the baseline coordinate for this box}
 @!disp: scaled; {displacement}
 @!save_dir:eight_bits; {what |dvi_dir| should pop to}
 @!jc:KANJI_code; {temporary register for KANJI codes}
 @!ksp_ptr:pointer; {position of |auto_spacing_glue| in the hlist}
 @z
-
 @x [32.619] l.12312 - pTeX: hlist_out Kanji, disp_node
 incr(cur_s);
 if cur_s>0 then dvi_out(push);
@@ -2426,6 +2555,8 @@ base_line:=cur_v; left_edge:=cur_h; disp:=0;
 @z
 
 @x [32.622] l.12331 - pTeX: chain
+@<Output node |p| for |hlist_out|...@>=
+reswitch: if is_char_node(p) then
   begin synch_h; synch_v;
   repeat f:=font(p); c:=character(p);
   if f<>dvi_f then @<Change font |dvi_f| to |f|@>;
@@ -2443,7 +2574,11 @@ continue:
   until not is_char_node(p);
   dvi_h:=cur_h;
   end
+else @<Output the non-|char_node| |p| for |hlist_out|
+    and move to the next node@>
 @y
+@<Output node |p| for |hlist_out|...@>=
+reswitch: if is_char_node(p) then
   begin synch_h; synch_v;
   chain:=false;
   repeat f:=font(p); c:=character(p);
@@ -2488,15 +2623,21 @@ continue:
   until not is_char_node(p);
   chain:=false;
   end
+else @<Output the non-|char_node| |p| for |hlist_out|
+    and move to the next node@>
 @z
 
 @x [32.623] l.12356 - pTeX: disp_node, dir_node
+@ @<Output the non-|char_node| |p| for |hlist_out|...@>=
+begin case type(p) of
 hlist_node,vlist_node:@<Output a box in an hlist@>;
 rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
   goto fin_rule;
   end;
 whatsit_node: @<Output the whatsit node |p| in an hlist@>;
 @y
+@ @<Output the non-|char_node| |p| for |hlist_out|...@>=
+begin case type(p) of
 hlist_node,vlist_node,dir_node:@<Output a box in an hlist@>;
 rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
   goto fin_rule;
@@ -2506,6 +2647,7 @@ disp_node: begin disp:=disp_dimen(p); cur_v:=base_line+disp; end;
 @z
 
 @x [32.624] l.12373 - pTeX: output a box(and dir_node) with disp
+@ @<Output a box in an hlist@>=
 if list_ptr(p)=null then cur_h:=cur_h+width(p)
 else  begin save_h:=dvi_h; save_v:=dvi_v;
   cur_v:=base_line+shift_amount(p); {shift the box down}
@@ -2515,6 +2657,7 @@ else  begin save_h:=dvi_h; save_v:=dvi_v;
   cur_h:=edge+width(p); cur_v:=base_line;
   end
 @y
+@ @<Output a box in an hlist@>=
 if list_ptr(p)=null then cur_h:=cur_h+width(p)
 else  begin save_h:=dvi_h; save_v:=dvi_v; save_dir:=dvi_dir;
   cur_v:=base_line+disp+shift_amount(p); {shift the box down}
@@ -2530,14 +2673,17 @@ else  begin save_h:=dvi_h; save_v:=dvi_v; save_dir:=dvi_dir;
 @z
 
 @x [32.625] l.12383 - pTeX: Output a rule with disp
+@ @<Output a rule in an hlist@>=
 if is_running(rule_ht) then rule_ht:=height(this_box);
 if is_running(rule_dp) then rule_dp:=depth(this_box);
 @y
+@ @<Output a rule in an hlist@>=
 if is_running(rule_ht) then rule_ht:=height(this_box)+disp;
 if is_running(rule_dp) then rule_dp:=depth(this_box)-disp;
 @z
 
 @x [32.629] l.12472 - pTeX: Output a leader box(and dir_node) with disp
+@<Output a leader box at |cur_h|, ...@>=
 begin cur_v:=base_line+shift_amount(leader_box); synch_v; save_v:=dvi_v;@/
 synch_h; save_h:=dvi_h; temp_ptr:=leader_box;
 outer_doing_leaders:=doing_leaders; doing_leaders:=true;
@@ -2547,6 +2693,7 @@ dvi_v:=save_v; dvi_h:=save_h; cur_v:=base_line;
 cur_h:=save_h+leader_wd+lx;
 end
 @y
+@<Output a leader box at |cur_h|, ...@>=
 begin cur_v:=base_line+disp+shift_amount(leader_box); synch_v; save_v:=dvi_v;@/
 synch_h; save_h:=dvi_h; save_dir:=dvi_dir; temp_ptr:=leader_box;
 outer_doing_leaders:=doing_leaders; doing_leaders:=true;
@@ -2581,11 +2728,15 @@ left_edge:=cur_h; cur_v:=cur_v-height(this_box);
 @z
 
 @x [32.632] l.12522 - pTeX: output non-char-node
+@ @<Output the non-|char_node| |p| for |vlist_out|@>=
+begin case type(p) of
 hlist_node,vlist_node:@<Output a box in a vlist@>;
 rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
   goto fin_rule;
   end;
 @y
+@ @<Output the non-|char_node| |p| for |vlist_out|@>=
+begin case type(p) of
 hlist_node,vlist_node,dir_node: @<Output a box in a vlist@>;
 rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
   goto fin_rule;
@@ -2593,6 +2744,7 @@ rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
 @z
 
 @x [32.633] l.12541 - pTeX: Output a box in a vlist
+@<Output a box in a vlist@>=
 if list_ptr(p)=null then cur_v:=cur_v+height(p)+depth(p)
 else  begin cur_v:=cur_v+height(p); synch_v;
   save_h:=dvi_h; save_v:=dvi_v;
@@ -2603,6 +2755,7 @@ else  begin cur_v:=cur_v+height(p); synch_v;
   cur_v:=save_v+depth(p); cur_h:=left_edge;
   end
 @y
+@<Output a box in a vlist@>=
 if list_ptr(p)=null then cur_v:=cur_v+height(p)+depth(p)
 else begin cur_v:=cur_v+height(p); synch_v;
   save_h:=dvi_h; save_v:=dvi_v; save_dir:=dvi_dir;
@@ -2619,6 +2772,7 @@ else begin cur_v:=cur_v+height(p); synch_v;
 @z
 
 @x [32.637] l.12619 - pTeX: Output a leader in a vlist
+@<Output a leader box at |cur_v|, ...@>=
 begin cur_h:=left_edge+shift_amount(leader_box); synch_h; save_h:=dvi_h;@/
 cur_v:=cur_v+height(leader_box); synch_v; save_v:=dvi_v;
 temp_ptr:=leader_box;
@@ -2629,6 +2783,7 @@ dvi_v:=save_v; dvi_h:=save_h; cur_h:=left_edge;
 cur_v:=save_v-height(leader_box)+leader_ht+lx;
 end
 @y
+@<Output a leader box at |cur_v|, ...@>=
 begin cur_h:=left_edge+shift_amount(leader_box); synch_h; save_h:=dvi_h;@/
 cur_v:=cur_v+height(leader_box); synch_v; save_v:=dvi_v; save_dir:=dvi_dir;
 temp_ptr:=leader_box;
@@ -2646,12 +2801,15 @@ end
 @z
 
 @x [32.638] l.12634 - pTeX: ship out
+@p procedure ship_out(@!p:pointer); {output the box |p|}
+label done;
 var page_loc:integer; {location of the current |bop|}
 @y
+@p procedure ship_out(@!p:pointer); {output the box |p|}
+label done;
 var page_loc:integer; {location of the current |bop|}
 @!del_node:pointer; {used when delete the |dir_node| continued box}
 @z
-
 @x [32.640] l.12656 - pTeX: ship out
 @<Ship box |p| out@>;
 @y
@@ -2686,14 +2844,15 @@ endcases;
 @z
 
 @x [33.647] l.12856 - pTeX: cur_kanji_skip, cur_xkanji_skip, last_disp
+@< Glob...@>=
 @!adjust_tail:pointer; {tail of adjustment list}
 @y
+@< Glob...@>=
 @!adjust_tail:pointer; {tail of adjustment list}
 @!last_disp:scaled; {displacement at end of list}
 @!cur_kanji_skip:pointer;
 @!cur_xkanji_skip:pointer;
 @z
-
 @x [33.648] l.12858 - pTeX: cur_kanji_skip, cur_xkanji_skip
 @ @<Set init...@>=adjust_tail:=null; last_badness:=0;
 @y
@@ -2706,13 +2865,16 @@ endcases;
 @z
 
 @x [33.649] l.12864 - pTeX: hpack
+@p function hpack(@!p:pointer;@!w:scaled;@!m:small_number):pointer;
+label reswitch, common_ending, exit;
 var r:pointer; {the box node that will be returned}
 @y
+@p function hpack(@!p:pointer;@!w:scaled;@!m:small_number):pointer;
+label reswitch, common_ending, exit;
 var r:pointer; {the box node that will be returned}
 @!k:pointer; {points to a |kanji_space| specification}
 @!disp:scaled; {displacement}
 @z
-
 @x [33.649] l.12873 - pTeX: hpack
 begin last_badness:=0; r:=get_node(box_node_size); type(r):=hlist_node;
 subtype(r):=min_quarterword; shift_amount(r):=0;
@@ -2752,6 +2914,8 @@ end;
 @z
 
 @x [33.651] l.12898 - pTeX: dir_node, disp_node, reset chain
+@ @<Examine node |p| in the hlist, taking account of its effect...@>=
+@^inner loop@>
 begin reswitch: while is_char_node(p) do
   @<Incorporate character dimensions into the dimensions of
     the hbox that will contain~it, then move to the next node@>;
@@ -2773,6 +2937,8 @@ if p<>null then
   end;
 end
 @y
+@ @<Examine node |p| in the hlist, taking account of its effect...@>=
+@^inner loop@>
 begin reswitch: chain:=false;
 while is_char_node(p) do
   @<Incorporate character dimensions into the dimensions of
@@ -2797,19 +2963,33 @@ end
 @z
 
 @x [33.653] l.12931 - pTeX: displacement
+@<Incorporate box dimensions into the dimensions of the hbox...@>=
+begin x:=x+width(p);
 if type(p)>=rule_node then s:=0 @+else s:=shift_amount(p);
 if height(p)-s>h then h:=height(p)-s;
 if depth(p)+s>d then d:=depth(p)+s;
+end
 @y
+@<Incorporate box dimensions into the dimensions of the hbox...@>=
+begin x:=x+width(p);
 if type(p)>=rule_node then s:=disp @+else s:=shift_amount(p)+disp;
 if height(p)-s>h then h:=height(p)-s;
 if depth(p)+s>d then d:=depth(p)+s;
+end
 @z
 
 @x [33.654] l.12944 - pTeX: auto spacing, displacement
+@<Incorporate character dimensions into the dimensions of the hbox...@>=
+begin f:=font(p); i:=char_info(f)(character(p)); hd:=height_depth(i);
+x:=x+char_width(f)(i);@/
 s:=char_height(f)(hd);@+if s>h then h:=s;
 s:=char_depth(f)(hd);@+if s>d then d:=s;
+p:=link(p);
+end
 @y
+@<Incorporate character dimensions into the dimensions of the hbox...@>=
+begin f:=font(p); i:=char_info(f)(character(p)); hd:=height_depth(i);
+x:=x+char_width(f)(i);@/
 s:=char_height(f)(hd)-disp; if s>h then h:=s;
 s:=char_depth(f)(hd)+disp; if s>d then d:=s;
 if font_dir[f]<>dir_default then
@@ -2822,6 +3002,8 @@ if font_dir[f]<>dir_default then
   else chain:=true;
   end
 else chain:=false;
+p:=link(p);
+end
 @z
 
 @x [33.668] l.13051 - pTeX: vpackage
@@ -2835,10 +3017,18 @@ add_glue_ref(zero_glue); add_glue_ref(zero_glue);
 @z
 
 @x [33.669] l.13140 - pTeX: dir_node
+@ @<Examine node |p| in the vlist, taking account of its effect...@>=
+begin if is_char_node(p) then confusion("vpack")
+@:this can't happen vpack}{\quad vpack@>
+else  case type(p) of
   hlist_node,vlist_node,rule_node,unset_node:
     @<Incorporate box dimensions into the dimensions of
       the vbox that will contain~it@>;
 @y
+@ @<Examine node |p| in the vlist, taking account of its effect...@>=
+begin if is_char_node(p) then confusion("vpack")
+@:this can't happen vpack}{\quad vpack@>
+else  case type(p) of
   hlist_node,vlist_node,dir_node,rule_node,unset_node:
     @<Incorporate box dimensions into the dimensions of
       the vbox that will contain~it@>;
@@ -2936,7 +3126,6 @@ function clean_box(@!p:pointer;@!s:small_number):pointer;
 @y
 function clean_box(@!p:pointer;@!s:small_number;@!jc:halfword):pointer;
 @z
-
 @x [36.720] l.14129 - pTeX: clean_box
 math_char: begin cur_mlist:=new_noad; mem[nucleus(cur_mlist)]:=mem[p];
   end;
@@ -2947,7 +3136,6 @@ math_jchar: begin cur_mlist:=new_noad; mem[nucleus(cur_mlist)]:=mem[p];
   math_kcode(cur_mlist):=jc;
   end;
 @z
-
 @x [36.720] l.14141 - pTeX: clean_box
 found: if is_char_node(q)or(q=null) then x:=hpack(q,natural)
   else if (link(q)=null)and(type(q)<=vlist_node)and(shift_amount(q)=0) then
@@ -3001,7 +3189,6 @@ var mlist:pointer; {beginning of the given list}
 @!style:small_number; {the given style}
 @!u:pointer; {temporary register}
 @z
-
 @x [36.726] l.14252 - pTeX: mlist_to_hlist
 @<Make a second pass over the mlist, removing all noads and inserting the
   proper spacing and penalties@>;
@@ -3384,9 +3571,9 @@ else if type(tail)<>glue_node then tail_append(new_penalty(inf_penalty))
 @z
 
 @x [38.828] l.16285 - pTeX: Global variable |chain|
-@!threshold:integer; {maximum badness on feasible lines}
+@!cur_p:pointer; {the current breakpoint under consideration}
 @y
-@!threshold:integer; {maximum badness on feasible lines}
+@!cur_p:pointer; {the current breakpoint under consideration}
 @!chain:boolean; {chain current line and next line?}
 @z
 
@@ -3414,7 +3601,6 @@ while s<>null do
       end;
     goto done end;
 @z
-
 @x [38.837] l.16474 - pTeX:
   kern_node: if subtype(s)<>explicit then goto done
     else break_width[1]:=break_width[1]-width(s);
@@ -3516,7 +3702,6 @@ hlist_node,vlist_node,rule_node: act_width:=act_width+width(cur_p);
 case type(cur_p) of
 hlist_node,vlist_node,dir_node,rule_node: act_width:=act_width+width(cur_p);
 @z
-
 @x [39.866] l.17024 - pTeX:
 kern_node: if subtype(cur_p)=explicit then kern_break
   else act_width:=act_width+width(cur_p);
@@ -3525,7 +3710,6 @@ kern_node: if (subtype(cur_p)=explicit)or(subtype(cur_p)=ita_kern) then
   kern_break
   else act_width:=act_width+width(cur_p);
 @z
-
 @x [39.866] l.17033 - pTeX:
 mark_node,ins_node,adjust_node: do_nothing;
 @y
@@ -3756,7 +3940,6 @@ var v:pointer; {the box to be split}
 var v:pointer; {the box to be split}
 w:pointer; {|dir_node|}
 @z
-
 @x [44.977] l.19007 - pTeX: free box node
 q:=prune_page_top(q); p:=list_ptr(v); free_node(v,box_node_size);
 if q=null then box(n):=null {the |eq_level| of the box stays the same}
@@ -3907,12 +4090,13 @@ box(n):=vpack(temp_ptr,natural); box_dir(box(n)):=ins_dir(p);
 @z
 
 @x [46.1030] l.19980 - pTeX: main_control
-  append_normal_space,exit;
+procedure main_control; {governs \TeX's activities}
+label big_switch,reswitch,main_loop,main_loop_wrapup,
 @y
+procedure main_control; {governs \TeX's activities}
+label big_switch,reswitch,main_loop,main_loop_wrapup,
   main_loop_j,main_loop_j+1,main_loop_j+3,skip_loop,again_2,
-  append_normal_space,exit;
 @z
-
 @x [46.1030] l.19981 - pTeX: main_control
 var@!t:integer; {general-purpose temporary variable}
 @y
@@ -3923,7 +4107,6 @@ var@!t:integer; {general-purpose temporary variable}
 @!disp:scaled; {displacement register}
 @!ins_kp:boolean; {whether insert kinsoku penalty}
 @z
-
 @x [46.1030] l.19985 - pTeX: main_control
 case abs(mode)+cur_cmd of
 hmode+letter,hmode+other_char,hmode+char_given: goto main_loop;
@@ -3950,7 +4133,6 @@ hmode+no_boundary: begin get_x_token;
   goto reswitch;
   end;
 @z
-
 @x [46.1030] l.19999 - pTeX: main_control
 main_loop:@<Append character |cur_chr| and the following characters (if~any)
   to the current hlist in the current font; |goto reswitch| when
@@ -4002,20 +4184,12 @@ if lig_stack=null then
 @z
 
 @x [46.1037] l.20167 - pTeX: Look ahead for another character
+@<Look ahead for another character...@>=
+get_next; {set only |cur_cmd| and |cur_chr|, for speed}
 if cur_cmd=letter then goto main_loop_lookahead+1;
 if cur_cmd=other_char then goto main_loop_lookahead+1;
 if cur_cmd=char_given then goto main_loop_lookahead+1;
-@y
-if cur_cmd=letter then goto main_loop_lookahead+1;
-if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
-  @<goto |main_lig_loop|@>;
-if cur_cmd=other_char then goto main_loop_lookahead+1;
-if cur_cmd=char_given then
-  begin if (cur_chr>=0)and(cur_chr<256) then goto main_loop_lookahead+1
-  else @<goto |main_lig_loop|@>;
-  end;
-@z
-@x [46.1037] l.20170 - pTeX: Look ahead for another character
+x_token; {now expand and set |cur_cmd|, |cur_chr|, |cur_tok|}
 if cur_cmd=letter then goto main_loop_lookahead+1;
 if cur_cmd=other_char then goto main_loop_lookahead+1;
 if cur_cmd=char_given then goto main_loop_lookahead+1;
@@ -4029,6 +4203,17 @@ fast_get_avail(lig_stack); font(lig_stack):=main_f;
 cur_r:=qi(cur_chr); character(lig_stack):=cur_r;
 if cur_r=false_bchar then cur_r:=non_char {this prevents spurious ligatures}
 @y
+@<Look ahead for another character...@>=
+get_next; {set only |cur_cmd| and |cur_chr|, for speed}
+if cur_cmd=letter then goto main_loop_lookahead+1;
+if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
+  @<goto |main_lig_loop|@>;
+if cur_cmd=other_char then goto main_loop_lookahead+1;
+if cur_cmd=char_given then
+  begin if (cur_chr>=0)and(cur_chr<256) then goto main_loop_lookahead+1
+  else @<goto |main_lig_loop|@>;
+  end;
+x_token; {now expand and set |cur_cmd|, |cur_chr|, |cur_tok|}
 if cur_cmd=letter then goto main_loop_lookahead+1;
 if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
   @<goto |main_lig_loop|@>;
@@ -4501,13 +4686,11 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
 
 @x [47.1101] l.21177 - pTeX: mark_node, prev_append
 mark_ptr(p):=def_ref; link(tail):=p; tail:=p;
-end;
 @y
 mark_ptr(p):=def_ref;
 if (not is_char_node(tail))and(type(tail)=disp_node) then
   prev_append(p)
 else tail_append(p);
-end;
 @z
 
 @x [47.1103] l.21187 - pTeX: penalty, prev_append
@@ -4535,7 +4718,6 @@ var @!p,@!q:pointer; {run through the current list}
 @!disp,@!pdisp:scaled; {displacement}
 @!pp,pnode:pointer;
 @z
-
 @x [47.1105] l.21213 - pTeX: delete_last: disp_node
 else  begin if not is_char_node(tail) then if type(tail)=cur_chr then
     begin q:=head;
@@ -4597,7 +4779,6 @@ var p:pointer; {the box}
 @!c:box_code..copy_code; {should we copy?}
 @!disp:scaled; {displacement}
 @z
-
 @x [47.1110] l.21277 - pTeX: free box node, delete kanji_skip
 if (abs(mode)=mmode)or((abs(mode)=vmode)and(type(p)<>vlist_node))or@|
    ((abs(mode)=hmode)and(type(p)<>hlist_node)) then
@@ -4671,15 +4852,11 @@ while link(tail)<>null do
 @z
 
 @x [47.1113] l.21306 - pTeX: italic correction, ita_kern
+procedure append_italic_correction;
+label exit;
 var p:pointer; {|char_node| at the tail of the current list}
 @!f:internal_font_number; {the font in the |char_node|}
-@y
-var p:pointer; {|char_node| at the tail of the current list}
-@!f:internal_font_number; {the font in the |char_node|}
-@!d:pointer; {|disp_node|}
-@z
-
-@x [47.1113] l.21309 - pTeX: ita_kern
+begin if tail<>head then
   begin if is_char_node(tail) then p:=tail
   else if type(tail)=ligature_node then p:=lig_char(tail)
   else return;
@@ -4688,6 +4865,12 @@ var p:pointer; {|char_node| at the tail of the current list}
   subtype(tail):=explicit;
   end;
 @y
+procedure append_italic_correction;
+label exit;
+var p:pointer; {|char_node| at the tail of the current list}
+@!f:internal_font_number; {the font in the |char_node|}
+@!d:pointer; {|disp_node|}
+begin if tail<>head then
   begin
   if (not is_char_node(tail))and(type(tail)=disp_node) then
     begin d:=tail; tail:=prev_node;
@@ -4738,7 +4921,6 @@ var s,@!t: real; {amount of slant}
 @!disp:scaled; {displacement}
 @!cx:KANJI_code; {temporary register for KANJI}
 @z
-
 @x [47.1123] l.21441 - pTeX: make_accent, Kanji, insert disp_node
 begin scan_char_num; f:=cur_font; p:=new_character(f,cur_val);
 @y
@@ -4753,7 +4935,6 @@ if (cur_val<0)or(cur_val>255) then
 else begin f:=cur_font; p:=new_character(f,cur_val);
   end;
 @z
-
 @x [47.1123] l.21451 - pTeX: make_accent, Kanji, insert disp_node
   link(tail):=p; tail:=p; space_factor:=1000;
 @y
@@ -4874,16 +5055,7 @@ procedure scan_math(@!p:pointer);
 label restart,reswitch,exit;
 var c:integer; {math character code}
 begin restart:@<Get the next non-blank non-relax...@>;
-@y
-procedure scan_math(@!p,@!q:pointer);
-label restart,reswitch,exit;
-var c:integer; {math character code}
-cx:KANJI_code; {temporary register for KANJI}
-begin KANJI(cx):=0;
-restart: @<Get the next non-blank non-relax...@>;
-@z
-
-@x [48.1151] l.21815 - pTeX: scan_math: use Kanji in math_mode
+reswitch:case cur_cmd of
 letter,other_char,char_given: begin c:=ho(math_code(cur_chr));
     if c=@'100000 then
       begin @<Treat |cur_chr| as an active character@>;
@@ -4891,6 +5063,13 @@ letter,other_char,char_given: begin c:=ho(math_code(cur_chr));
       end;
     end;
 @y
+procedure scan_math(@!p,@!q:pointer);
+label restart,reswitch,exit;
+var c:integer; {math character code}
+cx:KANJI_code; {temporary register for KANJI}
+begin KANJI(cx):=0;
+restart: @<Get the next non-blank non-relax...@>;
+reswitch:case cur_cmd of
 letter,other_char,char_given:
   if (cur_chr>=0)and(cur_chr<=256) then begin
     c:=ho(math_code(cur_chr));
@@ -4903,7 +5082,6 @@ letter,other_char,char_given:
     KANJI(cx):=cur_chr;
 kanji,kana,other_kchar: cx:=cur_chr;
 @z
-
 @x [48.1151] l.21831 - pTeX: scan_math: use Kanji in math_mode
 math_type(p):=math_char; character(p):=qi(c mod 256);
 if (c>=var_code)and fam_in_range then fam(p):=cur_fam
@@ -5024,7 +5202,6 @@ var l:boolean; {`\.{\\leqno}' instead of `\.{\\eqno}'}
 var l:boolean; {`\.{\\leqno}' instead of `\.{\\eqno}'}
 @!disp:scaled; {displacement}
 @z
-
 @x [48.1194] l.22341 - pTeX: set cur_kanji_skip, cur_xkanji_skip
 m:=mode; l:=false; p:=fin_mlist(null); {this pops the nest}
 @y
@@ -5095,9 +5272,14 @@ any_mode(def_tfont),
 @z
 
 @x [49.1211] l.22658 - pTeX: prefixed_command
-@!n:integer; {ditto}
+procedure prefixed_command;
+label done,exit;
+var a:small_number; {accumulated prefix codes so far}
 @y
-@!n,@!m:integer; {ditto}
+procedure prefixed_command;
+label done,exit;
+var a:small_number; {accumulated prefix codes so far}
+@!m:integer; {ditto}
 @z
 
 @x [49.1217] l.22740 - pTeX: select cur font
@@ -5125,21 +5307,21 @@ assign_int: begin p:=cur_chr; scan_optional_equals; scan_int;
     else word_define(p,cur_val);
     end
   else word_define(p,cur_val);
-end;
+  end;
 @z
 
 @x [49.1230] l.22936 - pTeX: xspcode, kcatcode
+@<Put each...@>=
 primitive("catcode",def_code,cat_code_base);
 @!@:cat_code_}{\.{\\catcode} primitive@>
 @y
+@<Put each...@>=
 primitive("catcode",def_code,cat_code_base);
 @!@:cat_code_}{\.{\\catcode} primitive@>
 primitive("kcatcode",def_code,kcat_code_base);
 @!@:cat_code_}{\.{\\kcatcode} primitive@>
 primitive("xspcode",def_code,auto_xsp_code_base);
 @!@:auto_xsp_code_}{\.{\\xspcode} primitive@>
-primitive("tozencode",def_code,tozen_code_base);
-@!@:tozen_code_}{\.{\\tozen} primitive@>
 @z
 
 @x [49.1231] l.22956 - pTeX: xspcode, kcatcode
@@ -5150,7 +5332,6 @@ def_code: if chr_code=cat_code_base then print_esc("catcode")
   else if chr_code=kcat_code_base then print_esc("kcatcode")
   else if chr_code=auto_xsp_code_base then print_esc("xspcode")
   else if chr_code=math_code_base then print_esc("mathcode")
-  else if chr_code=tozen_code_base then print_esc("tozencode")
 @z
 
 @x [49.1232] l.22968 - pTeX: kcatcode
@@ -5198,14 +5379,11 @@ def_code: begin
 if cur_chr=cat_code_base then n:=max_char_code
 @y
 @ @<Let |m| be the minimal...@>=
-if cur_chr=kcat_code_base then m:=kanji
-else if cur_chr=tozen_code_base then m:=@"A1A1
-else m:=0
+if cur_chr=kcat_code_base then m:=kanji else m:=0
 
 @ @<Let |n| be the largest...@>=
 if cur_chr=cat_code_base then n:=invalid_char {1byte |max_char_code|}
 else if cur_chr=kcat_code_base then n:=max_char_code
-else if cur_chr=tozen_code_base then n:=@"FEFE
 @z
 
 @x [49.1247] l.23186 - pTeX: alter_box_dimen : box_dir
@@ -5244,38 +5422,21 @@ def_font: new_font(a);
 def_tfont,def_jfont,def_font: new_font(a);
 @z
 
-@x [49.1289] l.23523 - pTeX: shift_case
-primitive("uppercase",case_shift,uc_code_base);
-@!@:uppercase_}{\.{\\uppercase} primitive@>
-@y
-primitive("uppercase",case_shift,uc_code_base);
-@!@:uppercase_}{\.{\\uppercase} primitive@>
-primitive("tozen",case_shift,tozen_code_base);
-@!@:tozen}{\.{\\tozen} primitive@>
-@z
-
-@x [49.1290] l.23527 - pTeX: shift_case
-case_shift:if chr_code=lc_code_base then print_esc("lowercase")
-  else print_esc("uppercase");
-@y
-case_shift:if chr_code=lc_code_base then print_esc("lowercase")
-  else if chr_code=uc_code_base then print_esc("uppercase")
-  else print_esc("tozen");
-@z
-
 @x [49.1292] l.23551 - pTeX: shift_case
+@<Change the case of the token in |p|, if a change is appropriate@>=
+t:=info(p);
 if t<cs_token_flag+single_base then
   begin c:=t mod 256;
   if equiv(b+c)<>0 then info(p):=t-c+equiv(b+c);
   end
 @y
+@<Change the case of the token in |p|, if a change is appropriate@>=
+t:=info(p);
 if t<cs_token_flag+single_base then
-  if (t>kanji_token_base)and(t<kanji_token_end) then p:=link(p)
+  if check_kanji(t) then p:=link(p) {wchar_token}
   else begin c:=t mod 256;
-    if equiv(b+c)<>0 then
-      if b=tozen_code_base then info(p):=equiv(b+c)
-      else info(p):=t-c+equiv(b+c);
-  end
+    if equiv(b+c)<>0 then info(p):=t-c+equiv(b+c);
+    end
 @z
 
 @x [49.1291] l.23565 - pTeX: show_mode
@@ -5284,7 +5445,6 @@ if t<cs_token_flag+single_base then
 @d show_lists=3 { \.{\\showlists} }
 @d show_mode=4 { \.{\\showmode} }
 @z
-
 @x [49.1291] l.23574 - pTeX: show_mode
 primitive("showlists",xray,show_lists);
 @!@:show_lists_}{\.{\\showlists} primitive@>
@@ -5462,30 +5622,6 @@ end else begin
   t:=height_depth(orig_char_info(cur_jfont)(qi(0)));
   v:=char_height(cur_jfont)(t)+char_depth(cur_jfont)(t);
 end
-
-@ |print_kansuji| procedure converts a number to KANJI number.
-
-@<Declare procedures needed in |scan_something|@>=
-procedure print_kansuji(@!n:integer);
-var @!k:0..23; {index to current digit; we assume that $|n|<10^{23}$}
-@!cx: KANJI_code; {temporary register for KANJI}
-begin k:=0;
-  if n<0 then return; {nonpositive input produces no output}
-  repeat dig[k]:=n mod 10; n:=n div 10; incr(k);
-  until n=0;
-  begin while k>0 do
-    begin decr(k);
-    case dig[k] of
-      0: cx:=@"A1BB;
-      1: cx:=@"B0EC; 2: cx:=@"C6F3; 3: cx:=@"BBB0;
-      4: cx:=@"BBCD; 5: cx:=@"B8DE; 6: cx:=@"CFBB;
-      7: cx:=@"BCB7; 8: cx:=@"C8AC; 9: cx:=@"B6E5;
-    endcases;@/
-	if (proc_kanji_code=sjis_enc) then cx:=EUCtoSJIS(cx);
-    print_char(Hi(cx)); print_char(Lo(cx));
-    end;
-  end;
-end;
 
 @ pTeX inserts a glue specified by \.{\\kanjiskip} between 2byte-characters,
 automatically, if \.{\\autospacing}.  This glue is suppressed by
@@ -5677,7 +5813,11 @@ if check_kanji(n) then
 @:this can't happen kinsoku}{\quad kinsoku@>
   end
 else
-  begin print_err("Invalid KANJI code ("); print_hex(n); print_char(")");
+  begin print_err("Invalid KANJI code for ");
+  if (p=pre_break_penalty_code) then print("pre")
+  else if (p=post_break_penalty_code) then print("post")
+  else print_char("?");
+  print("breakpenalty ("); print_hex(n); print_char(")");
 @.Invalid KANJI code@>
   help1("I'm skip this control sequences.");@/
   error; return;

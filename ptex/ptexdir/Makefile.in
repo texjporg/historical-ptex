@@ -1,11 +1,13 @@
 # Makefile for ptex
 version = @WEB2CVERSION@
 configopt = @configopt@
+configkcode = @configkcode@
 
 default: programs formats
 
 programs=ptex tftopl pltotf pdvitype jbibtex
-formats=ptex.fmt platex.fmt
+euc-formats=ptex-euc.fmt platex-euc.fmt
+sjis-formats=ptex-sjis.fmt platex-sjis.fmt
 
 ac_include ../../make/paths.mk
 
@@ -159,6 +161,7 @@ $(kpathsea):
 
 # 
 # Making formats and bases.
+formats=$(euc-formats) $(sjis-formats)
 formats: $(formats)
 
 texmf.cnf: $(kpathsea_dir)/texmf.cnf
@@ -166,13 +169,21 @@ texmf.cnf: $(kpathsea_dir)/texmf.cnf
 
 dumpenv = TEXMFCNF=$(thisdir) TEXMF=$(texmf)
 
-ptex.fmt: ptex texmf.cnf
+ptex-euc.fmt: ptex texmf.cnf
 	$(dumpenv) $(MAKE) $(makeargs) files="--progname=ptex ptex.tex min10.tfm" prereq-check
-	$(dumpenv) ./ptex -ini \\input ptex \\dump </dev/null
+	$(dumpenv) ./ptex -ini --kanji=euc --jobname=ptex-euc \\input ptex \\dump </dev/null
 
-platex.fmt: ptex texmf.cnf
+ptex-sjis.fmt: ptex texmf.cnf
+	$(dumpenv) $(MAKE) $(makeargs) files="--progname=ptex ptex.tex min10.tfm" prereq-check
+	$(dumpenv) ./ptex -ini --kanji=sjis --jobname=ptex-sjis \\input ptex \\dump </dev/null
+
+platex-euc.fmt: ptex texmf.cnf
 	$(dumpenv) $(MAKE) $(makeargs) files="--progname=platex platex.ltx" prereq-check
-	$(dumpenv) ./ptex -ini --progname=platex \\input platex.ltx </dev/null
+	$(dumpenv) ./ptex -ini --kanji=euc --progname=platex --jobname=platex-euc \\input platex.ltx </dev/null
+
+platex-sjis.fmt: ptex texmf.cnf
+	$(dumpenv) $(MAKE) $(makeargs) files="--progname=platex platex.ltx" prereq-check
+	$(dumpenv) ./ptex -ini --kanji=sjis --progname=platex --jobname=platex-sjis \\input platex.ltx </dev/null
 
 # This is meant to be called recursively, with $(files) set.
 prereq-check: $(kpathsea_dir)/kpsewhich
@@ -206,13 +217,19 @@ install-programs: $(programs)
 
 # The links to ptex for each format and for {ini,vir}ptex.
 install-links: install-programs
-	cd $(bindir) && \
-	(rm -f iniptex virptex; $(LN) ptex iniptex; $(LN) ptex virptex)
+	cd $(bindir) && (rm -f iniptex virptex platex; \
+		$(LN) ptex iniptex; $(LN) ptex virptex ; $(LN) ptex platex)
 
 # Always do plain.*, so examples from the TeXbook (etc.) will work.
 install-formats: $(formats)
 	$(SHELL) $(top_srcdir)/mkinstalldirs $(fmtdir)
 	for f in $(formats); do $(INSTALL_DATA) $$f $(fmtdir)/$$f; done
+	cd $(fmtdir) && (rm -f ptex-jis.fmt platex-jis.fmt ;\
+		$(LN) ptex-euc.fmt ptex-jis.fmt ;\
+		$(LN) platex-euc.fmt platex-jis.fmt)
+	cd $(fmtdir) && (rm -f ptex.fmt platex.fmt ;\
+		$(LN) ptex-$(configkcode).fmt ptex.fmt ;\
+		$(LN) platex-$(configkcode).fmt platex.fmt )
 
 # Auxiliary files.
 install-data::
@@ -271,7 +288,7 @@ tftopl-check: tftopl
 pooltype-check: $(srcdir)/pooltype
 	$(srcdir)/pooltype ptex.pool > $(testdir)/xtexpool.typ
 
-ptex-check: trip ptex.fmt
+ptex-check: trip ptex-euc.fmt
 # Test truncation (but don't bother showing the warning msg).
 	./ptex -output-comment="`cat PROJECTS`" $(testdir)/hello 2>/dev/null \
 	  && $(srcdir)/dvitype hello.dvi | grep kb@mail.tug.org >/dev/null
@@ -308,8 +325,8 @@ clean:: mostryclean
 	rm -f jbibtex.c jbibtex.o jbibextra.o
 distclean:: clean
 	rm -fr failure
-	rm -f ptex.web ptex.ch ptex.p ptex.pool ptex.log ptex.fmt
-	rm -f platex.log platex.fmt texsys.aux platex
+	rm -f ptex.web ptex.ch ptex.p ptex.pool ptex.log ptex-euc.fmt ptex-sjis.fmt
+	rm -f platex.log platex-euc.fmt platex-sjis.fmt texsys.aux platex
 	rm -f tftopl.web tftopl.p
 	rm -f pltotf.web pltotf.p
 	rm -f pdvitype.web pdvitype.p
