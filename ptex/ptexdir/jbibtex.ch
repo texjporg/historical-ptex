@@ -1475,8 +1475,10 @@ var @!long_options: array[0..n_options] of getopt_struct;
     @!getopt_return_val: integer;
     @!option_index: c_int_type;
     @!current_option: 0..n_options;
+    @!version_switch: boolean;
 begin
   @<Initialize the option variables@>;
+  version_switch := false;
   @<Define the option table@>;
   repeat
     getopt_return_val := getopt_long_only (argc, argv, '', long_options,
@@ -1494,13 +1496,15 @@ begin
       usage_help (JBIBTEX_HELP, nil);
 
     end else if argument_is ('version') then begin
-      print_version_and_exit (banner, 'Oren Patashnik', nil);
+      version_switch := true;
 
     end else if argument_is ('kanji') then begin
       @<Set process kanji code@>;
 
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
+  if (version_switch) then
+    print_version_and_exit (banner, 'Oren Patashnik', nil);
 
   {Now |optind| is the index of first non-option on the command line.
    We must have one remaining argument.}

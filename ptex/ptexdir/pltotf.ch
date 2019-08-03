@@ -1,5 +1,6 @@
 % This is a change file for TFtoPL
 %
+% (07/18/2006) ST PLtoTF p1.8 (3.5, Web2c 7.2)
 % (11/13/2000) KN PLtoTF p1.4 (3.5, Web2c 7.2)
 % (03/27/1998) KN PLtoTF p1.3 (3.5, Web2c 7.2)
 %
@@ -12,7 +13,7 @@
 @x [2] l.69 - pTeX:
 @d banner=='This is PLtoTF, Version 3.5' {printed when the program starts}
 @y
-@d banner=='This is Nihongo PLtoTF, Version 3.5-p1.6'
+@d banner=='This is Nihongo PLtoTF, Version 3.5-p1.8'
   {printed when the program starts}
 @d jis_enc==0
 @d euc_enc==1
@@ -403,6 +404,23 @@ const n_options = 3; {Pascal won't count array lengths for us.}
 const n_options = 4; {Pascal won't count array lengths for us.}
 @z
 @x
+var @!long_options: array[0..n_options] of getopt_struct;
+    @!getopt_return_val: integer;
+    @!option_index: c_int_type;
+    @!current_option: 0..n_options;
+begin
+  @<Initialize the option variables@>;
+@y
+var @!long_options: array[0..n_options] of getopt_struct;
+    @!getopt_return_val: integer;
+    @!option_index: c_int_type;
+    @!current_option: 0..n_options;
+    @!version_switch: boolean;
+begin
+  @<Initialize the option variables@>;
+  version_switch := false;
+@z
+@x
       usage_help (PLTOTF_HELP, nil);
 @y
       usage_help (PTEX_PLTOTF_HELP, nil);
@@ -410,12 +428,20 @@ const n_options = 4; {Pascal won't count array lengths for us.}
 @x
     end else if argument_is ('version') then begin
       print_version_and_exit (banner, nil, 'D.E. Knuth');
+
+    end; {Else it was a flag; |getopt| has already done the assignment.}
+  until getopt_return_val = -1;
 @y
     end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth');
+      version_switch := true;
 
     end else if argument_is ('kanji') then begin
       @<Set process kanji code@>;
+
+    end; {Else it was a flag; |getopt| has already done the assignment.}
+  until getopt_return_val = -1;
+  if (version_switch) then
+    print_version_and_exit (banner, nil, 'D.E. Knuth');
 @z
 
 @x
@@ -714,14 +740,14 @@ var @!first_byte,@!second_byte:integer; { jis code bytes }
 begin
 first_byte:=jis div @'400 -@"21;
 second_byte:=jis mod @'400 -@"21;
-if first_byte<=8 then
+if first_byte<8 then
   jis_to_index:=first_byte*94+second_byte
 else { next |first_byte| start 16 }
   jis_to_index:=(first_byte-7)*94+second_byte;
 end;
 @#
 function index_to_jis(ix:integer):integer;
-begin if ix<=8*94+94-1 then
+begin if ix<=8*94-1 then
   index_to_jis:=(ix div 94 +@"21)*@'400+(ix mod 94 +@"21)
 else
   index_to_jis:=((ix+7*94) div 94 +@"21)*@'400+((ix+7*94) mod 94 +@"21)

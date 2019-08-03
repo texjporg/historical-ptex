@@ -1,5 +1,6 @@
 % This is a change file for TFtoPL
 %
+% (07/18/2006) ST TFtoPL p1.7 (3.1, Web2c 7.2)
 % (03/27/1998) KN TFtoPL p1.4 (3.1, Web2c 7.2)
 %
 @x [0] l.45 - pTeX:
@@ -11,7 +12,7 @@
 @x [2] l.64 - pTeX:
 @d banner=='This is TFtoPL, Version 3.1' {printed when the program starts}
 @y
-@d banner=='This is Nihongo TFtoPL, Version 3.2-p1.5'
+@d banner=='This is Nihongo TFtoPL, Version 3.2-p1.7'
   {printed when the program starts}
 @d jis_enc==0
 @d euc_enc==1
@@ -350,6 +351,23 @@ const n_options = 4; {Pascal won't count array lengths for us.}
 const n_options = 5; {Pascal won't count array lengths for us.}
 @z
 @x
+var @!long_options: array[0..n_options] of getopt_struct;
+    @!getopt_return_val: integer;
+    @!option_index: c_int_type;
+    @!current_option: 0..n_options;
+begin
+  @<Initialize the option variables@>;
+@y
+var @!long_options: array[0..n_options] of getopt_struct;
+    @!getopt_return_val: integer;
+    @!option_index: c_int_type;
+    @!current_option: 0..n_options;
+    @!version_switch: boolean;
+begin
+  @<Initialize the option variables@>;
+  version_switch := false;
+@z
+@x
       usage_help (TFTOPL_HELP, nil);
 @y
       usage_help (PTEX_TFTOPL_HELP, nil);
@@ -359,10 +377,19 @@ const n_options = 5; {Pascal won't count array lengths for us.}
       print_version_and_exit (banner, nil, 'D.E. Knuth');
 @y
     end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth');
+      version_switch := true;
 
     end else if argument_is ('kanji') then begin
       @<Set process kanji code@>;
+@z
+@x
+    end; {Else it was a flag; |getopt| has already done the assignment.}
+  until getopt_return_val = -1;
+@y
+    end; {Else it was a flag; |getopt| has already done the assignment.}
+  until getopt_return_val = -1;
+  if (version_switch) then
+    print_version_and_exit (banner, nil, 'D.E. Knuth');
 @z
 
 @x
@@ -502,7 +529,7 @@ end;
 @ @<declare kanji conversion functions@>=
 function index_to_jis(ix:integer):integer;
 begin
-if ix<=8*94+94-1 then
+if ix<=8*94-1 then
   index_to_jis:=(ix div 94 + @"21) * @'400 + (ix mod 94 + @"21)
 else
   index_to_jis:=((ix+7 * 94) div 94 + @"21) * @'400 + ((ix+7*94) mod 94 + @"21)
@@ -514,7 +541,7 @@ var first_byte,second_byte:integer; { jis code bytes }
 begin
 first_byte:=cx div @'400 - @"21;
 second_byte:=cx mod @'400 - @"21;
-if first_byte<=8 then
+if first_byte<8 then
   jis_to_index:=first_byte*94+second_byte
 else
   jis_to_index:=(first_byte-7)*94+second_byte;

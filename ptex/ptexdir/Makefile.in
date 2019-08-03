@@ -243,6 +243,7 @@ install-data::
 		mv -f $(web2cdir)/texmf.cnf $(web2cdir)/texmf.cnf.orig ;\
 	else true; fi
 	$(INSTALL_DATA) texmf.cnf $(web2cdir)/texmf.cnf
+	$(top_srcdir)/../selfautofix "$(bindir)" "$(web2cdir)"
 # 
 # Testing, including triptrap. The `x' filenames are for output.
 check: pltotf-check tftopl-check pooltype-check ptex-check 
@@ -308,10 +309,10 @@ installcheck:
 
 # 
 # Cleaning.
-mostryclean::
+mostlyclean::
 	rm -f *.o
 
-clean:: mostryclean
+clean:: mostlyclean
 	rm -f texcoerce.h texd.h jbibd.h jbibtex.h
 	rm -f $(ptex_c) $(ptex_o) $(plib_o) $(programs)
 	rm -f tftopl.h tftopl.c tftopl.o

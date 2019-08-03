@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.9
+% This is a change file for pTeX 3.1.10
 % By Sadayuki Tanaka (sada-t@ascii.co.jp), Ken Nakano (ken-na@ascii.co.jp)
 % and ASCII Corporation.
 %
@@ -41,13 +41,14 @@
 % (11/29/2004) KN  pTeX p3.1.5
 % (12/13/2004) KN  pTeX p3.1.8
 % (10/17/2005) ST  pTeX p3.1.9
+% (07/18/2006) ST  pTeX p3.1.10
 %
 @x [1.2] l.195 - pTeX:
 @d TeX_banner_k=='This is TeXk, Version 3.141592' {printed when \TeX\ starts}
 @d TeX_banner=='This is TeX, Version 3.141592' {printed when \TeX\ starts}
 @y
-@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.9' {printed when p\TeX\ starts}
-@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.9' {printed when p\TeX\ starts}
+@d TeX_banner_k=='This is pTeXk, Version 3.141592-p3.1.10' {printed when p\TeX\ starts}
+@d TeX_banner=='This is pTeX, Version 3.141592-p3.1.10' {printed when p\TeX\ starts}
 @z
 
 @x [2.??] l.586 - pTeX:
@@ -3846,7 +3847,7 @@ label restart,exit;
 var a:integer; {address of lig/kern instruction}
 @!gp,@!gq,@!p,@!r:pointer; {temporary registers for list manipulation}
 @!rr:halfword;
-begin restart:@t@>@;@/
+begin r:=min_halfword; restart:@t@>@;@/
 if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
 ((math_type(nucleus(q))=math_char)or(math_type(nucleus(q))=math_jchar)) then
   begin p:=link(q);

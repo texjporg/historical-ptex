@@ -820,6 +820,7 @@ parse_options P2C(int, argc,  string *, argv)
 {
   int g;   /* `getopt' return code.  */
   int option_index;
+  int version_switch = false;
 
   for (;;) {
     g = getopt_long_only (argc, argv, "+", long_options, &option_index);
@@ -947,9 +948,12 @@ parse_options P2C(int, argc,  string *, argv)
         usagehelp (PROGRAM_HELP, BUG_ADDRESS);
 
     } else if (ARGUMENT_IS ("version")) {
-      printversionandexit (BANNER, COPYRIGHT_HOLDER, AUTHOR);
+		version_switch = true;
 
     } /* Else it was a flag; getopt has already done the assignment.  */
+  }
+  if (version_switch) {
+    printversionandexit (BANNER, COPYRIGHT_HOLDER, AUTHOR);
   }
 }
 

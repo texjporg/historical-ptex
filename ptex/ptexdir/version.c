@@ -10,16 +10,14 @@ printversionandexit P3C(const_string, banner,
   extern string based_prog_name;
   extern KPSEDLL string kpathsea_version_string;/* from kpathsea/version.c */
   string prog_name, prog_version;
-  string work_banner;
+  string work_banner, term_code;
   unsigned len;
 
-#if TERM_CODE == JIS
-  string term_code=" (JIS)";
-#elif TERM_CODE == SJIS
-  string term_code=" (SJIS)";
-#else
-  string term_code=" (EUC)";
-#endif
+  switch (prockanjicode) {
+  case JIS: term_code=" (JIS)"; break;
+  case SJIS: term_code=" (SJIS)"; break;
+  default: term_code=" (EUC)"; break;
+  }
 
   work_banner = xstrdup(banner);
                          /* attention!:  sizeof(s) = strlen(s) + 1 */
