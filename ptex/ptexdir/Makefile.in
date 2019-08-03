@@ -108,6 +108,7 @@ tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
 pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) pltotf.o $(plib_o) $(LOADLIBES)
 pltotf.o: pltotf.c kanji.h ptexhelp.h
+	$(compile) -DKANJI_C $<
 pltotf.c: pltotf.p $(web2c_aux)
 pltotf.p: pltotf.web pltotf.ch
 pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch

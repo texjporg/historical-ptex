@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.4
+% This is a change file for pTeX 3.1.5
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -37,13 +37,14 @@
 % (05/22/2001) KN  pTeX p2.1.11
 % (03/10/2001) KN  pTeX p3.0 (modified BSD licence)
 % (09/02/2004) ST  pTeX p3.1.4
+% (11/29/2004) KN  pTeX p3.1.5
 %
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.1.4' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.1.4' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.1.5' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.1.5' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
@@ -87,13 +88,13 @@ label done,exit;
 var k,@!l:KANJI_code; {small indices or counters}
 @z
 
-@x [4.49] l.1296 - pTeX:
-@<Character |k| cannot be printed@>=
-   not is_printable[k]
-@y
-@<Character |k| cannot be printed@>=
-  not (iskanji1(k) or iskanji2(k) or is_printable[k])
-@z
+%@x [4.49] l.1296 - pTeX:
+%@<Character |k| cannot be printed@>=
+%   not is_printable[k]
+%@y
+%@<Character |k| cannot be printed@>=
+%  not (iskanji1(k) or iskanji2(k) or is_printable[k])
+%@z
 
 @x [4.51] l.1325 - pTeX:
 else  bad_pool('! I can''t read tex.pool; bad path?')
@@ -238,16 +239,16 @@ pseudo: if tally<trick_count then
   end;
 @z
 
-@x
-k:=s;
-if ((selector<=no_print)and(@<Character |k| cannot be printed@>))
-   or((selector>no_print)and(not isprint(k)))
-then begin print_visible_char("^"); print_visible_char("^");
-@y
-k:=s;
-if @<Character |k| cannot be printed@>
-then begin print_visible_char("^"); print_visible_char("^");
-@z
+%@x [5.xx] - pTeX: print_char
+%k:=s;
+%if ((selector<=no_print)and(@<Character |k| cannot be printed@>))
+%   or((selector>no_print)and(not isprint(k)))
+%then begin print_visible_char("^"); print_visible_char("^");
+%@y
+%k:=s;
+%if @<Character |k| cannot be printed@>
+%then begin print_visible_char("^"); print_visible_char("^");
+%@z
 
 @x [5.61] l.1596 - pTeX:
 @<Initialize the output...@>=
@@ -514,8 +515,7 @@ of larger type codes will also be defined, for use in math mode only.
       print_ASCII(qo(character(p)));
 @y
       if font_dir[font(p)]<>dir_default then
-        begin p:=link(p);
-        print_char(Hi(info(p))); print_char(Lo(info(p)));
+        begin p:=link(p); print_kanji(info(p));
         end
       else print_ASCII(qo(character(p)));
 @z
@@ -533,8 +533,7 @@ hlist_node,vlist_node,dir_node,ins_node,whatsit_node,
 @y
   print_char(" ");
   if font_dir[font(p)]<>dir_default then
-    begin p:=link(p);
-    print_char(Hi(info(p))); print_char(Lo(info(p)));
+    begin p:=link(p); print_kanji(info(p));
     end
   else print_ASCII(qo(character(p)));
 @z
@@ -1348,8 +1347,7 @@ left_brace,right_brace,math_shift,tab_mark,sup_mark,sub_mark,spacer,
 @y
 @<Display the token ...@>=
 case m of
-kanji,kana,other_kchar: begin print(Hi(KANJI(c))); print(Lo(KANJI(c)));
-  end;
+kanji,kana,other_kchar: print_kanji(KANJI(c));
 left_brace,right_brace,math_shift,tab_mark,sup_mark,sub_mark,spacer,
   letter,other_char: print(c);
 @z
@@ -1359,7 +1357,7 @@ other_char: chr_cmd("the character ");
 @y
 other_char: chr_cmd("the character ");
 kanji,kana,other_kchar: begin print("kanji character ");
-  print_char(Hi(KANJI(chr_code))); print_char(Lo(KANJI(chr_code))); end;
+  print_kanji(KANJI(chr_code)); end;
 @z
 
 @x [22.303] l.6480 - pTeX: state mid_kanji
@@ -1469,6 +1467,7 @@ done1:
 @!cat:0..15; {|cat_code(cur_chr)|, usually}
 @y
 @!cat:escape..max_char_code; {|cat_code(cur_chr)|, usually}
+@!l:0..buf_size; {temporay index into |buffer|}
 @z
 
 @x [24.343] l.7242 - pTeX: input external file
@@ -1556,14 +1555,26 @@ else  begin start_cs: k:=loc; cur_chr:=buffer[k]; cat:=cat_code(cur_chr);
   else if cat=spacer then state:=skip_blanks
   else state:=mid_line;
   if (cat=letter)and(k<=limit) then
+    @<Scan ahead in the buffer until finding a nonletter;
+    if an expanded code is encountered, reduce it
+    and |goto start_cs|; otherwise if a multiletter control
+    sequence is found, adjust |cur_cs| and |loc|, and
+    |goto found|@>
+  else @<If an expanded code is present, reduce it and |goto start_cs|@>;
+  cur_cs:=single_base+buffer[loc]; incr(loc);
+  end;
+found: cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
+if cur_cmd>=outer_call then check_outer_validity;
+end
 @y
 @<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
-else  begin start_cs: k:=loc; cur_chr:=buffer[k]; incr(k);
+else  begin k:=loc; cur_chr:=buffer[k]; incr(k);
   if (iskanji1(cur_chr))and(k<=limit)and(iskanji2(buffer[k])) then
     begin cat:=kcat_code(cur_chr); incr(k);
     end
   else cat:=cat_code(cur_chr);
+start_cs:
   if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
   else if cat=spacer then state:=skip_blanks
   else state:=mid_line;
@@ -1571,6 +1582,62 @@ else  begin start_cs: k:=loc; cur_chr:=buffer[k]; incr(k);
     begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
     end
   else if ((cat=letter)or(cat=kanji)or(cat=kana))and(k<=limit) then
+    @<Scan ahead in the buffer until finding a nonletter;
+    if an expanded code is encountered, reduce it
+    and |goto start_cs|; otherwise if a multiletter control
+    sequence is found, adjust |cur_cs| and |loc|, and
+    |goto found|@>
+  else @<If an expanded code is present, reduce it and |goto start_cs|@>;
+  cur_cs:=single_base+buffer[loc]; incr(loc);
+  end;
+found: cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
+if cur_cmd>=outer_call then check_outer_validity;
+end
+@z
+
+@x
+@<If an expanded...@>=
+begin if buffer[k]=cur_chr then @+if cat=sup_mark then @+if k<limit then
+  begin c:=buffer[k+1]; @+if c<@'200 then {yes, one is indeed present}
+    begin d:=2;
+    if is_hex(c) then @+if k+2<=limit then
+      begin cc:=buffer[k+2]; @+if is_hex(cc) then incr(d);
+      end;
+    if d>2 then
+      begin hex_to_cur_chr; buffer[k-1]:=cur_chr;
+      end
+    else if c<@'100 then buffer[k-1]:=c+@'100
+    else buffer[k-1]:=c-@'100;
+    limit:=limit-d; first:=first-d;
+    while k<=limit do
+      begin buffer[k]:=buffer[k+d]; incr(k);
+      end;
+    goto start_cs;
+    end;
+  end;
+end
+@y
+@<If an expanded...@>=
+begin if buffer[k]=cur_chr then @+if cat=sup_mark then @+if k<limit then
+  begin c:=buffer[k+1]; @+if c<@'200 then {yes, one is indeed present}
+    begin d:=2;
+    if is_hex(c) then @+if k+2<=limit then
+      begin cc:=buffer[k+2]; @+if is_hex(cc) then incr(d);
+      end;
+    if d>2 then
+      begin hex_to_cur_chr; buffer[k-1]:=cur_chr;
+      end
+    else if c<@'100 then buffer[k-1]:=c+@'100
+    else buffer[k-1]:=c-@'100;
+    limit:=limit-d; first:=first-d;
+    l:=k; cur_chr:=buffer[k-1]; cat:=cat_code(cur_chr);
+    while l<=limit do
+      begin buffer[l]:=buffer[l+d]; incr(l);
+      end;
+    goto start_cs;
+    end;
+  end;
+end
 @z
 
 @x [24.356] l.7437 - pTeX: scan control sequence (cont)
@@ -1591,8 +1658,26 @@ begin repeat cur_chr:=buffer[k]; incr(k);
     begin cat:=kcat_code(cur_chr); incr(k);
     end
   else cat:=cat_code(cur_chr);
+  if buffer[k]=cur_chr then @+if cat=sup_mark then @+if k<limit then
+    begin c:=buffer[k+1]; @+if c<@'200 then {yes, one is indeed present}
+      begin d:=2;
+      if is_hex(c) then @+if k+2<=limit then
+        begin cc:=buffer[k+2]; @+if is_hex(cc) then incr(d);
+        end;
+      if d>2 then
+        begin hex_to_cur_chr; buffer[k-1]:=cur_chr;
+        end
+      else if c<@'100 then buffer[k-1]:=c+@'100
+      else buffer[k-1]:=c-@'100;
+      limit:=limit-d; first:=first-d;
+      l:=k; cur_chr:=buffer[k-1]; cat:=cat_code(cur_chr);
+      while l<=limit do
+        begin buffer[l]:=buffer[l+d]; incr(l);
+        end;
+      end;
+    end;
 until not((cat=letter)or(cat=kanji)or(cat=kana))or(k>limit);
-@<If an expanded...@>;
+{@@<If an expanded...@@>;}
 if not((cat=letter)or(cat=kanji)or(cat=kana)) then decr(k);
 if cat=other_kchar then decr(k); {now |k| points to first nonletter}
 if k>loc+1 then {multiletter control sequence has been scanned}
@@ -1819,18 +1904,24 @@ toks_register,assign_toks,def_family,set_font,def_font,def_jfont,def_tfont:
 @z
 
 @x [26.414] l.8358 - pTeX:
+@ @<Fetch a character code from some table@>=
+begin scan_char_num;
 if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m<math_code_base then scanned_result(equiv(m+cur_val))(int_val)
 else scanned_result(eqtb[m+cur_val].int)(int_val);
+end
 @y
+@ @<Fetch a character code from some table@>=
+begin scan_char_num;
 if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m=kcat_code_base then scanned_result(equiv(m+Hi(cur_val)))(int_val)
 else if m<math_code_base then
-  begin if iskanji1(Hi(cur_val)) then
+  begin if check_kanji(cur_val)>0 then
   scanned_result(equiv(m+Hi(cur_val)))(int_val)
   else scanned_result(equiv(m+cur_val))(int_val)
   end
 else scanned_result(eqtb[m+cur_val].int)(int_val);
+end
 @z
 
 @x [26.420] l.8463 - pTeX: Fetch a box dimension: dir_node
@@ -2072,7 +2163,7 @@ kuten_code: begin
 kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else if KANJI(cx)=0 then print_char(cur_chr)
-  else begin print_char(Hi(cx)); print_char(Lo(cx)); end;
+  else print_kanji(cx);
 @z
 
 @x [28.487] l.9516 - pTeX: iftdir, ifydir, iftbox, ifybox
@@ -3111,8 +3202,7 @@ procedure print_fam_and_char(@!p:pointer;@!t:small_number);
 var @!cx:KANJI_code; {temporary register for KANJI}
 begin print_esc("fam"); print_int(fam(p)); print_char(" ");
 if t=math_char then print_ASCII(qo(character(p)))
-else  begin KANJI(cx):=math_kcode_nucleus(p);
-  print_char(Hi(cx)); print_char(Lo(cx));
+else  begin KANJI(cx):=math_kcode_nucleus(p); print_kanji(cx);
   end;
 @z
 
@@ -5706,7 +5796,7 @@ begin k:=0;
 	cx:=kansuji_char(dig[k]);
 	if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(cx)
 	else if (proc_kanji_code=euc_enc) then cx:=JIStoEUC(cx);
-    print_char(Hi(cx)); print_char(Lo(cx));
+    print_kanji(cx);
     end;
   end;
 end;
@@ -6547,6 +6637,14 @@ if inhibit_glue_flag<>true then
   end;
 end;
 skip_loop: inhibit_glue_flag:=false;
+
+@ @<Basic printing...@>=
+procedure print_kanji(@!s:KANJI_code); {prints a single character}
+begin
+if s>255 then
+  begin print_visible_char(Hi(s)); print_visible_char(Lo(s));
+  end else print_char(s);
+end;
 
 @* \[56] System-dependent changes.
 @z

@@ -1215,6 +1215,9 @@ getrandomseed()
    to eof.  Otherwise, we return `true' and set last = first +
    length(line except trailing whitespace).  */
 
+#ifdef KANJI
+static int injis=0;
+#endif /* KANJI */
 boolean
 input_line P1C(FILE *, f)
 {
@@ -1224,7 +1227,6 @@ input_line P1C(FILE *, f)
   last = first;
 #ifdef KANJI
   while (last < bufsize-3 && (i = getc (f)) != EOF && i != '\n' && i != '\r') {
-    static int injis=0;
     if (i == '\033') { /* ESC */
       if ((i = getc(f)) == '$') { /* Kanji-In */
         i = getc(f);
@@ -1265,8 +1267,12 @@ input_line P1C(FILE *, f)
     buffer[last++] = i;
 #endif /* KANJI */
 
-  if (i == EOF && errno != EINTR && last == first)
+  if (i == EOF && errno != EINTR && last == first) {
+#ifdef KANJI
+    injis = 0;
+#endif /* KANJI */
     return false;
+  }
 
   /* We didn't get the whole line because our buffer was too small.  */
   if (i != EOF && i != '\n' && i != '\r') {

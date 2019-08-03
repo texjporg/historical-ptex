@@ -21,7 +21,7 @@ const_string PTEXHELP[] = {
 "  -help                print this message and exit.",
 NULL };
 
-#define BANNER "This is pTeX, Version 3.14159-p3.1.4"
+#define BANNER "This is pTeX, Version 3.14159-p3.1.5"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP PTEXHELP
