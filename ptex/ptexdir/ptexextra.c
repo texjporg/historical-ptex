@@ -49,7 +49,7 @@
 #elif defined (Omega)
 #include <omegadir/omegaextra.h>
 #else
-#define BANNER "This is TeX, Version 3.14159"
+#define BANNER "This is TeX, Version 3.141592"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP TEXHELP
@@ -64,7 +64,7 @@
 #define edit_var "TEXEDIT"
 #endif /* TeX */
 #ifdef MF
-#define BANNER "This is Metafont, Version 2.7182"
+#define BANNER "This is Metafont, Version 2.71828"
 #define COPYRIGHT_HOLDER "D.E. Knuth"
 #define AUTHOR NULL
 #define PROGRAM_HELP MFHELP
@@ -128,9 +128,13 @@ static void parse_src_specials_option P1H(const_string);
 extern TEXDLL void mainbody P1H(void);
 
 /* Parsing a first %&-line in the input file. */
-static void parse_first_line P1H(void);
+static void parse_first_line P1H(const_string);
 
+/* Parse option flags. */
 static void parse_options P2H(int, string *);
+
+/* Try to figure out if we have been given a filename. */
+static string get_input_file_name P1H(void);
 
 #ifdef MP
 /* name of TeX program to pass to makempx */
@@ -152,6 +156,8 @@ string locale_name = "";
 void TEXDLL
 maininit P2C(int, ac, string *, av)
 {
+  string main_input_file;
+
   /* Save to pass along to topenin.  */
   argc = ac;
   argv = av;
@@ -186,10 +192,30 @@ prockanjicode = SJIS;
      any path searching.  */
   kpse_set_program_name (argv[0], user_progname);
 
+  /* FIXME: gather engine names in a single spot. */
+  xputenv("engine", TEXMFENGINENAME);
+  
+  /* Were we given a simple filename? */
+  main_input_file = get_input_file_name();
+
+  /* Second chance to activate file:line:error style messages, this
+     time from texmf.cnf. */
+  if (filelineerrorstylep < 0) {
+    filelineerrorstylep = 0;
+  } else if (!filelineerrorstylep) {
+    string file_line_error_style = kpse_var_value ("file_line_error_style");
+    filelineerrorstylep = (file_line_error_style
+                           && (*file_line_error_style == 't'
+                               || *file_line_error_style == 'y'
+                               || *file_line_error_style == '1'));
+  }
+
   /* If no dump default yet, and we're not doing anything special on
      this run, we may want to look at the first line of the main input
      file for a %&<dumpname> specifier.  */
-  if (!parsefirstlinep) {
+  if (parsefirstlinep < 0) {
+    parsefirstlinep = 0;
+  } else if (!parsefirstlinep) {
     string parse_first_line = kpse_var_value ("parse_first_line");
     parsefirstlinep = (parse_first_line
                        && (*parse_first_line == 't'
@@ -197,10 +223,11 @@ prockanjicode = SJIS;
                            || *parse_first_line == '1'));
   }
   if (parsefirstlinep && (!dump_name || !translate_filename)) {
-    parse_first_line ();
+    parse_first_line (main_input_file);
   }
   /* Check whether there still is no translate_filename known.  If so,
      use the default_translate_filename. */
+  /* FIXME: deprecated. */
   if (!translate_filename) {
     translate_filename = default_translate_filename;
   }
@@ -241,6 +268,17 @@ prockanjicode = SJIS;
     }
   }
 
+#ifdef TeX
+#if !defined(Omega) && !defined(eOmega) && !defined(Aleph)
+  /* Sanity check: -mltex and -enc only work in combination with -ini. */
+  if (!iniversion) {
+    if (mltexp) {
+      fprintf(stderr, "-mltex only works with -ini\n");
+    }
+  }
+#endif
+#endif
+  
   /* If we've set up the fmt/base default in any of the various ways
      above, also set its length.  */
   if (dump_name) {
@@ -281,7 +319,9 @@ prockanjicode = SJIS;
   kpse_set_program_enabled (kpse_fmt_format, MAKE_TEX_FMT_BY_DEFAULT,
                             kpse_src_compile);
 
-  if (!shellenabledp) {
+  if (shellenabledp < 0) {
+    shellenabledp = 0;
+  } else if (!shellenabledp) {
     string shell_escape = kpse_var_value ("shell_escape");
     shellenabledp = (shell_escape
                      && (*shell_escape == 't'
@@ -560,7 +600,10 @@ ipcpage P1C(int, is_eof)
    can be parsed.  */
 
 static int
-tcx_get_num P3C(unsigned, line_count,  string, start,  string *, post)
+tcx_get_num P4C(int, upb,
+                unsigned, line_count,
+                string, start,
+                string *, post)
 {
   int num = strtol (start, post, 0);
   assert (post && *post);
@@ -573,23 +616,25 @@ tcx_get_num P3C(unsigned, line_count,  string, start,  string *, post)
       fprintf (stderr, "%s:%d: Expected numeric constant, not `%s'.\n",
                translate_filename, line_count, start);
     num = -1;
-  } else if (num < 0 || num > 255) {
-    fprintf (stderr, "%s:%d: Destination charcode %d <0 or >255.\n",
-             translate_filename, line_count, num);
+  } else if (num < 0 || num > upb) {
+    fprintf (stderr, "%s:%d: Destination charcode %d <0 or >%d.\n",
+             translate_filename, line_count, num, upb);
     num = -1;
   }  
 
   return num;
 }
 
-
-/* Look for the character translation file FNAME along the same path as
+/* Update the xchr, xord, and xprn arrays for TeX, allowing a
+   translation table specified at runtime via an external file.
+   Look for the character translation file FNAME along the same path as
    tex.pool.  If no suffix in FNAME, use .tcx (don't bother trying to
    support extension-less names for these files).  */
-/* Probably a new format ought to be introduced for these files. */
 
-static void
-read_char_translation_file P1H(void)
+/* FIXME: A new format ought to be introduced for these files. */
+
+void
+readtcxfile P1H(void)
 {
   string orig_filename;
   if (!find_suffix (translate_filename)) {
@@ -611,24 +656,35 @@ read_char_translation_file P1H(void)
 
       line_count++;
 
-      first = tcx_get_num (line_count, line, &start2);
+      first = tcx_get_num (255, line_count, line, &start2);
       if (first >= 0) {
-        string extra;
+        string start3;
         int second;
+        int printable;
         
-        /* I suppose we could check for nonempty junk following the second
-           charcode, but let's not bother.  */
-        second = tcx_get_num (line_count, start2, &extra);
+        second = tcx_get_num (255, line_count, start2, &start3);
         if (second >= 0) {
+            /* I suppose we could check for nonempty junk following the
+               "printable" code, but let's not bother.  */
+          string extra;
+            
           /* If they mention a second code, make that the internal number.  */
           xord[first] = second;
           xchr[second] = first;
+
+          printable = tcx_get_num (1, line_count, start3, &extra);
+          if (printable == -1)
+            printable = 0;
+          /* Don't allow the 7bit ASCII set to become unprintable. */
+          if (32 <= second && second <= 126)
+            printable = 1;
         } else {
           second = first; /* else make internal the same as external */
+          /* If they mention a charcode, call it printable.  */
+          printable = 1;
         }
 
-        /* If they mention a charcode, call it printable.  */
-        isprintable[second] = 1;
+        xprn[second] = printable;
       }
       free (line);
     }
@@ -637,60 +693,64 @@ read_char_translation_file P1H(void)
     WARNING1 ("Could not open char translation file `%s'", orig_filename);
   }
 }
-
-/* Set up the xchr, xord, and is_printable arrays for TeX, allowing a
-   translation table specified at runtime via an external file.  By
-   default, no characters are translated (all 256 simply map to
-   themselves) and only printable ASCII is_printable.  We must
-   initialize xord at the same time as xchr, and not use the
-   ``system-independent'' code in tex.web, because we want
-   settings in the tcx file to override the defaults, and not simply
-   assign everything in numeric order.  */
-
-void
-setupcharset P1H(void)
-{
-  unsigned c;
-  
-  /* Set up defaults.  Doing this first means the tcx file doesn't have
-     to boringly specify all the usual stuff.  It also means it can't
-     override the usual stuff.  This is a good thing, because of the way
-     we handle the string pool. */
-  for (c = 0; c <= 255; c++) {
-    xchr[c] = xord[c] = c;
-    isprintable[c] = (32 <= c && c <= 126);
-  }
-
-#if 0
-  /* Get value from cnf file/environment variable if the option gives
-     a special value.  */
-  if (translate_filename && STREQ (translate_filename, "-")) {
-    free (translate_filename);
-    translate_filename = kpse_var_value ("CHARTRANSLATE");
-  }
-#endif
-
-  /* The expansion is nonempty if the variable is set.  */
-  if (translate_filename) {
-    read_char_translation_file ();
-  }
-  /* Code to set the isprintable array based on the locale.  The code
-   * was removed because in this form it affected not just output to
-   * the terminal and log file, but also the results of \write.
-   */
-#if 0
-  else {
-    /* Use the locale to adjust the isprintable array. */
-    for (c = 0; c <= 255; c++) {
-      if (!isprintable[c] && isprint(c)) {
-        isprintable[c] = 1;
-      }
-    }
-  }
-#endif
-}  
 #endif /* !Omega */
 #endif /* TeX || MF || MP [character translation] */
+
+/* Normalize quoting of filename -- that is, only quote if there is a space,
+   and always use the quote-name-quote style. */
+string
+normalize_quotes P2C(const_string, name, const_string, mesg)
+{
+    boolean quoted = false;
+    boolean must_quote = (strchr(name, ' ') != NULL);
+    /* Leave room for quotes and NUL. */
+    string ret = (string)xmalloc(strlen(name)+3);
+    string p;
+    const_string q;
+    p = ret;
+    if (must_quote)
+        *p++ = '"';
+    for (q = name; *q; q++) {
+        if (*q == '"')
+            quoted = !quoted;
+        else
+            *p++ = *q;
+    }
+    if (must_quote)
+        *p++ = '"';
+    *p = '\0';
+    if (quoted) {
+        fprintf(stderr, "! Unbalanced quotes in %s %s\n", mesg, name);
+        uexit(1);
+    }
+    return ret;
+}
+
+/* Getting the input filename. */
+string
+get_input_file_name P1H(void)
+{
+  string input_file_name = NULL;
+
+  if (argv[optind] && argv[optind][0] != '&' && argv[optind][0] != '\\') {
+    /* Not &format, not \input, so assume simple filename. */    
+    string name = normalize_quotes(argv[optind], "argument");
+    boolean quoted = (name[0] == '"');
+    if (quoted) {
+        /* Overwrite last quote and skip first quote. */
+        name[strlen(name)-1] = '\0';
+        name++;
+    }
+    input_file_name = kpse_find_file(name, INPUT_FORMAT, false);
+    if (quoted) {
+        /* Undo modifications */
+        name[strlen(name)] = '"';
+        name--;
+    }
+    argv[optind] = name;
+  }
+  return input_file_name;
+}
 
 /* Reading the options.  */
 
@@ -701,47 +761,53 @@ setupcharset P1H(void)
 
 /* SunOS cc can't initialize automatic structs, so make this static.  */
 static struct option long_options[]
-  = { { DUMP_OPTION,              1, 0, 0 },
-      { "help",                   0, 0, 0 },
-      { "ini",                    0, &iniversion, 1 },
-      { "interaction",            1, 0, 0 },
-      { "kpathsea-debug",         1, 0, 0 },
-      { "progname",               1, 0, 0 },
-      { "version",                0, 0, 0 },
-      { "recorder",               0, &recorder_enabled, 1 },
+  = { { DUMP_OPTION,                 1, 0, 0 },
+      { "help",                      0, 0, 0 },
+      { "ini",                       0, &iniversion, 1 },
+      { "interaction",               1, 0, 0 },
+      { "halt-on-error",             0, &haltonerrorp, 1 },
+      { "kpathsea-debug",            1, 0, 0 },
+      { "progname",                  1, 0, 0 },
+      { "version",                   0, 0, 0 },
+      { "recorder",                  0, &recorder_enabled, 1 },
 #ifdef TeX
 #ifdef IPC
-      { "ipc",                    0, &ipcon, 1 },
-      { "ipc-start",              0, &ipcon, 2 },
+      { "ipc",                       0, &ipcon, 1 },
+      { "ipc-start",                 0, &ipcon, 2 },
 #endif /* IPC */
-#ifndef Omega
+#if !defined(Omega) && !defined(eOmega) && !defined(Aleph)
       { "mltex",                  0, &mltexp, 1 },
-#endif /* !Omega */
-      { "output-comment",         1, 0, 0 },
-      { "shell-escape",           0, &shellenabledp, 1 },
-      { "debug-format",           0, &debugformatfile, 1 },
-      { "src-specials",           2, 0, 0 },
+#endif /* !Omega && !eOmega && !Aleph */
+      { "output-comment",            1, 0, 0 },
+      { "output-directory",          1, 0, 0 },
+      { "shell-escape",              0, &shellenabledp, 1 },
+      { "no-shell-escape",           0, &shellenabledp, -1 },
+      { "debug-format",              0, &debugformatfile, 1 },
+      { "src-specials",              2, 0, 0 },
 #endif /* TeX */
 #if defined (TeX) || defined (MF) || defined (MP)
-      { "file-line-error-style",  0, &filelineerrorstylep, 1 },
-      { "jobname",                1, 0, 0 },
-      { "parse-first-line",       0, &parsefirstlinep, 1 },
-#ifndef Omega
-      { "translate-file",         1, 0, 0 },
-      { "default-translate-file", 1, 0, 0 },
-#if defined(WIN32) && defined(OEM)
-      { "oem",                    0, 0, 0 },
-#endif
-#endif /* !Omega */
+      { "file-line-error-style",     0, &filelineerrorstylep, 1 },
+      { "no-file-line-error-style",  0, &filelineerrorstylep, -1 },
+      /* Shorter option names for the above. */
+      { "file-line-error",           0, &filelineerrorstylep, 1 },
+      { "no-file-line-error",        0, &filelineerrorstylep, -1 },
+      { "jobname",                   1, 0, 0 },
+      { "parse-first-line",          0, &parsefirstlinep, 1 },
+      { "no-parse-first-line",       0, &parsefirstlinep, -1 },
+#if !defined(Omega) && !defined(eOmega) && !defined(Aleph)
+      { "translate-file",            1, 0, 0 },
+      { "default-translate-file",    1, 0, 0 },
+      { "8bit",                      0, &eightbitp, 1 },
+#endif /* !Omega && !eOmega && !Aleph */
 #endif /* TeX || MF || MP */
 #if defined (TeX) || defined (MF)
-      { "mktex",                  1, 0, 0 },
-      { "no-mktex",               1, 0, 0 },
+      { "mktex",                     1, 0, 0 },
+      { "no-mktex",                  1, 0, 0 },
 #endif /* TeX or MF */
 #ifdef MP
-      { "T",                      0, &troffmode, 1 },
-      { "troff",                  0, &troffmode, 1 },
-      { "tex",                    1, 0, 0 },
+      { "T",                         0, &troffmode, 1 },
+      { "troff",                     0, &troffmode, 1 },
+      { "tex",                       1, 0, 0 },
 #endif /* MP */
 #ifdef KANJI
       { "kanji",                  1, 0, 0 },
@@ -762,7 +828,8 @@ parse_options P2C(int, argc,  string *, argv)
       break;
 
     if (g == '?') { /* Unknown option.  */
-      usage (argv[0]);
+      /* FIXME: usage (argv[0]); replaced by continue. */
+      continue;
     }
 
     assert (g == 0); /* We have no short option names.  */
@@ -774,13 +841,16 @@ parse_options P2C(int, argc,  string *, argv)
       user_progname = optarg;
 
     } else if (ARGUMENT_IS ("jobname")) {
-      job_name = optarg;
+      job_name = normalize_quotes(optarg, "jobname");
       
     } else if (ARGUMENT_IS (DUMP_OPTION)) {
       dump_name = optarg;
       if (!user_progname) user_progname = optarg;
       dumpoption = true;
 
+    } else if (ARGUMENT_IS ("output-directory")) {
+      output_directory = optarg;
+      
 #ifdef TeX
     } else if (ARGUMENT_IS ("output-comment")) {
       unsigned len = strlen (optarg);
@@ -874,7 +944,7 @@ parse_options P2C(int, argc,  string *, argv)
 #endif /* KANJI */
       
     } else if (ARGUMENT_IS ("help")) {
-       usagehelp (PROGRAM_HELP);
+        usagehelp (PROGRAM_HELP, BUG_ADDRESS);
 
     } else if (ARGUMENT_IS ("version")) {
       printversionandexit (BANNER, COPYRIGHT_HOLDER, AUTHOR);
@@ -942,82 +1012,74 @@ parse_src_specials_option P1C(const_string, opt_list)
    Also call kpse_reset_program_name to ensure the correct paths for the
    format are used.  */
 static void
-parse_first_line P1H(void)
+parse_first_line P1C(const_string, filename)
 {
-  char first_char = optind < argc ? argv[optind][0] : 0;
+  FILE *f = filename ? fopen (filename, FOPEN_R_MODE) : NULL;
+  if (f) {
+    string first_line = read_line (f);
+    xfclose (f, filename);
 
-  if (first_char && first_char != '&' && first_char != '\\') {
-    /* If the file can't be found, don't look too hard now.  We'll
-       detect that it's missing in the normal course of things and give
-       the error then.  */
-    string in_name = kpse_find_file (argv[optind], INPUT_FORMAT, false);
-    FILE *f = in_name ? fopen (in_name, FOPEN_R_MODE) : NULL;
-    if (f) {
-      string first_line = read_line (f);
-      xfclose (f, in_name);
+    /* We deal with the general format "%&fmt --translate-file=tcx" */
+    /* The idea of using this format came from Wlodzimierz Bzyl
+       <matwb@monika.univ.gda.pl> */
+    if (first_line && first_line[0] == '%' && first_line[1] == '&') {
+      /* Parse the first line into at most three space-separated parts. */
+      char *s;
+      char *part[4];
+      int npart;
+      char **parse;
 
-      /* We deal with the general format "%&fmt --translate-file=tcx" */
-      /* The idea of using this format came from Wlodzimierz Bzyl
-         <matwb@monika.univ.gda.pl> */
-      if (first_line && first_line[0] == '%' && first_line[1] == '&') {
-        /* Parse the first line into at most three space-separated parts. */
-        char *s;
-        char *part[4];
-        int npart;
-        char **parse;
-
-        for (s = first_line+2; ISBLANK(*s); ++s)
-          ;
-        npart = 0;
-        while (*s && npart != 3) {
-          part[npart++] = s;
-          while (*s && *s != ' ') s++;
-          while (*s == ' ') *s++ = '\0';
+      for (s = first_line+2; ISBLANK(*s); ++s)
+        ;
+      npart = 0;
+      while (*s && npart != 3) {
+        part[npart++] = s;
+        while (*s && *s != ' ') s++;
+        while (*s == ' ') *s++ = '\0';
+      }
+      part[npart] = NULL;
+      parse = part;
+      /* Look at what we've got.  Very crude! */
+      if (*parse && **parse != '-') {
+        /* A format name */
+        if (dump_name) {
+          /* format already determined, do nothing. */
+        } else {
+          string f_name = concat (part[0], DUMP_EXT);
+          string d_name = kpse_find_file (f_name, DUMP_FORMAT, false);
+          if (d_name && kpse_readable_file (d_name)) {
+            dump_name = xstrdup (part[0]);
+            kpse_reset_program_name (dump_name);
+            /* Tell TeX/MF/MP we have a %&name line... */
+            dumpline = true;
+          }
+          free (f_name);
         }
-        part[npart] = NULL;
-        parse = part;
-        /* Look at what we've got.  Very crude! */
-        if (*parse && **parse != '-') {
-          /* A format name */
-          if (dump_name) {
-              /* format already determined, do nothing. */
-          } else {
-            string f_name = concat (part[0], DUMP_EXT);
-            string d_name = kpse_find_file (f_name, DUMP_FORMAT, false);
-            if (d_name && kpse_readable_file (d_name)) {
-              dump_name = xstrdup (part[0]);
-              kpse_reset_program_name (dump_name);
-              /* Tell TeX/MF/MP we have a %&name line... */
-              dumpline = true;
-            }
-            free (f_name);
-          }
-          parse++;
+        parse++;
+      }
+      /* The tcx stuff, if any.  Should we support the -translate-file
+         form as well as --translate-file?  */
+      if (*parse) {
+        if (translate_filename) {
+          /* TCX file already set, do nothing. */
+        } else if (STREQ (*parse, "--translate-file")) {
+          s = *(parse+1);
+        } else if (STREQ (*parse, "-translate-file")) {
+          s = *(parse+1);
+        } else if (STRNEQ (*parse, "--translate-file=", 17)) {
+          s = *parse+17;
+        } else if (STRNEQ (*parse, "-translate-file=", 16)) {
+          s = *parse+16;
         }
-        /* The tcx stuff, if any.  Should we support the -translate-file
-           form as well as --translate-file?  */
-        if (*parse) {
-          if (translate_filename) {
-            /* TCX file already set, do nothing. */
-          } else if (STREQ (*parse, "--translate-file")) {
-            s = *(parse+1);
-          } else if (STREQ (*parse, "-translate-file")) {
-            s = *(parse+1);
-          } else if (STRNEQ (*parse, "--translate-file=", 17)) {
-            s = *parse+17;
-          } else if (STRNEQ (*parse, "-translate-file=", 16)) {
-            s = *parse+16;
-          }
-          /* Just set the name, no sanity checks here. */
-          /* FIXME: remove trailing spaces. */
-          if (s && *s) {
-            translate_filename = xstrdup(s);
-          }
+        /* Just set the name, no sanity checks here. */
+        /* FIXME: remove trailing spaces. */
+        if (s && *s) {
+          translate_filename = xstrdup(s);
         }
       }
-      if (first_line)
-        free (first_line);
     }
+    if (first_line)
+      free (first_line);
   }
 }
 
@@ -1040,7 +1102,15 @@ opennameok P3C(const_string, fname, const_string, check_var,
      puzzling...
      This function contains several return statements...  */
 
+  char  mess[8];
   const_string open_choice = kpse_var_value (check_var);
+
+  if (strcmp(check_var, "openin_any") == 0)
+    strcpy(mess, "reading");
+  else if (strcmp(check_var, "openout_any") == 0)
+    strcpy(mess, "writing");
+  else
+    mess[0] = '\0';
 
   if (!open_choice) open_choice = default_choice;
 
@@ -1053,8 +1123,8 @@ opennameok P3C(const_string, fname, const_string, check_var,
     /* Disallow .rhosts, .login, etc.  Allow .tex (for LaTeX).  */
     if (base[0] == 0 ||
         (base[0] == '.' && !IS_DIR_SEP(base[1]) && !STREQ (base, ".tex"))) {
-      fprintf(stderr, "%s: Not writing to %s (%s = %s).\n",
-              program_invocation_name, fname, check_var, open_choice);
+      fprintf(stderr, "%s: Not %s to %s (%s = %s).\n",
+              program_invocation_name, mess, fname, check_var, open_choice);
       return false;
     }
   }
@@ -1073,23 +1143,23 @@ opennameok P3C(const_string, fname, const_string, check_var,
     if (!texmfoutput || *texmfoutput == '\0'
         || fname != strstr (fname, texmfoutput)
         || !IS_DIR_SEP(fname[strlen(texmfoutput)])) {
-      fprintf(stderr, "%s: Not writing to %s (%s = %s).\n",
-              program_invocation_name, fname, check_var, open_choice);
+      fprintf(stderr, "%s: Not %s to %s (%s = %s).\n",
+              program_invocation_name, mess, fname, check_var, open_choice);
       return false;
     }
   }
   /* For all pathnames, we disallow "../" at the beginning or "/../"
      anywhere.  */
   if (fname[0] == '.' && fname[1] == '.' && IS_DIR_SEP(fname[2])) {
-    fprintf(stderr, "%s: Not writing to %s (%s = %s).\n",
-            program_invocation_name, fname, check_var, open_choice);
+    fprintf(stderr, "%s: Not %s to %s (%s = %s).\n",
+            program_invocation_name, mess, fname, check_var, open_choice);
     return false;
   } else {
     const_string dotpair = strstr (fname, "..");
     /* If dotpair[2] == DIR_SEP, then dotpair[-1] is well-defined. */
     if (dotpair && IS_DIR_SEP(dotpair[2]) && IS_DIR_SEP(dotpair[-1])) {
-      fprintf(stderr, "%s: Not writing to %s (%s = %s).\n",
-              program_invocation_name, fname, check_var, open_choice);
+      fprintf(stderr, "%s: Not %s to %s (%s = %s).\n",
+              program_invocation_name, mess, fname, check_var, open_choice);
       return false;
     }
   }
@@ -1215,18 +1285,22 @@ getrandomseed()
    to eof.  Otherwise, we return `true' and set last = first +
    length(line except trailing whitespace).  */
 
-#ifdef KANJI
-static int injis=0;
-#endif /* KANJI */
 boolean
 input_line P1C(FILE *, f)
 {
   int i;
 
+#ifdef KANJI
+/* new line input method */
+  static int injis=0;
+#endif
+
   /* Recognize either LF or CR as a line terminator.  */
   last = first;
 #ifdef KANJI
+/* new line input method */
   while (last < bufsize-3 && (i = getc (f)) != EOF && i != '\n' && i != '\r') {
+    int j;
     if (i == '\033') { /* ESC */
       if ((i = getc(f)) == '$') { /* Kanji-In */
         i = getc(f);
@@ -1235,7 +1309,18 @@ input_line P1C(FILE *, f)
         } else {
           buffer[last++] = '\033';
           buffer[last++] = '$';
-          buffer[last++] = i;
+          if(i == EOF) {
+             break;
+          } else if(i == '\n') {
+             break;
+          } else if(i == '\r') {
+             j = getc(f);
+             if(j != '\n') ungetc(j, f);
+             else i = j;
+             break;
+          } else {
+             buffer[last++] = i;
+	  }
         }
       } else if (i == '(') { /* Kanji-out */
         i = getc(f);
@@ -1244,35 +1329,77 @@ input_line P1C(FILE *, f)
         } else {
           buffer[last++] = '\033';
           buffer[last++] = '(';
-          buffer[last++] = i;
+          if(i == EOF) {
+             break;
+          } else if(i == '\n') {
+             break;
+          } else if(i == '\r') {
+             j = getc(f);
+             if(j != '\n') ungetc(j, f);
+             else i = j;
+             break;
+	  } else {
+             buffer[last++] = i;
+	  }
         }
       } else {
         buffer[last++] = '\033';
-        buffer[last++] = i;
+        if(i == EOF) {
+           break;
+        } else if(i == '\n') {
+           break;
+        } else if(i == '\r') {
+           j = getc(f);
+           if(j != '\n') ungetc(j, f);
+           else i = j;
+           break;
+	} else {
+           buffer[last++] = i;
+	}
       }
     } else { /* rather than ESC */
       if (injis == 0) {
         buffer[last++] = i;
       } else {
+        j = getc(f);
+        if(j == EOF) {
+           buffer[last++] = i;
+           i = j;
+           break;
+        } else if(j == '\n') {
+           buffer[last++] = i;
+           i = j;
+           break;
+	} else if(j == '\r') {
+           buffer[last++] = i;
+           i = j;
+           j = getc(f);
+           if(j != '\n') ungetc(j, f);
+           else i = j;
+           break;
         /* JIS encoding */
-        if (prockanjicode==SJIS) i = JIStoSJIS(i << 8 | getc(f));
-		else i = JIStoEUC(i << 8 | getc(f));
-        buffer[last++] = (i >> 8) & 0xff;
-        buffer[last++] = i & 0xff;
+        } else {
+           if (prockanjicode==SJIS) {
+              i = JIStoSJIS(i << 8 | j);
+	   } else {
+              i = JIStoEUC(i << 8 | j);
+           }
+           buffer[last++] = (i >> 8) & 0xff;
+           buffer[last++] = i & 0xff;
+	}
       }
     }
   }
+
+  if(i == EOF || i == '\n' || i == '\r')
+    injis = 0;
 #else /* KANJI */
   while (last < bufsize && (i = getc (f)) != EOF && i != '\n' && i != '\r')
     buffer[last++] = i;
 #endif /* KANJI */
 
-  if (i == EOF && errno != EINTR && last == first) {
-#ifdef KANJI
-    injis = 0;
-#endif /* KANJI */
+  if (i == EOF && errno != EINTR && last == first)
     return false;
-  }
 
   /* We didn't get the whole line because our buffer was too small.  */
   if (i != EOF && i != '\n' && i != '\r') {
@@ -1304,7 +1431,12 @@ input_line P1C(FILE *, f)
      buffer[i] = xord[buffer[i]];
 #endif
 
-    return true;
+#ifdef KANJI
+  for (i = last+1; (i < last + 5 && i < bufsize) ; i++)
+    buffer[i] = '\0';
+#endif
+
+  return true;
 }
 
 /* This string specifies what the `e' option does in response to an
@@ -1657,8 +1789,10 @@ makesrcspecial P2C(strnumber, srcfilename,
   size_t len = strlen(filename);
   char * s = buf;  
 
-  sprintf (buf, "src:%d%s", lineno, 
-                  (isdigit(*filename) ? " " : ""));
+  /* Always put a space after the number, which makes things easier
+   * to parse.
+   */
+  sprintf (buf, "src:%d ", lineno);
 
   if (poolptr + strlen(buf) + strlen(filename) >= poolsize) {
        fprintf (stderr, "\nstring pool overflow\n"); /* fixme */
@@ -1699,21 +1833,25 @@ callmakempx P2C(string, mpname,  string, mpxname)
   } else {
     /* We will invoke something. Compile-time default if nothing else.  */
     string cmd;
+    string qmpname = normalize_quotes(mpname, "mpname");
+    string qmpxname = normalize_quotes(mpxname, "mpxname");
     if (!cnf_cmd)
       cnf_cmd = xstrdup (MPXCOMMAND);
 
     if (troffmode)
       cmd = concatn (cnf_cmd, " -troff ",
-                     mpname, " ", mpxname, NULL);
+                     qmpname, " ", qmpxname, NULL);
     else if (mpost_tex_program && *mpost_tex_program)
       cmd = concatn (cnf_cmd, " -tex=", mpost_tex_program, " ",
-                   mpname, " ", mpxname, NULL);
+                     qmpname, " ", qmpxname, NULL);
     else
-      cmd = concatn (cnf_cmd, " -tex ", mpname, " ", mpxname, NULL);
+      cmd = concatn (cnf_cmd, " -tex ", qmpname, " ", qmpxname, NULL);
 
     /* Run it.  */
     ret = system (cmd);
     free (cmd);
+    free (qmpname);
+    free (qmpxname);
   }
 
   free (cnf_cmd);

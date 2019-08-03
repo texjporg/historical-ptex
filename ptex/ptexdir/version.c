@@ -27,7 +27,7 @@ printversionandexit P3C(const_string, banner,
   prog_version = strtok(NULL, ",") + sizeof(" Version ") - 1;
 
   /* The Web2c version string starts with a space.  */
-  printf ("%s%s %s%s\n", prog_name, versionstring, prog_version, term_code);
+  printf ("%s %s%s%s\n", prog_name, prog_version, term_code, versionstring);
   puts (kpathsea_version_string);
 
   if (copyright_holder) {

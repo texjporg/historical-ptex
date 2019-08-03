@@ -18,19 +18,31 @@ sed -e '/^% ptex, platex, platex209 macros paths./d
 /^ptex_inputs *=/d
 /^TEXINPUTS.platex209 *=/d
 /^TEXINPUTS.platex2e *=/d
+/^TEXINPUTS.platex-sjis *=/d
+/^TEXINPUTS.platex-euc *=/d
+/^TEXINPUTS.platex-jis *=/d
 /^TEXINPUTS.platex *=/d
+/^TEXINPUTS.ptex-sjis *=/d
+/^TEXINPUTS.ptex-euc *=/d
+/^TEXINPUTS.ptex-jis *=/d
 /^TEXINPUTS.ptex *=/d
 /^TEXINPUTS.iniptex *=/d
 /^BIBINPUTS.jbibtex *=/d
 /^BSTINPUTS.jbibtex *=/d' ${cnffile} | \
-sed -e '/^TEXINPUTS.jadetex =/ a\
+sed -e '/^TEXINPUTS.xetex *=/ a\
 \
 % pTeX.\
 ptex_inputs = .;$TEXMF/{ptex,tex}/{plain,generic,}//\
 platex209_inputs = .;$TEXMF/{ptex,tex}/{platex209,plain,platex,}//\
 platex2e_inputs = .;$TEXMF/{ptex,tex}/{platex,latex,generic,}//\
 TEXINPUTS.platex209 = $platex209_inputs\
+TEXINPUTS.platex-sjis = $platex2e_inputs\
+TEXINPUTS.platex-euc = $platex2e_inputs\
+TEXINPUTS.platex-jis = $platex2e_inputs\
 TEXINPUTS.platex = $platex2e_inputs\
+TEXINPUTS.ptex-sjis = $ptex_inputs\
+TEXINPUTS.ptex-euc = $ptex_inputs\
+TEXINPUTS.ptex-jis = $ptex_inputs\
 TEXINPUTS.ptex = $ptex_inputs\
 
 /^% BibTeX bibliographies and style files./ a\

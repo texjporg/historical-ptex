@@ -50,6 +50,20 @@ extern integer KUTENtoSJIS(integer);
 #define putc(c,fp) putc2(c,fp)
 #endif /* *not* KANJI_C */
 
+#ifdef TeX
+#undef TEXMFPOOLNAME
+#undef TEXMFENGINENAME
+#define TEXMFPOOLNAME   "ptex.pool"
+#define TEXMFENGINENAME "ptex"
+#endif /* TeX */
+
+#ifdef MP
+#undef TEXMFPOOLNAME
+#undef TEXMFENGINENAME
+#define TEXMFPOOLNAME   "jmp.pool"
+#define TEXMFENGINENAME "jmpost"
+#endif /* MP */
+
 #ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
 #else

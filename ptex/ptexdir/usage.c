@@ -15,14 +15,14 @@ usage P1C(const_string, str)
    limitations (sigh).
 */
 void
-usagehelp P1C(const_string*, message)
+usagehelp P2C(const_string*, message, const_string, bug_email)
 {
-    while (*message) {
-        fputs(*message, stdout);
-        putchar('\n');
-        ++message;
-    }
-    putchar('\n');
-	puts("Email bug reports to www-ptex@ascii.co.jp");
-    uexit(0);
+  if (!bug_email)
+    bug_email = "www-ptex@ascii.co.jp";
+  while (*message) {
+    fprintf(stdout, "%s\n", *message);
+    ++message;
+  }
+  fprintf(stdout, "\nEmail bug reports to %s.\n", bug_email);
+  uexit(0);
 }

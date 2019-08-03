@@ -174,7 +174,7 @@ end.
 @x [still 14]
 @!buf_size=1000; {maximum number of characters in an input line (or string)}
 @y
-@!buf_size=3000; {maximum number of characters in an input line (or string)}
+@!buf_size=9000; {maximum number of characters in an input line (or string)}
 @z
 
 @x [still 14]
@@ -1491,7 +1491,7 @@ begin
       min_crossrefs := atoi (optarg);
       
     end else if argument_is ('help') then begin
-      usage_help (JBIBTEX_HELP);
+      usage_help (JBIBTEX_HELP, nil);
 
     end else if argument_is ('version') then begin
       print_version_and_exit (banner, 'Oren Patashnik', nil);

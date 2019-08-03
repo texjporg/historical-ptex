@@ -20,13 +20,13 @@ ac_include ../../make/common.mk
 ac_include ../../make/programs.mk
 
 @MAINT@ifeq ($(CC), gcc)
-@MAINT@XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat -D__USE_FIXED_PROTOTYPES__
+@MAINT@XDEFS = -Wimplicit -Wreturn-type -Wcomment -Wformat
 @MAINT@endif
 
 # With --enable-ipc, TeX may need to link with -lsocket.
 socketlibs = @socketlibs@
 
-common_makeargs = $(MFLAGS) CC='$(CC)' CFLAGS='$(CFLAGS)' $(XMAKEARGS)
+common_makeargs = $(MFLAGS) CC='$(CC)' CFLAGS='$(CFLAGS)' LDFLAGS='$(LDFLAGS)' $(XMAKEARGS)
 install_makeargs = INSTALL='$(INSTALL)' INSTALL_DATA='$(INSTALL_DATA)' \
   INSTALL_PROGRAM='$(INSTALL_PROGRAM)' \
   $(makevars) $(common_makeargs)
@@ -34,7 +34,7 @@ install_makeargs = INSTALL='$(INSTALL)' INSTALL_DATA='$(INSTALL_DATA)' \
 proglib = ../lib/lib.a
 
 # The sh script that does the conversion:
-web2c = srcdir=$(thisdir) $(shared_env) $(SHELL) $(thisdir)/pconvert
+web2c = srcdir=$(thisdir) $(SHELL) $(thisdir)/pconvert
 # Additional dependencies:
 web2c_aux = $(thisdir)/pconvert $(cwebdir)/common.defines \
 	$(thisdir)/kanji.defines
@@ -46,7 +46,7 @@ web2c_programs = $(cwebdir)/fixwrites $(cwebdir)/splitup $(cwebdir)/web2c
 .p.c: # really depends on $(web2c_programs), and generates .h.
 	 $(web2c) $*
 .ch.p: # really depends on $(srcdir)/tangle; for ptex, also generates .pool
-	$(shared_env) $(srcdir)/tangle $(thisdir)/$*.web $<
+	$(srcdir)/tangle $(thisdir)/$*.web $<
 
 # These definitions have to come before the rules that expand them.
 # The tex{ini,0,1,2}.c files are created by splitup, run as part of convert.
@@ -87,7 +87,7 @@ $(ptex_c) texcoerce.h texd.h: ptex.p $(web2c_aux) $(web2c_programs)
 
 ptex.p: ptex.web ptex.ch $(srcdir)/tangle
 
-ptex.web: $(srcdir)/tex.web $(srcdir)/tex.ch
+ptex.web: $(srcdir)/tex.web $(srcdir)/tex.ch $(srcdir)/tie
 	$(srcdir)/tie -m ptex.web $(srcdir)/tex.web $(srcdir)/tex.ch
 
 ptex.ch: $(srcdir)/tie ptex.web ptex-base.ch
@@ -108,7 +108,7 @@ tftopl.web: $(srcdir)/tftopl.web $(srcdir)/tftopl.ch
 pltotf: pltotf.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) pltotf.o $(plib_o) $(LOADLIBES)
 pltotf.o: pltotf.c kanji.h ptexhelp.h
-	$(compile) -DKANJI_C $<
+	$(compile) -DKANJI_C=1 -c pltotf.c
 pltotf.c: pltotf.p $(web2c_aux)
 pltotf.p: pltotf.web pltotf.ch
 pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
@@ -119,7 +119,7 @@ pltotf.web: $(srcdir)/pltotf.web $(srcdir)/pltotf.ch
 pdvitype: pdvitype.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) pdvitype.o $(plib_o) $(LOADLIBES)
 pdvitype.o: pdvitype.c kanji.h ptexhelp.h
-	$(compile) -DDVITYPE -DHEX_CHAR_CODE $<
+	$(compile) -DDVITYPE -DHEX_CHAR_CODE -c pdvitype.c
 pdvitype.c: pdvitype.p $(web2c_aux)
 pdvitype.p: pdvitype.web pdvitype.ch
 pdvitype.web:
@@ -128,13 +128,13 @@ pdvitype.web:
 ### jBibTeX
 jbibtex: jbibtex.o jbibextra.o $(plib_o) $(kpathsea) $(proglib)
 	$(kpathsea_link) jbibtex.o jbibextra.o $(plib_o) $(LOADLIBES)
+jbibextra.o: jbibextra.c jbibd.h kanji.h ptexhelp.h
 jbibtex.o: jbibtex.c jbibextra.h kanji.h ptexhelp.h
-	$(compile) -DBIBTEX $<
+	$(compile) -DBIBTEX -c jbibtex.c
 jbibtex.c jbibd.h: jbibtex.p $(web2c_aux) jbibd.sed
 jbibtex.p: jbibtex.web jbibtex.ch
 jbibtex.web:
 	$(LN) $(srcdir)/bibtex.web jbibtex.web
-jbibextra.o: jbibd.h kanji.h ptexhelp.h
 
 # Additional dependencies for recompiling the C code are generated
 # automatically, included at the end.
@@ -171,25 +171,24 @@ texmf.cnf: $(kpathsea_dir)/texmf.cnf
 dumpenv = TEXMFCNF=$(thisdir) TEXMF=$(texmf)
 
 ptex-euc.fmt: ptex texmf.cnf
-	$(dumpenv) $(MAKE) $(makeargs) files="--progname=ptex ptex.tex min10.tfm" prereq-check
-	$(dumpenv) ./ptex -ini --kanji=euc --jobname=ptex-euc \\input ptex \\dump </dev/null
+	$(dumpenv) $(MAKE) progname=ptex files="ptex.tex min10.tfm" prereq-check
+	$(dumpenv) ./ptex --ini --kanji=euc --progname=ptex --jobname=ptex-euc \\input ptex.tex \\dump </dev/null
 
 ptex-sjis.fmt: ptex texmf.cnf
-	$(dumpenv) $(MAKE) $(makeargs) files="--progname=ptex ptex.tex min10.tfm" prereq-check
-	$(dumpenv) ./ptex -ini --kanji=sjis --jobname=ptex-sjis \\input ptex \\dump </dev/null
+	$(dumpenv) $(MAKE) progname=ptex files="ptex.tex min10.tfm" prereq-check
+	$(dumpenv) ./ptex --ini --kanji=sjis --progname=ptex --jobname=ptex-sjis \\input ptex.tex \\dump </dev/null
 
 platex-euc.fmt: ptex texmf.cnf
-	$(dumpenv) $(MAKE) $(makeargs) files="--progname=platex platex.ltx" prereq-check
-	$(dumpenv) ./ptex -ini --kanji=euc --progname=platex --jobname=platex-euc \\input platex.ltx </dev/null
+	$(dumpenv) $(MAKE) progname=platex files="platex.ltx" prereq-check
+	$(dumpenv) ./ptex --ini --kanji=euc --progname=platex --jobname=platex-euc \\input platex.ltx </dev/null
 
 platex-sjis.fmt: ptex texmf.cnf
-	$(dumpenv) $(MAKE) $(makeargs) files="--progname=platex platex.ltx" prereq-check
-	$(dumpenv) ./ptex -ini --kanji=sjis --progname=platex --jobname=platex-sjis \\input platex.ltx </dev/null
+	$(dumpenv) $(MAKE) progname=platex files="platex.ltx" prereq-check
+	$(dumpenv) ./ptex --ini --kanji=sjis --progname=platex --jobname=platex-sjis \\input platex.ltx </dev/null
 
 # This is meant to be called recursively, with $(files) set.
 prereq-check: $(kpathsea_dir)/kpsewhich
-	$(dumpenv) $(kpathsea_dir)/kpsewhich $(files) >/dev/null \
-		|| $(MAKE) prereq-lose >/dev/null
+	$(dumpenv) $(kpathsea_dir)/kpsewhich --progname=$(progname) $(files) >/dev/null || $(MAKE) prereq-lose >/dev/null
 
 prereq-lose:
 	@echo "You seem to be missing input files necessary to make the" >&2
@@ -211,44 +210,38 @@ install: install-exec install-data
 install-exec:: install-links
 install-data:: install-formats
 
-# The actual binary executables and pool files.
-install-programs: $(programs)
-	$(SHELL) $(top_srcdir)/mkinstalldirs $(bindir) $(texpooldir)
-	for p in $(programs); do $(INSTALL_LIBTOOL_PROG) $(bindir) $$p; done
+# Installation directories.
+$(bindir)::
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(bindir)
+$(web2cdir)::
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(web2cdir)
 
-# The links to ptex for each format and for {ini,vir}ptex.
-install-links: install-programs
-	cd $(bindir) && (rm -f iniptex virptex platex; \
-		$(LN) ptex iniptex; $(LN) ptex virptex ; $(LN) ptex platex)
+# The actual binary executables and pool files.
+install-programs: $(programs) $(bindir)
+	for p in $(programs); do $(INSTALL_LIBTOOL_PROG) $$p $(bindir); done
+
+# The links to ptex for each format.
+install-links: install-programs $(bindir)
+	cd $(bindir) && (rm -f iniptex virptex platex; $(LN) ptex platex)
 
 # Always do plain.*, so examples from the TeXbook (etc.) will work.
-install-formats: $(formats)
-	$(SHELL) $(top_srcdir)/mkinstalldirs $(fmtdir)
-	for f in $(formats); do $(INSTALL_DATA) $$f $(fmtdir)/$$f; done
-	cd $(fmtdir) && (rm -f ptex-jis.fmt platex-jis.fmt ;\
+install-formats: $(formats) $(web2cdir)
+	for f in $(formats); do $(INSTALL_DATA) $$f $(web2cdir)/$$f; done
+	cd $(web2cdir) && (rm -f ptex-jis.fmt platex-jis.fmt ;\
 		$(LN) ptex-euc.fmt ptex-jis.fmt ;\
 		$(LN) platex-euc.fmt platex-jis.fmt)
-	cd $(fmtdir) && (rm -f ptex.fmt platex.fmt ;\
+	cd $(web2cdir) && (rm -f ptex.fmt platex.fmt ;\
 		$(LN) ptex-$(configkcode).fmt ptex.fmt ;\
 		$(LN) platex-$(configkcode).fmt platex.fmt )
 
 # Auxiliary files.
 install-data::
-	$(SHELL) $(top_srcdir)/mkinstalldirs \
-		$(texpooldir) $(web2cdir) $(fontnamedir)
-	$(INSTALL_DATA) ptex.pool $(texpooldir)/ptex.pool
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(web2cdir)
+	$(INSTALL_DATA) ptex.pool $(web2cdir)/ptex.pool
 	if [ -f $(web2cdir)/texmf.cnf ]; then \
 		mv -f $(web2cdir)/texmf.cnf $(web2cdir)/texmf.cnf.orig ;\
 	else true; fi
 	$(INSTALL_DATA) texmf.cnf $(web2cdir)/texmf.cnf
-# tcx files
-#	cd $(thisdir)/share && \
-#	for f in *.tcx; do $(INSTALL_DATA) $$f $(web2cdir)/$$f; done
-# map files are not provided with pTeX
-#	cd $(thisdir)/share && \
-#	for f in *.map; do $(INSTALL_DATA) $$f $(fontnamedir)/$$f; done
-#	cd $(thisdir)/doc && $(MAKE) $(install_makeargs) install-data
-
 # 
 # Testing, including triptrap. The `x' filenames are for output.
 check: pltotf-check tftopl-check pooltype-check ptex-check 
@@ -348,4 +341,3 @@ Makefile: configure $(srcdir)/config.status $(thisdir)/Makefile.in
 
 kanji.h: kanji.h.in
 	$(SHELL) configure $(configopt)
-

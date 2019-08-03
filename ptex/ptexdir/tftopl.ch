@@ -350,9 +350,9 @@ const n_options = 4; {Pascal won't count array lengths for us.}
 const n_options = 5; {Pascal won't count array lengths for us.}
 @z
 @x
-      usage_help (TFTOPL_HELP);
+      usage_help (TFTOPL_HELP, nil);
 @y
-      usage_help (PTEX_TFTOPL_HELP);
+      usage_help (PTEX_TFTOPL_HELP, nil);
 @z
 @x
     end else if argument_is ('version') then begin

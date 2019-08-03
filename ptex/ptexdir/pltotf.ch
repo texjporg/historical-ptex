@@ -403,9 +403,9 @@ const n_options = 3; {Pascal won't count array lengths for us.}
 const n_options = 4; {Pascal won't count array lengths for us.}
 @z
 @x
-      usage_help (PLTOTF_HELP);
+      usage_help (PLTOTF_HELP, nil);
 @y
-      usage_help (PTEX_PLTOTF_HELP);
+      usage_help (PTEX_PLTOTF_HELP, nil);
 @z
 @x
     end else if argument_is ('version') then begin
