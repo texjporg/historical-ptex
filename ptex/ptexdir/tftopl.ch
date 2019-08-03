@@ -337,6 +337,12 @@ else
   end;
 @z
 
+@x
+      usage (0, TFTOPL_HELP);
+@y
+      usage_help (PTEX_TFTOPL_HELP);
+@z
+
 @x [99] l.1751 - pTeX:
 @* Index.
 @y

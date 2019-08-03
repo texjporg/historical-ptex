@@ -1006,7 +1006,7 @@ begin
       usage (1, 'pdvitype');
 
     end else if argument_is ('help') then begin
-      usage (0, DVITYPE_HELP);
+      usage_help (PDVITYPE_HELP);
 
     end else if argument_is ('version') then begin
       print_version_and_exit (banner, nil, 'D.E. Knuth');

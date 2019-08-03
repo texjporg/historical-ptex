@@ -1,2 +1,4 @@
 @define function inputline();
 @define procedure initkanji;
+@define const JBIBTEXHELP;
+@define procedure usagehelp();

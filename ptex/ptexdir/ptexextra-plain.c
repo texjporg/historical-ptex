@@ -46,7 +46,7 @@ extern struct tm *localtime ();
 #include <omegadir/omegaextra.h>
 #else
 #ifdef KANJI
-#define BANNER "This is pTeX, Version p3.0, based on TeX, Version 3.14159"
+#define BANNER "This is pTeX, Version p3.0.1, based on TeX, Version 3.14159"
 #else /* KANJI */
 #define BANNER "This is TeX, Version 3.14159"
 #endif /* KANJI */
@@ -59,6 +59,7 @@ extern struct tm *localtime ();
 #define DUMP_EXT ".fmt"
 #define INPUT_FORMAT kpse_tex_format
 #ifdef KANJI
+#include "texmfmp-help.h"
 #define INI_PROGRAM "iniptex"
 #define VIR_PROGRAM "virptex"
 #ifdef Xchr
@@ -764,12 +765,7 @@ parse_options P2C(int, argc,  string *, argv)
       }
       
     } else if (ARGUMENT_IS ("help")) {
-      string help = PROGRAM_HELP;
-#if defined (TeX) && defined (IPC)
-      /* Don't say the options exist unless they really do.  */
-      help = concat (help, TEX_IPC_HELP);
-#endif
-      usage (0, help);
+      usagehelp (PROGRAM_HELP);
 
     } else if (ARGUMENT_IS ("version")) {
       printversionandexit (BANNER, COPYRIGHT_HOLDER, AUTHOR);

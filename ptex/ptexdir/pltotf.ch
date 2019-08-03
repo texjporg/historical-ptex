@@ -390,6 +390,12 @@ begin @<If is tfm then print error@>;
 end;
 @z
 
+@x
+      usage (0, PLTOTF_HELP);
+@y
+      usage_help (PTEX_PLTOTF_HELP);
+@z
+
 @x [148] l.2620 - pTeX:
 @* Index.
 @y

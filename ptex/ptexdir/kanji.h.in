@@ -3,8 +3,8 @@
 */
 #ifndef KANJI_H
 #define KANJI_H
-#include "ptexhelp.h"
 #include "cpascal.h"
+#include "ptexhelp.h"
 
 #define KANJI
 #define JIS   1
@@ -53,7 +53,9 @@ extern integer KUTENtoSJIS(integer);
 #define putc(c,fp) putc2(c,fp)
 #endif /* JIS or *not* KANJI_C */
 
-/* 連絡先など */
-#include "maintain.h"
+#ifdef TeX
+#undef TEXPOOLNAME
+#define TEXPOOLNAME "ptex.pool"
+#endif /* TeX */
 
 #endif /* not KANJI_H */

@@ -1,20 +1,6 @@
 #include "config.h"
 #include "kanji.h"
 
-/*** lib/usage.c:  Output a help message (from help.h). ***/
-void
-usage P2C(int, status,  const_string, str)
-{
-  if (status == 0) {
-    fputs (str, stdout);
-    putchar ('\n');
-    puts("Email bug reports to www-ptex@ascii.co.jp");
-  } else {
-    fprintf (stderr, "Try `%s --help' for more information.\n", str);
-  }
-  uexit (status);
-}
-
 /*** lib/printversion.c:  Output for the option --version. ***/
 void
 printversionandexit P3C(const_string, banner,

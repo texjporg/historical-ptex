@@ -3,38 +3,64 @@
 #  author: Ken Nakano (ken-na@ascii.co.jp)
 #
 progname=`basename $0`
+kanjicode=
+configopt=
+srcsp=
 
 printUsage () {
-	echo "Usage: $progname {EUC|JIS|SJIS}"
+	echo "Usage: $progname {EUC|JIS|SJIS} [-with-src-special]"
 	exit 1
 }
-
-if [ -z "$*" ]; then
-	printUsage
-fi
-
-case $1 in
-	euc|EUC)  kanjicode=EUC  ;;
-	jis|JIS)  kanjicode=JIS  ;;
-	sjis|SJIS) kanjicode=SJIS ;;
-	*) echo "unknown option $1"; printUsage ;;
-esac
-
-if [ ! -f kanji.h.in ]; then
-	echo "kanji.h.in not found."
-	exit 1
-fi
-echo "creating kanji.h"
-sed -e "s/@kanjicode@/$kanjicode/" kanji.h.in > kanji.h
 
 if [ ! -f ../config.status ]; then
 	echo "../config.status not found."
 	echo "please make orignal Web2c programs before make pTeX."
 	exit 1
 fi
+
+# 引数チェック
+test -z "$*" && printUsage
+case $1 in
+	[Ee][Uu][Cc])  kanjicode=EUC  ;;
+	[Jj][Ii][Ss])  kanjicode=JIS  ;;
+	[Ss][Jj][Ii][Ss]) kanjicode=SJIS ;;
+	*) echo "unknown option $1"; printUsage ;;
+esac
+case $2 in
+	-with-src-special | --with-src-special |\
+	-with-special | --with-special ) srcsp=yes ;; 
+	-*) echo "unkown option $2"; printUsage ;;
+esac
+
+CONFIGSED=config.sed 
+echo "s%@configopt@%$*%g" > $CONFIGSED
+echo "s%@kanjicode@%$kanjicode%g" >> $CONFIGSED
+if [ x$srcsp = xyes ]; then
+	echo "s%@SRCSP@%%g" >> $CONFIGSED
+	echo "s%@PLAIN@%#P#%g" >> $CONFIGSED
+else
+	echo "s%@SRCSP@%#P#%g" >> $CONFIGSED
+	echo "s%@PLAIN@%%g" >> $CONFIGSED
+fi
+
+echo "creating kanji.h"
+sed -f $CONFIGSED kanji.h.in > kanji.h
+
+echo "texmfmp-help.h"
+if [ x$srcsp = xyes ]; then
+	cat texmfmp-help.h.in > texmfmp-help.h
+else
+	sed -e '/src-special/d' texmfmp-help.h.in > texmfmp-help.h
+fi
+
+
+# Makefile の作成
 CONFIG_FILES=Makefile
 CONFIG_HEADERS=..
 export CONFIG_FILES CONFIG_HEADERS
 ../config.status
-sed -e "s/@kanjicode@/$kanjicode/" Makefile > $$ && mv -f $$ Makefile
+TMPFILE=`mktemp /tmp/makefile.XXXXXX` || exit 1
+sed -f $CONFIGSED Makefile > $TMPFILE
+mv -f $TMPFILE Makefile
+
 exit 0

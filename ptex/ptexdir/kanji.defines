@@ -17,3 +17,9 @@
 @define function EUCtoSJIS ();
 @define function KUTENtoSJIS ();
 @define function putc2 ();
+
+@define const PTEXTFTOPLHELP;
+@define const PTEXPLTOTFHELP;
+@define const PDVITYPEHELP;
+
+@define procedure usagehelp();

@@ -46,7 +46,7 @@ extern struct tm *localtime ();
 #include <omegadir/omegaextra.h>
 #else
 #ifdef KANJI
-#define BANNER "This is pTeX, Version p3.0, based on TeX, Version 3.14159"
+#define BANNER "This is pTeX, Version p3.0.1, based on TeX, Version 3.14159"
 #else /* KANJI */
 #define BANNER "This is TeX, Version 3.14159"
 #endif /* KANJI */
@@ -843,12 +843,7 @@ parse_options P2C(int, argc,  string *, argv)
       }
       
     } else if (ARGUMENT_IS ("help")) {
-#if defined (TeX) && defined (IPC)
-      /* Don't say the options exist unless they really do.  */
-      usagelong(0, PROGRAM_HELP, IPC_HELP, NULL);
-#else
-	  usagelong(0, PROGRAM_HELP, NULL);
-#endif
+	  usagehelp(PROGRAM_HELP);
 
     } else if (ARGUMENT_IS ("version")) {
       printversionandexit (BANNER, COPYRIGHT_HOLDER, AUTHOR);

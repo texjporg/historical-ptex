@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.0
+% This is a change file for pTeX 3.0.1
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -39,7 +39,7 @@
 @x [1.2] l.194 - pTeX:
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version p3.0, based on TeX, Version 3.14159'
+@d banner=='This is pTeX, Version p3.0.1, based on TeX, Version 3.14159'
 @z
 
 @x [2.??] l.573 - pTeX:

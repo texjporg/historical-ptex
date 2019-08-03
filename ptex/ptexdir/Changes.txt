@@ -1,7 +1,13 @@
-2002/01/15:
+2002/01/18: (p3.0.1)
+	以下のソースを用いたたときでもコンパイルできるようにした。
+		* tetex-supp.tar.gz
+		* web2c-7.3.3.tar.gz
+		* teTeX-src-beta-20011202.tar.gz
+
+2002/01/15: (p3.0)
 	ptex-base.ch: fix hyphenation.
 
-2001/10/03: (p3.0)
+2001/10/03:
     README.txt: rewrite
     INSTALL.txt: rewrite
     ptex-base.ch: version 3.0

@@ -1,0 +1,17 @@
+#ifdef TeX
+const_string PTEXHELP[] = {
+"Usage: ptex [option] texfile",
+"       ptex [option] &format texfile",
+"",
+"  -fmt=NAME            use NAME instead of program name or %&format.",
+"  -progname=NAME       pretend to be program NAME.",
+"                       (this affects both format and search path)",
+"  -ini                 be iniptex.",
+"  -interaction={batchmode/nonstopmode/scrollmode/errorstopmode}",
+"  -shell-escape        enable the \\write18{shell command} construct.",
+"  -src-specials        insert source specials into the DVI file.",
+"",
+"  -version             print version information and exit.",
+"  -help                print this message and exit.",
+NULL };
+#endif /* TeX */

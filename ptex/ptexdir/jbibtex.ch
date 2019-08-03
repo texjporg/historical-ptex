@@ -1491,7 +1491,7 @@ begin
       min_crossrefs := atoi (optarg);
       
     end else if argument_is ('help') then begin
-      usage (0, BIBTEX_HELP);
+      usage_help (JBIBTEX_HELP);
 
     end else if argument_is ('version') then begin
       print_version_and_exit (banner, 'Oren Patashnik', nil);
