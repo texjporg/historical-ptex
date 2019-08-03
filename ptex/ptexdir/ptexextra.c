@@ -127,9 +127,7 @@ static void parse_src_specials_option P1H(const_string);
 /* The main body of the WEB is transformed into this procedure.  */
 extern TEXDLL void mainbody P1H(void);
 
-/* Whether we parse a first %&-line in the input file. */
-static void maybe_parse_first_line P1H(void);
-/* And how we parse it. */
+/* Parsing a first %&-line in the input file. */
 static void parse_first_line P1H(void);
 
 static void parse_options P2H(int, string *);
@@ -189,9 +187,15 @@ prockanjicode = 2;
   kpse_set_program_name (argv[0], user_progname);
 
   /* If no dump default yet, and we're not doing anything special on
-     this run, look at the first line of the main input file for a
-     %&<dumpname> specifier.  */
-  maybe_parse_first_line();
+     this run, we may want to look at the first line of the main input
+     file for a %&<dumpname> specifier.  */
+  if (!parsefirstlinep) {
+    string parse_first_line = kpse_var_value ("parse_first_line");
+    parsefirstlinep = (parse_first_line
+                       && (*parse_first_line == 't'
+                           || *parse_first_line == 'y'
+                           || *parse_first_line == '1'));
+  }
   if (parsefirstlinep && (!dump_name || !translate_filename)) {
     parse_first_line ();
   }
@@ -714,6 +718,7 @@ static struct option long_options[]
 #if defined (TeX) || defined (MF) || defined (MP)
       { "file-line-error-style",  0, &filelineerrorstylep, 1 },
       { "jobname",                1, 0, 0 },
+      { "parse-first-line",       0, &parsefirstlinep, 1 },
 #ifndef Omega
       { "translate-file",         1, 0, 0 },
       { "default-translate-file", 1, 0, 0 },
@@ -929,21 +934,6 @@ parse_src_specials_option P1C(const_string, opt_list)
    FORMAT is a readable dump file, then set DUMP_VAR to FORMAT.
    Also call kpse_reset_program_name to ensure the correct paths for the
    format are used.  */
-static void
-maybe_parse_first_line P1H(void)
-{
-  string parse_first_line_value = kpse_var_value ("parse_first_line");
-
-  /* Default to not parsing the first line. */
-  if (!parse_first_line_value) {
-      parsefirstlinep = false;
-  } else {
-      parsefirstlinep = (*parse_first_line_value == 't'
-                         || *parse_first_line_value == 'y'
-                         || *parse_first_line_value == '1');
-  }
-}
-
 static void
 parse_first_line P1H(void)
 {

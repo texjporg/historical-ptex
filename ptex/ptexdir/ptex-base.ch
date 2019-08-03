@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.0.4
+% This is a change file for pTeX 3.0.5
 % By Ken Nakano (ken-na@ascii.co.jp) and ASCII Corporation.
 %
 % Thanks for :
@@ -40,8 +40,8 @@
 @d banner=='This is TeX, Version 3.14159' {printed when \TeX\ starts}
 @d banner_k=='This is TeXk, Version 3.14159' {printed when \TeX\ starts}
 @y
-@d banner=='This is pTeX, Version 3.14159-p3.0.4' {printed when \TeX\ starts}
-@d banner_k=='This is pTeXk, Version 3.14159-p3.0.4' {printed when \TeX\ starts}
+@d banner=='This is pTeX, Version 3.14159-p3.0.5' {printed when \TeX\ starts}
+@d banner_k=='This is pTeXk, Version 3.14159-p3.0.5' {printed when \TeX\ starts}
 @z
 
 @x [2.??] l.573 - pTeX:
