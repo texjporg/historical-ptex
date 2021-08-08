@@ -1,0 +1,170 @@
+From: matsui@jepri.denken.or.jp (Shouichi Matsui)
+Newsgroups: fj.comp.texhax
+Subject: jbibtex030 patch
+Message-ID: <921031051750.5963@jepri.denken.or.jp>
+Date: 31 Oct 92 05:17:51 GMT
+Organization: CRIEPI (Denryoku Chuuoo Kenkyuusyo), Tokyo, Japan
+Lines: 161
+X-Newsreader: Tin 1.1 PL4 (Denken)
+
+電力中央研究所の松井と申します。
+
+BibTeX の日本語対応版である JBibTeX 0.30 のバグフィックスパッチです。
+
+author などの漢字氏名の名前が1文字でそのコードの2バイト目があるパターン
+である場合に正しく処理されないバグを修正するものです。
+（このバグは伊藤孝士＠地球惑星物理学教室．理学部．東京大学さんが発見して
+くださいました）。
+
+このパッチにより，jbibtex のバージョンは 0.30 -> 0.31 になります。
+
+patch 用の bibtex.ch ファイルのdiff ファイルを shar した物を添付します。
+
+-------------------- from here -----------------------------------
+#!/bin/sh
+# This is a shell archive (shar 3.32)
+# made 10/31/1992 05:16 UTC by root@jepri
+# Source directory /joho/ASCII/jtex/jbibtex030.new
+#
+# existing files WILL be overwritten
+#
+# This shar contains:
+# length  mode       name
+# ------ ---------- ------------------------------------------
+#   2518 -rw-rw-r-- jbibtex031.patch
+#
+if touch 2>&1 | fgrep 'amc' > /dev/null
+ then TOUCH=touch
+ else TOUCH=true
+fi
+# ============= jbibtex031.patch ==============
+echo "x - extracting jbibtex031.patch (Text)"
+sed 's/^X//' << 'SHAR_EOF' > jbibtex031.patch &&
+X*** bibtex.ch.old	Tue Sep  8 13:35:52 1992
+X--- bibtex.ch	Sat Oct 31 14:14:45 1992
+X***************
+X*** 15,20 ****
+X--- 15,21 ----
+X  %  5/ 2/89 	Version 0.20 of JBiBTeX by Shouichi Matsui
+X  % 12/25/90	Version 0.30 of JBibTeX by Shouichi Matsui
+X  %  1/ 1/91      last update for JBibTeX 0.30 by Shouichi Matsui
+X+ % 10/30/92      last update for JBibTeX 0.31 for bug fix by Shouichi Matsui
+X  % 
+X  %
+X  @x only print chnages
+X***************
+X*** 21,27 ****
+X  \def\title{\BibTeX\ }
+X  @y
+X  \let\maybe=\iffalse
+X! \def\title{J\BibTeX\ Changes for C Version \BibTeX\ }
+X  @z
+X  
+X  @x
+X--- 22,28 ----
+X  \def\title{\BibTeX\ }
+X  @y
+X  \let\maybe=\iffalse
+X! \def\title{J\BibTeX\ 0.31 Changes for C Version \BibTeX\ }
+X  @z
+X  
+X  @x
+X***************
+X*** 31,43 ****
+X  @y
+X   \def\titlepage{F}
+X   \centerline{\:\titlefont The {\:\ttitlefont J\BibTeX} preprocessor}
+X!  \vskip 15pt \centerline{(Version 0.30 base on C Version \BibTeX 0.99c---\today)} \vfill}
+X  @z
+X  
+X  @x banner
+X  @d banner=='This is BibTeX, Version 0.99c' {printed when the program starts}
+X  @y
+X! @d banner=='This is JBibTeX 0.30 based on C Version BibTeX 0.99c' {printed when the program starts}
+X  @z
+X  
+X  @x terminal
+X--- 32,44 ----
+X  @y
+X   \def\titlepage{F}
+X   \centerline{\:\titlefont The {\:\ttitlefont J\BibTeX} preprocessor}
+X!  \vskip 15pt \centerline{(Version 0.31 base on C Version \BibTeX 0.99c---\today)} \vfill}
+X  @z
+X  
+X  @x banner
+X  @d banner=='This is BibTeX, Version 0.99c' {printed when the program starts}
+X  @y
+X! @d banner=='This is JBibTeX 0.31 based on C Version BibTeX 0.99c' {printed when the program starts}
+X  @z
+X  
+X  @x terminal
+X***************
+X*** 1046,1051 ****
+X--- 1047,1086 ----
+X  	       end;
+X  	  ex_buf_ptr := ex_buf_ptr + 2;
+X  	end;
+X+ @z
+X+ @x Changes for JBibTeX by Shouichi Matsui for Zenkaku comma[385]
+X+     othercases
+X+ 	if (lex_class[ex_buf[ex_buf_ptr]] = white_space) then
+X+ 	    begin
+X+ 	    incr(ex_buf_ptr);
+X+ 	    preceding_white := true;
+X+ 	    end
+X+ 	else
+X+ 	    begin
+X+ 	    incr(ex_buf_ptr);
+X+ 	    preceding_white := false;
+X+ 	    end
+X+   endcases;
+X+ check_brace_level (pop_lit_var);
+X+ end;
+X+ @y
+X+     othercases
+X+ 	if (lex_class[ex_buf[ex_buf_ptr]] = white_space) then
+X+ 	    begin
+X+ 	    incr(ex_buf_ptr);
+X+ 	    preceding_white := true;
+X+ 	    end
+X+ 	else
+X+ 	    begin
+X+ 		if( ex_buf[ex_buf_ptr] > 127 ) then
+X+ 			ex_buf_ptr := ex_buf_ptr +2
+X+ 		else
+X+ 			incr(ex_buf_ptr);
+X+ 	    preceding_white := false;
+X+ 	    end
+X+   endcases;
+X+ check_brace_level (pop_lit_var);
+X+ end;
+X  @z
+X  
+X  @x Changes for JBibTeX by Shouichi Matsui [415]
+SHAR_EOF
+$TOUCH -am 1031141692 jbibtex031.patch &&
+chmod 0664 jbibtex031.patch ||
+echo "restore of jbibtex031.patch failed"
+set `wc -c jbibtex031.patch`;Wc_c=$1
+if test "$Wc_c" != "2518"; then
+	echo original size 2518, current size $Wc_c
+fi
+exit 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         松井 正一 (財)電力中央研究所 経済研究所 情報システム部             %
+%    E-mail: matsui@denken.or.jp, Phone:(03)3201-6601, FAX:(03)3287-2864     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

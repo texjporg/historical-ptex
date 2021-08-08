@@ -7,5 +7,13 @@ ASCII Nihongo TeX 2.99-j1.7 and its bugfixes:
 retrieved from:
     ftp://akagi.ms.u-tokyo.ac.jp/pub/TeX/source/ascii-jtex-1.7/
 
+
+JBibTeX 0.30 -> 0.31 bug fix:
+    - jbibtex0.30-0.31.diff
+
+retrieved from:
+    https://groups.google.com/g/fj.comp.texhax/c/5DgRCYbAedM/m/gdl6Yo_i4SEJ
+
+
 ----
 Japanese TeX Development Community
