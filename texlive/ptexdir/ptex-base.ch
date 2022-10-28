@@ -50,12 +50,13 @@
 % (2012-05-11) PB  pTeX p3.3
 % (2013-04-09) PB  pTeX p3.4 (TL 2013)
 % (2014-04-17) KB  pTeX p3.5 (TL 2014)
+% (2014-03-15) KB  pTeX p3.6 (TL 2015)
 %
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.5' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.6' {current p\TeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -2217,7 +2218,7 @@ else if scan_keyword("sp") then goto done
 @d sjis_code=7 {command code for \.{\\sjis}}
 @d jis_code=8 {command code for \.{\\jis}}
 @d kuten_code=9 {command code for \.{\\kuten}}
-@d ptex_convert_codes=10 {end of \eTeX's command codes}
+@d ptex_convert_codes=10 {end of \pTeX's command codes}
 @d job_name_code=ptex_convert_codes {command code for \.{\\jobname}}
 @z
 

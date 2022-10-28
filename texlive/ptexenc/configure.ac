@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2010 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2010-2015 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -50,6 +50,6 @@ AH_TOP([/* ptexenc/c-auto.h: defines for ptexenc, as determined by configure. */
 #define PTEXENCVERSION "ptexenc version] ptexenc_version["])
 AH_BOTTOM([#endif /* !PTEXENC_C_AUTO_H */])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile ptexenc.pc])
 
 AC_OUTPUT
