@@ -1,0 +1,132 @@
+2010-06-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (ptex_cppflags): Add $(AM_CPPFLAGS).
+
+2010-05-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Files, pbibtex.defines, ptex.mk, ptex-base.ch.orig,
+	ptex-include.ch, ptexhelp.h, reautoconf (removed): Unused files.
+	* am/ptex.am (EXTRA_DIST): Adjust.
+
+2010-05-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (EXTRA_DIST): Remove tmf-pool.h.
+
+2010-05-23  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptex-base.ch: Bug fix from
+	Hironori Kitagawa <h_kitagawa2001@yahoo.co.jp>.
+
+2010-05-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Fix the lib/libp.a rebuild rule.
+
+2010-05-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* nissya.test (new): Shell script for pBibTeX test using kanji.
+	* tests/nissya_bib.aux, tests/nissya.bst, tests/sample.bib
+	(new): Test data for nissya.test from Akira.
+	* am/ptex.am: Add the new test.
+
+2010-05-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.ch: Treat kanji chars for put[1-4] as for set[1-4].
+
+2010-05-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* yokotate.test: Use ptftopl with '-charcode-format octal'.
+	* ptftopl.ch: Correctly check glue indices.
+	Use Web macros to access |char_type| table entries.
+	Reformat CHARSINTYPE lists with shorter lines.
+
+2010-04-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.test: Use installed cm fonts.
+	* sample.test, yokotate.test (new): Shell scripts to test
+	pDVItype and pPLtoTF/pTFtoPL with yoko and tate fonts.
+	* tests/goth10.tfm tests/sample.dvi (new): Data for sample.test.
+	* tests/{min10,tmin10}.{pl,tfm} (new): Data for yokotate.test.
+	* am/ptex.am: Add the new tests.
+
+2010-04-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch: Remove unused code 'Check if |max_print_line|...'.
+	Akira Kakuto <kakuto@fuk.kindai.ac.jp>, 24 Apr 2010 12:10:13.
+
+2010-04-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, kanji.h: Use input_line2() with five arguments
+	for correct handling of buffer_overflow.
+
+	* pbibtex-longline-test.pl, pbibtex-openout-test.pl,
+	pbibtex-mem.test, pbibtex.test: New tests.
+	* am/ptex.am: Add them.
+
+2010-04-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.ch: Remove unnecessary change.
+	* ppltotf.ch: Adapt to bug fix now done in ../pltotf.ch,
+	originally by Ken Nakano <nakano@nextsolution.co.jp>.
+	* kanji.h (inputline2): Moved from ../../ptexenc/ptexenc.h to here.
+
+	* pbibtex.ch: Correct handling of buffer_overflow.  From Akira.
+	* ptex.defines (inputline3): Removed.
+
+	* am/ptex.am: No synctex.  No reason to create ptexdir/lib/.
+
+2010-04-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.test, ppltotf.test, ptftopl.test (new): Shell scripts
+	for basic 'make check' tests.
+	* am/ptex.am: Add these tests.
+
+	* pbibtex.ch: Adapt to change (bug fix) in ../bibtex.ch.
+	Remove kanji fix of workaround from ../bibtex.ch for breaking
+	long lines in module 324; all that is gone with bibtex-0.99d.
+
+2010-04-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ppltotf.ch: Rename PTEX_PLTOTF_HELP => PPLTOTF_HELP.
+	* ptftopl.ch: Rename PTEX_TFTOPL_HELP => PTFTOPL_HELP.
+	* ptexhelp.h (removed): Help text now in ../help.h.
+	* kanji.h: Remove #include "ptexhelp.h" and redefinition of
+	TEXMFPOOLNAME and TEXMFENGINENAME.
+
+	* ptexextra.in (PTEXHELP): Moved to ../texmfmp-help.h from here.
+
+	* ptex.defines (inputline3): Moved from pbibtex.defines to here.
+	(PTEXTFTOPLHELP, PTEXPLTOTFHELP, PDVITYPEHELP): Removed.
+	* pbibtex.defines (removed): Using ptex.defines.
+	* ptex-include.ch (removed): Now done in ../texmfmp.h.
+
+	* am/ptex.am: Adjust and replace lib/lib.a by ../lib/libp.a.
+
+2010-04-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.ch: New version, used on top of dvitype.ch.
+	* ptftopl.ch, ptex-base.ch: Remove trailing whitespace.
+
+	Avoid compiler warnings.
+	* ptftopl.ch (organize): Slightly reformulate (uninitialized).
+	* ppltotf.ch: Handle Pascal Web's char as in ../pltotf.ch.
+	(todig): Change param type to byte. Don't return uninitialized.
+
+2010-04-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, ptex-base.ch, ptftopl.ch: Use conststringcast, not
+	stringcast to cast the get_enc_string() value which is now const.
+	* ptexhelp.h (PDVITYPEHELP): Fixed a typo in help message.
+
+2010-04-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch: New version from Akira, used on top of bibtex.ch.
+	Keep hack0 -- initialization of jump buffer.
+	* am/ptex.am: Reworked.
+	* ptexextra.in, ptexhelp.h: Declare based_prog_name as const.
+	* ppltotf.ch: Fixed a typo.
+
+2010-04-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Fix for 'make dist' and 'make distcheck'.
+	* ptrip.test: Simplify.
+	* ptrip.diffs: Expected results from TRIP test for pTeX.

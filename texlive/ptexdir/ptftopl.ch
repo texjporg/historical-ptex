@@ -10,13 +10,10 @@
 @z
 
 @x [2] l.64 - pTeX:
-@d banner=='This is TFtoPL, Version 3.1' {printed when the program starts}
+@d banner=='This is TFtoPL, Version 3.2' {printed when the program starts}
 @y
 @d banner=='This is Nihongo TFtoPL, Version 3.2-p1.7'
   {printed when the program starts}
-@d jis_enc==0
-@d euc_enc==1
-@d sjis_enc==2
 @z
 
 @x [2] l.91 - pTeX:
@@ -37,11 +34,7 @@ var @!k:integer; {all-purpose initiallization index}
 @y
   print_ln (version_string);
   print ('process kanji code is ');
-  case proc_kanji_code of
-    jis_enc: print('jis');
-    euc_enc: print('euc');
-    sjis_enc: print('sjis');
-  end;
+  print (conststringcast(get_enc_string));
   print_ln('.');
 @z
 
@@ -80,9 +73,11 @@ else if lf=tate_id_byte then
   write_ln(pl_file,'(COMMENT THIS IS A KANJI FORMAT FILE)');
   write_ln(pl_file,'(DIRECTION TATE)');
   end
-else  begin file_format:=tfm_format; nt:=0; tmp_ptr:=2;
-  end;
-if file_format<>tfm_format then
+else file_format:=tfm_format;
+if file_format=tfm_format then
+  begin nt:=0; tmp_ptr:=2;
+  end
+else
   begin if eof(tfm_file) then abort('The input file is only two bytes long!');
   read(tfm_file,tfm[2]);
   if eof(tfm_file) then abort('The input file is only three bytes long!');
@@ -288,7 +283,7 @@ else if width_index(c)>0 then
   if file_format<>tfm_format then
     begin out('TYPE'); tfm[0]:=c; out_octal(0,1);
     end
-  else 
+  else
     begin out('CHARACTER'); out_char(c);
     end;
   out_ln;
@@ -370,11 +365,11 @@ begin
 @x
       usage_help (TFTOPL_HELP, nil);
 @y
-      usage_help (PTEX_TFTOPL_HELP, nil);
+      usage_help (PTFTOPL_HELP, nil);
 @z
 @x
     end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth');
+      print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
 @y
     end else if argument_is ('version') then begin
       version_switch := true;
@@ -389,7 +384,7 @@ begin
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
   if (version_switch) then
-    print_version_and_exit (banner, nil, 'D.E. Knuth');
+    print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
 @z
 
 @x
@@ -430,7 +425,7 @@ begin  if nonexistent(tfm[k+1]) then
 @.Glue step for nonexistent...@>
 else
   begin left; out('GLUE'); out_char(tfm[k+1]);
-    if tfm[k+3]>=ng then
+    if 3*tfm[k+3]>=ng then
       begin bad('Glue index too large.');
 @.Glue index too large@>
       out(' R 0.0 R 0.0 R 0.0');
@@ -445,19 +440,21 @@ end;
 
 @ list the |char_type| table in a similar way to the type table
 
+@d char_type(#)==4*(type_base+#) {here \#\ is an index, not a character}
+@d JIS_code(#)==tfm[char_type(#)+0]*@'400+tfm[char_type(#)+1] {JIS code from |char_type| table}
+@d JIS_type(#)==tfm[char_type(#)+2]*@'400+tfm[char_type(#)+3] {JIS type from |char_type| table}
+
 @<list |char_type| table@>=
-this_code:=tfm[4*type_base+0]*@'400+tfm[4*type_base+1];
-this_type:=tfm[4*type_base+2]*@'400+tfm[4*type_base+3];
+this_code:=JIS_code(0);
+this_type:=JIS_type(0);
 if (this_code<>0)or(this_type<>0) then
   begin bad('the first entry in char_type is not zero. I''ll zero it.');
   print_ln('JIS code is ', this_code:1, '. Type is ', this_type:1, '.');
   end;
 for kanji_index:=0 to max_kanji do kanji_type[kanji_index]:=-1;
 for type_index:=1 to nt-1 do
-  begin this_code:=tfm[4*type_base + type_index * 4 + 0] * 256 +
-	             tfm[4*type_base + type_index * 4 + 1];
-  this_type:=tfm[4*type_base + type_index * 4 + 2] * 256 +
-                 tfm[4*type_base + type_index * 4 + 3];
+  begin this_code:=JIS_code(type_index);
+  this_type:=JIS_type(type_index);
   if not valid_jis_code(this_code) then
     bad('jis code ', this_code:1,
 	    ' in char_type table entry ', type_index:1,
@@ -471,13 +468,13 @@ for type_index:=1 to nt-1 do
 @#
 for type_num:=1 to ec do
   begin left; out('CHARSINTYPE');
-  tfm[0]:=type_num; out_octal(0,1); out_ln;
+  tfm[0]:=type_num; out_octal(0,1);
   type_count:=0;
   for kanji_index:=0 to max_kanji do
     if kanji_type[kanji_index]=type_num then
-      begin incr(type_count);
-      if (type_count mod 14)=0 then out_ln;
-      out_kanji(index_to_jis(kanji_index)); out(' ');
+      begin if (type_count mod 10)=0 then out_ln else out(' ');
+      incr(type_count);
+      out_kanji(index_to_jis(kanji_index));
       end;
   if type_count=0 then bad('type ', type_num:1, 'has no characters in it!');
   out_ln; right;
@@ -498,7 +495,7 @@ var @!cx:integer; {KANJI code}
 i:0..4; {index of array}
 begin@/
 if charcode_format=charcode_octal then
-  begin cx:=jis_code; out(' J '); {specify jiscode format}
+  begin cx:=jis_code; out('J '); {specify jiscode format}
   dig[0]:=Hi(cx) div 16; dig[1]:=Hi(cx) mod 16;
   dig[2]:=Lo(cx) div 16; dig[3]:=Lo(cx) mod 16;
   for i:=0 to 3 do
@@ -509,8 +506,7 @@ if charcode_format=charcode_octal then
     end;
   end
 else begin
-  if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(jis_code)
-  else cx:=JIStoEUC(jis_code);
+  cx:=toBUFF(fromDVI(jis_code));
   out(xchr[Hi(cx)]); out(xchr[Lo(cx)]);
   end;
 end;
@@ -549,23 +545,9 @@ end
 
 @ output kanji code.
 
-@<Global...@> =
-@!proc_kanji_code:jis_enc..sjis_enc;
-
-@ @<Initialize the option...@> =
-ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS')@/
-ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC')@/
-ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS')@/
-
 @ @<Set process kanji code@>=
-  if strcmp(optarg, 'jis') = 0 then
-    proc_kanji_code:=jis_enc
-  else if strcmp(optarg, 'euc') = 0 then
-    proc_kanji_code:=euc_enc
-  else if strcmp(optarg, 'sjis') = 0 then
-    proc_kanji_code:=sjis_enc
-  else
-    print_ln('Bad kanjicode encoding', optarg, '.');
+  if (not set_enc_string(optarg,optarg)) then
+    print_ln('Bad kanjicode encoding "', stringcast(optarg), '".');
 
 @* Index.
 @z

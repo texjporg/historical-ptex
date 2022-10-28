@@ -1,4 +1,4 @@
-% This is a change file for TFtoPL
+% This is a change file for PLtoTF
 %
 % (07/18/2006) ST PLtoTF p1.8 (3.5, Web2c 7.2)
 % (11/13/2000) KN PLtoTF p1.4 (3.5, Web2c 7.2)
@@ -15,9 +15,6 @@
 @y
 @d banner=='This is Nihongo PLtoTF, Version 3.5-p1.8'
   {printed when the program starts}
-@d jis_enc==0
-@d euc_enc==1
-@d sjis_enc==2
 @z
 
 @x [6] l.140 - pTeX:
@@ -25,11 +22,7 @@
 @y
   print_ln (version_string);
   print ('process kanji code is ');
-  case proc_kanji_code of
-    jis_enc: print('jis');
-    euc_enc: print('euc');
-    sjis_enc: print('sjis');
-  end;
+  fputs(get_enc_string, stdout);
   print_ln ('.');
 @z
 
@@ -62,38 +55,12 @@ for k:=loc+1 to limit do print(xchr[buffer[k]]);
   {print the characters yet unseen}
 @z
 
-@x [28] l.610 - pTeX: Read JIS kanji code.
-@p procedure fill_buffer;
-begin left_ln:=right_ln; limit:=0; loc:=0;
-@y
-@p procedure fill_buffer;
-var @!c_a,@!c_b:byte;
-@!cx:integer;
-@!kmode:0..1; {|1| denotes in JIS kanji strings}
-begin left_ln:=right_ln; limit:=0; loc:=0; kmode:=0;
-@z
-
 @x [28] l.619 - pTeX:
-else  begin while (limit<buf_size-1)and(not eoln(pl_file)) do
+else  begin while (limit<buf_size-2)and(not eoln(pl_file)) do
     begin incr(limit); read(pl_file,buffer[limit]);
     end;
 @y
-else  begin kmode:=0;
-  while (limit<buf_size-3)and(not eoln(pl_file)) do
-    begin read(pl_file,c_a);
-    if c_a=@'33 then @<Store JIS code characters to buffer@>
-    else
-      begin if kmode=0 then
-        begin incr(limit); buffer[limit]:=c_a;
-        end
-      else  begin read(pl_file,c_b);
-	    if (proc_kanji_code=sjis_enc) then cx:=JIStoSJIS(c_a*@'400+c_b)
-		else cx:=JIStoEUC(c_a*@'400+c_b);
-        incr(limit); buffer[limit]:=cx div @'400;
-        incr(limit); buffer[limit]:=cx mod @'400;
-        end;
-      end;
-    end;
+else  begin limit:=input_line2(pl_file,buffer,limit+1,buf_size-1)-1;
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,43 +71,21 @@ else  begin kmode:=0;
 %      This bug may be found in other routines so...
 %      Fix: add some (more?) space at the end of each line, in fill_buffer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-@x [28] l.622 - pTeX:
-  buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
-  if left_ln then @<Set |loc| to the number of leading blanks in
-    the buffer, and check the indentation@>;
-  end;
-end;
-@y
-  buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
-  if right_ln then begin incr(limit); buffer[limit+1]:=' ';
-    end;
-  if left_ln then @<Set |loc| to the number of leading blanks in
-    the buffer, and check the indentation@>;
-  end;
-end;
-
-@ @<Store JIS code characters...@>=
-begin read(pl_file,c_a);
-if c_a='$' then  begin read(pl_file,c_a);
-  if (c_a='@@')or(c_a='B') then kmode:=1 { Kanji in }
-  else begin incr(limit); buffer[limit]:=@'33;
-    incr(limit); buffer[limit]:='$';
-    incr(limit); buffer[limit]:=c_a;
-    end;
-  end
-else  if c_a='(' then  begin read(pl_file,c_a);
-  if (c_a='J')or(c_a='B')or(c_a='H') then kmode:=0 { Kanji out }
-  else  begin incr(limit); buffer[limit]:=@'33;
-    incr(limit); buffer[limit]:='(';
-    incr(limit); buffer[limit]:=c_a;
-    end;
-  end
-else  begin
-  incr(limit); buffer[limit]:=@'33;
-  incr(limit); buffer[limit]:=c_a;
-  end;
-end
-@z
+% @x [28] l.622 - pTeX:
+%   buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
+%   if left_ln then @<Set |loc| to the number of leading blanks in
+%     the buffer, and check the indentation@>;
+%   end;
+% end;
+% @y
+%   buffer[limit+1]:=' '; right_ln:=eoln(pl_file);
+%   if right_ln then begin incr(limit); buffer[limit+1]:=' ';
+%     end;
+%   if left_ln then @<Set |loc| to the number of leading blanks in
+%     the buffer, and check the indentation@>;
+%   end;
+% end;
+% @z
 
 @x [36] l.754 - pTeX: May have to increase some numbers to fit new commands
 @d max_name_index=88 {upper bound on the number of keywords}
@@ -423,11 +368,11 @@ begin
 @x
       usage_help (PLTOTF_HELP, nil);
 @y
-      usage_help (PTEX_PLTOTF_HELP, nil);
+      usage_help (PPLTOTF_HELP, nil);
 @z
 @x
     end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth');
+      print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
 
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
@@ -441,7 +386,7 @@ begin
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;
   if (version_switch) then
-    print_version_and_exit (banner, nil, 'D.E. Knuth');
+    print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
 @z
 
 @x
@@ -702,14 +647,16 @@ The |jis_to_index| is called from |chars_in_type| command.
 function get_next_raw:byte; {get next rawdata in buffer}
 begin while loc=limit do fill_buffer;
 incr(loc); get_next_raw:=buffer[loc];
-if iskanji1(buffer[loc]) then cur_char:=" "
+if multistrlen(buffer,loc+2,loc)=2 then cur_char:=" "
 else cur_char:=xord[buffer[loc]];
 end;
 @#
-function todig(@!ch:char):byte; {convert character to number}
+function todig(@!ch:byte):byte; {convert character to number}
 begin if (ch>="A")and(ch<="F") then todig:=ch-"A"+10
 else if (ch>="0")and(ch<="9") then todig:=ch-"0"
-else skip_error('This expression is out of JIS-code encoding.');
+else  begin skip_error('This expression is out of JIS-code encoding.');
+  todig:=0;
+  end;
 end;
 @#
 procedure print_jis_hex(jis_code:integer); {prints jiscode as four digits}
@@ -767,14 +714,13 @@ else if (ch='J')or(ch='j') then
   incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch)*@"100;
   incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch)*@"10;
   incr(loc); ch:=xord[buffer[loc]]; cx:=cx+todig(ch);
-  jis_code:=cx; cur_char:=ch;
+  jis_code:=toDVI(fromJIS(cx)); cur_char:=ch;
   if not valid_jis_code(jis_code) then
     err_print('jis code ', jis_code:1, ' is invalid');
   end
-else if iskanji1(ch) then
-  begin incr(loc); cx:=Lo(ch)*@'400+Lo(buffer[loc]); cur_char:=" ";
-  if (proc_kanji_code=sjis_enc) then jis_code:=SJIStoJIS(cx)
-  else jis_code:=EUCtoJIS(cx);
+else if multistrlen(buffer, loc+2, loc)=2 then
+  begin jis_code:=toDVI(fromBUFF(buffer, loc+2, loc));
+  incr(loc); cur_char:=" ";
   if not valid_jis_code(jis_code) then
     err_print('jis code ', jis_code:1, ' is invalid');
   end
@@ -782,25 +728,9 @@ else jis_code:=-1;
 get_kanji:=jis_code;
 end;
 
-@ input kanji code.
-
-@<Global...@> =
-@!proc_kanji_code:jis_enc..sjis_enc;
-
-@ @<Initialize the option...@> =
-ifdef('OUTJIS')  proc_kanji_code:=jis_enc; endif('OUTJIS');
-ifdef('OUTEUC')  proc_kanji_code:=euc_enc; endif('OUTEUC');
-ifdef('OUTSJIS') proc_kanji_code:=sjis_enc; endif('OUTSJIS');
-
 @ @<Set process kanji code@>=
-  if strcmp(optarg, 'jis') = 0 then
-    proc_kanji_code:=jis_enc
-  else if strcmp(optarg, 'euc') = 0 then
-    proc_kanji_code:=euc_enc
-  else if strcmp(optarg, 'sjis') = 0 then
-    proc_kanji_code:=sjis_enc
-  else
-    print_ln('Bad kanjicode encoding', optarg, '.');
+  if (not set_enc_string(optarg,optarg)) then
+    print_ln('Bad kanjicode encoding "', stringcast(optarg), '".');
 
 @* Index.
 @z
