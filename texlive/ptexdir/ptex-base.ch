@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.4
+% This is a change file for pTeX
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
@@ -56,6 +56,9 @@
 %                  with non-vanishing \ybaselineshift.
 % (2016-06-06) AK  Hironori Kitagawa fixed a bug in check_box(box_p:pointer).
 %                  pTeX p3.7.1.
+% (2017-09-07) HK  pTeX p3.7.2 More restrictions on direction change commands.
+% (2018-01-21) HK  Added \ptexversion primitive and co. pTeX p3.8.
+% (2018-04-14) HK  pTeX p3.8.1 Bug fix for discontinuous KINSOKU table.
 %
 
 @x
@@ -69,7 +72,10 @@
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.7.1' {current \pTeX\ version}
+@d pTeX_version=3
+@d pTeX_minor_version=8
+@d pTeX_revision==".1"
+@d pTeX_version_string=='-p3.8.1' {current \pTeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -978,7 +984,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d set_box=def+1 {set a box ( \.{\\setbox} )}
 @d hyph_data=set_box+1 {hyphenation data ( \.{\\hyphenation}, \.{\\patterns} )}
 @d set_interaction=hyph_data+1 {define level of interaction ( \.{\\batchmode}, etc.~)}
-@d set_auto_spacing=set_interaction+1 {set auto spaceing mode
+@d set_auto_spacing=set_interaction+1 {set auto spacing mode
   ( \.{\\autospacing}, \.{\\noautospacing}, ( \.{\\autoxspacing}, \.{\\noautoxspacing} )}
 @d max_command=set_auto_spacing {the largest command code seen at |big_switch|}
 @z
@@ -993,6 +999,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
   @!dir_field,@!adj_dir_field: -dir_yoko..dir_yoko;
   @!pdisp_field: scaled;
   @!head_field,@!tail_field,@!pnode_field,@!last_jchr_field: pointer;
+  @!disp_called_field: boolean;
 @z
 
 @x [16.213] l.4445 - pTeX: last_jchr, direction, adjust_dir, prev_{node,disp}
@@ -1006,6 +1013,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d prev_node==cur_list.pnode_field {previous to last |disp_node|}
 @d prev_disp==cur_list.pdisp_field {displacemant at |prev_node|}
 @d last_jchr==cur_list.last_jchr_field {final jchar node on current list}
+@d disp_called==cur_list.disp_called_field {is a |disp_node| present in the current list?}
 @z
 
 @x [16.214] l.4464 - pTeX: prev_append: disp_node
@@ -1019,18 +1027,19 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
   end
 @z
 
-@x [16.215] l.4477 - pTeX: last_jchar, direction, adjust_dir, prev_node
+@x [16.215] l.4477 - pTeX: last_jchr, direction, adjust_dir, prev_node
 mode:=vmode; head:=contrib_head; tail:=contrib_head;
 @y
 mode:=vmode; head:=contrib_head; tail:=contrib_head; prev_node:=tail;
 direction:=dir_yoko; adjust_dir:=direction; prev_disp:=0; last_jchr:=null;
+disp_called:=false;
 @z
 
 @x [16.216] l.4496 - pTeX: last_jchr, displacement.
 incr(nest_ptr); head:=get_avail; tail:=head; prev_graf:=0; mode_line:=line;
 @y
 incr(nest_ptr); head:=new_null_box; tail:=head; prev_node:=tail;
-prev_graf:=0; prev_disp:=0; last_jchr:=null; mode_line:=line;
+prev_graf:=0; prev_disp:=0; disp_called:=false; last_jchr:=null; mode_line:=line;
 @z
 
 @x [16.217] l.4504 - pTeX: pop_nest last_jchr
@@ -1407,6 +1416,30 @@ else if n<=eqtb_size then print("kinsoku")
 else print_char("?"); {this can't happen either}
 end;
 tats
+@z
+
+@x [17.???] l.???? - pTeX multibyte control symbol
+procedure print_cs(@!p:integer); {prints a purported control sequence}
+@y
+procedure print_cs(@!p:integer); {prints a purported control sequence}
+var j, l:pool_pointer; @!cat:0..max_char_code;
+@z
+
+@x
+else  begin print_esc(text(p));
+  print_char(" ");
+  end;
+@y
+else  begin l:=text(p);
+  print_esc(l); j:=str_start[l]; l:=str_start[l+1];
+  if l>j+1 then begin
+    if l-j=multistrlen(ustringcast(str_pool), l, j) then
+      begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(str_pool), l, j)));
+      if (cat<>other_kchar) then print_char(" ");
+      end
+    else print_char(" "); end
+  else print_char(" ");
+  end;
 @z
 
 @x [18.265] l.5903 - pTeX: \jfont \tfont
@@ -2042,6 +2075,34 @@ else { \.{\\delcode} }
   scanned_result(eqtb[m+cur_val].int)(int_val) end;
 @z
 
+@x pTeX: \ptexversion
+@d badness_code=glue_val+2 {code for \.{\\badness}}
+@y
+@d badness_code=glue_val+2 {code for \.{\\badness}}
+@d ptex_version_code=badness_code+1 {code for \.{\\ptexversion}}
+@d ptex_minor_version_code=ptex_version_code+1 {code for \.{\\ptexminorversion}}
+@z
+
+@x pTeX: \ptexversion
+primitive("badness",last_item,badness_code);
+@!@:badness_}{\.{\\badness} primitive@>
+@y
+primitive("badness",last_item,badness_code);
+@!@:badness_}{\.{\\badness} primitive@>
+primitive("ptexversion",last_item,ptex_version_code);
+@!@:ptexversion_}{\.{\\ptexversion} primitive@>
+primitive("ptexminorversion",last_item,ptex_minor_version_code);
+@!@:ptexminorversion_}{\.{\\ptexminorversion} primitive@>
+@z
+
+@x pTeX: \ptexversion
+  input_line_no_code: print_esc("inputlineno");
+@y
+  input_line_no_code: print_esc("inputlineno");
+  ptex_version_code: print_esc("ptexversion");
+  ptex_minor_version_code: print_esc("ptexminorversion");
+@z
+
 @x [26.420] l.8474 - pTeX: Fetch a box dimension: dir_node
 begin scan_eight_bit_int;
 if box(cur_val)=null then cur_val:=0 @+else cur_val:=mem[box(cur_val)+m].sc;
@@ -2092,6 +2153,18 @@ if not is_char_node(tx) then
 @d find_effective_tail==find_effective_tail_pTeX
 
 @<Fetch an item in the current node...@>=
+@z
+
+@x pTeX: \ptexversion 
+  begin if cur_chr=input_line_no_code then cur_val:=line
+  else cur_val:=last_badness; {|cur_chr=badness_code|}
+@y
+  begin case m of
+    input_line_no_code: cur_val:=line;
+    badness_code: cur_val:=last_badness;
+    ptex_version_code: cur_val:=pTeX_version;
+    ptex_minor_version_code: cur_val:=pTeX_minor_version;
+  end; {there and no other cases}
 @z
 
 @x [26.424] l.8516 - pTeX: Fetch an item ...: disp_node
@@ -2234,6 +2307,14 @@ else if scan_keyword("sp") then goto done
 @.sp@>
 @z
 
+@x [26.459] pTeX: help message
+help6("Dimensions can be in units of em, ex, in, pt, pc,")@/
+  ("cm, mm, dd, cc, bp, or sp; but yours is a new one!")@/
+@y
+help6("Dimensions can be in units of em, ex, zw, zh, in, pt, pc,")@/
+  ("cm, mm, dd, cc, bp, H, Q, or sp; but yours is a new one!")@/
+@z
+
 @x [27.464] l.9475 - pTeX: str_toks
   if t=" " then t:=space_token
   else t:=other_token+t;
@@ -2263,7 +2344,8 @@ else if scan_keyword("sp") then goto done
 @d sjis_code=7 {command code for \.{\\sjis}}
 @d jis_code=8 {command code for \.{\\jis}}
 @d kuten_code=9 {command code for \.{\\kuten}}
-@d ptex_convert_codes=10 {end of \pTeX's command codes}
+@d ptex_revision_code=10 {command code for \.{\\ptexrevision}}
+@d ptex_convert_codes=11 {end of \pTeX's command codes}
 @d job_name_code=ptex_convert_codes {command code for \.{\\jobname}}
 @z
 
@@ -2283,6 +2365,8 @@ primitive("jis",convert,jis_code);
 @!@:jis_}{\.{\\jis} primitive@>
 primitive("kuten",convert,kuten_code);
 @!@:kuten_}{\.{\\kuten} primitive@>
+primitive("ptexrevision",convert,ptex_revision_code);
+@!@:ptexrevision_}{\.{\\ptexrevision} primitive@>
 @z
 
 @x [27.469] l.9558 - pTeX:
@@ -2294,6 +2378,7 @@ primitive("kuten",convert,kuten_code);
   sjis_code:print_esc("sjis");
   jis_code:print_esc("jis");
   kuten_code:print_esc("kuten");
+  ptex_revision_code:print_esc("ptexrevision");
 @z
 
 @x [27.470] l.9566 - pTeX: convert KANJI code continue
@@ -2318,6 +2403,7 @@ KANJI(cx):=0;
 case c of
 number_code,roman_numeral_code,
 kansuji_code,euc_code,sjis_code,jis_code,kuten_code: scan_int;
+ptex_revision_code: do_nothing;
 string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token;
   if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {|wchar_token|}
@@ -2342,6 +2428,7 @@ jis_code:   print_int(fromJIS(cur_val));
 euc_code:   print_int(fromEUC(cur_val));
 sjis_code:  print_int(fromSJIS(cur_val));
 kuten_code: print_int(fromKUTEN(cur_val));
+ptex_revision_code: print(pTeX_revision);
 kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else if KANJI(cx)=0 then print_char(cur_chr)
@@ -2510,7 +2597,7 @@ loop@+begin
     append_char(Hi(cur_chr)); {kanji upper byte}
     append_char(Lo(cur_chr)); {kanji lower byte}
     end
-  else if (cur_cmd>other_char)or(cur_chr>255) then {not a alphabet}
+  else if (cur_cmd>other_char)or(cur_chr>255) then {not an alphabet}
     begin back_input; goto done;
     end
   {If |cur_chr| is a space and we're not scanning a token list, check
@@ -2549,19 +2636,19 @@ This is called BigEndian order.
 This is called BigEndian order.
 @!@^BigEndian order@>
 
-We use to get \TeX\ knowledge about KANJI fonts from \.{JFM} files.
-The \.{JFM} format holds more two 16-bit integers ,|id| and |nt|,
+We get \TeX\ knowledge about KANJI fonts from \.{JFM} files.
+The \.{JFM} format holds more two 16-bit integers, |id| and |nt|,
 at the top of the file.
 $$\vbox{\halign{\hfil#&$\null=\null$#\hfil\cr
 |id|&identification code of the file;\cr
 |nt|&number of words in the |char_type| table;\cr}}$$
-The identification byte, |id| equals~11 or~9. When \TeX read a font file,
+The identification byte, |id| equals~11 or~9. When \TeX\ reads a font file,
 the |id| equals~11 or~9 then the font is the \.{JFM}, othercases it is
 the \.{TFM} file. The \.{TFM} holds |lf| at the same postion of |id|,
-usually it take a larger number than~9 or~11.
-The |nt| is nonngative and less than $2^{15}$.
+usually it takes a larger number than~9 or~11.
+The |nt| is nonnegative and less than $2^{15}$.
 
-We must have |ec=0|,
+We must have |bc=0|,
 $$\hbox{|lf=7+lh+nt+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np|.}$$
 
 @d yoko_jfm_id=11 {for `yoko-kumi' fonts}
@@ -2575,7 +2662,7 @@ operation looks for both |list_tag| and |ext_tag|.
 
 If the \.{JFM}, the |lig_tag| is called |gk_tag|. The |gk_tag| means that
 this character has a glue/kerning program starting at position |remainder|
-in the |glue_kern| array. And a \.{JFM} not used |tag=2| and |tag=3|.
+in the |glue_kern| array. And a \.{JFM} does not use |tag=2| and |tag=3|.
 @z
 
 @x [30.544] l.11088 - pTeX: gk_tag
@@ -2622,10 +2709,15 @@ in the |glue_kern| array. And a \.{JFM} not used |tag=2| and |tag=3|.
 
 @x [30.557] l.11413 - pTeX: glue_kern_start
 @d lig_kern_start(#)==lig_kern_base[#]+rem_byte {beginning of lig/kern program}
+@d lig_kern_restart_end(#)==256*op_byte(#)+rem_byte(#)+32768-kern_base_offset
+@d lig_kern_restart(#)==lig_kern_base[#]+lig_kern_restart_end
 @y
 @d lig_kern_start(#)==lig_kern_base[#]+rem_byte {beginning of lig/kern program}
-@d glue_kern_start(#)==lig_kern_base[#]+rem_byte
-  {beginning of glue/kern program}
+@d lig_kern_restart_end(#)==256*op_byte(#)+rem_byte(#)+32768-kern_base_offset
+@d lig_kern_restart(#)==lig_kern_base[#]+lig_kern_restart_end
+@d glue_kern_start(#)==lig_kern_base[#]+rem_byte {beginning of glue/kern program}
+@d glue_kern_restart_end(#)==256*op_byte(#)+rem_byte(#)+32768-kern_base_offset
+@d glue_kern_restart(#)==lig_kern_base[#]+glue_kern_restart_end
 @z
 
 @x [30.560] l.11457 - pTeX: jfm_flag, jfm_id, nt, cx
@@ -2635,6 +2727,22 @@ var k:font_index; {index into |font_info|}
 @!jfm_flag:dir_default..dir_tate; {direction of the \.{JFM}}
 @!nt:halfword; {number of the |char_type| tables}
 @!cx:KANJI_code; {kanji code}
+@z
+
+@x
+@d read_sixteen(#)==begin #:=fbyte;
+  if #>127 then abort;
+  fget; #:=#*@'400+fbyte;
+  end
+@y
+@d read_sixteen(#)==begin #:=fbyte;
+  if #>127 then abort;
+  fget; #:=#*@'400+fbyte;
+  end
+@d read_twentyfourx(#)==begin #:=fbyte;
+  fget; #:=#*@"100+fbyte;
+  fget; #:=#+fbyte*@"10000;
+  end
 @z
 
 @x [30.565] l.11548 - pTeX: read tfm size
@@ -2747,8 +2855,8 @@ for k:=fmem_ptr to width_base[f]-1 do
 if jfm_flag<>dir_default then
   for k:=ctype_base[f] to ctype_base[f]+nt-1 do
     begin
-    fget; read_sixteen(cx); font_info[k].hh.rh:=tokanji(cx); {|kchar_code|}
-    fget; read_sixteen(cx); font_info[k].hh.lhfield:=tonum(cx); {|kchar_type|}
+    fget; read_twentyfourx(cx); font_info[k].hh.rh:=tokanji(cx); {|kchar_code|}
+    fget; cx:=fbyte; font_info[k].hh.lhfield:=tonum(cx); {|kchar_type|}
     end;
 for k:=char_base[f]+bc to width_base[f]-1 do
   begin store_four_quarters(font_info[k].qqqq);
@@ -2863,7 +2971,7 @@ comes next; this currently equals~2, as in the preamble.
 @ The last part of the postamble, following the |post_post| byte that
 signifies the end of the font definitions, contains |q|, a pointer to the
 |post| command that started the postamble.  An identification byte, |i|,
-comes next; this equals~2 or~3. If not used \pTeX primitives then the
+comes next; this equals~2 or~3. If \pTeX\ primitives are not used then the
 identification byte equals~2, othercase this is set to~3.
 @z
 
@@ -3826,9 +3934,13 @@ if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
         begin cur_c:=a; a:=glue_kern_start(cur_f)(cur_i);
         {|cur_c|:=qi(|get_jfm_pos|(|math_kcode|(p),
                    |fam_fnt|(fam(nucleus(p))+|cur_size|)));}
-        repeat
          cur_i:=font_info[a].qqqq;
-         if next_char(cur_i)=cur_c then
+         if skip_byte(cur_i)>stop_flag then {huge glue/kern table rearranged}
+           begin a:=glue_kern_restart(cur_f)(cur_i);
+           cur_i:=font_info[a].qqqq;
+           end;
+       loop@+ begin
+         if next_char(cur_i)=cur_c then if skip_byte(cur_i)<=stop_flag then
          if op_byte(cur_i)<kern_flag then
            begin gp:=font_glue[cur_f]; rr:=rem_byte(cur_i);
            if gp<>null then begin
@@ -3846,13 +3958,16 @@ if (math_type(subscr(q))=empty)and(math_type(supscr(q))=empty)and@|
              add_glue_ref(gq); link(gp):=get_node(small_node_size);
              gp:=link(gp); glue_ptr(gp):=null; link(gp):=null;
              end;
-           p:=new_glue(gq); link(p):=link(q); link(q):=p; return;
+           p:=new_glue(gq); subtype(p):=jfm_skip+1;
+           link(p):=link(q); link(q):=p; return;
            end
          else begin p:=new_kern(char_kern(cur_f)(cur_i));
            link(p):=link(q); link(q):=p; return;
            end;
-         incr(a);
-        until skip_byte(cur_i)>=stop_flag;
+         if skip_byte(cur_i)>=stop_flag then return;
+         a:=a+qo(skip_byte(cur_i))+1; {SKIP property}
+         cur_i:=font_info[a].qqqq;
+         end;
         end;
       end;
   end;
@@ -4348,7 +4463,7 @@ r:=link(q); link(q):=null; q:=link(temp_head); link(temp_head):=r;
 if last_disp<>0 then begin
   r:=get_node(small_node_size);
   type(r):=disp_node; disp_dimen(r):=last_disp;
-  link(r):=q; q:=r;
+  link(r):=q; q:=r; disp_called:=true;
   end;
 @z
 
@@ -4762,7 +4877,7 @@ end;
 var p,@!q:pointer; {for short-term use}
 @y
 var p,@!q:pointer; {for short-term use}
-@!r:pointer; {temporaly}
+@!r:pointer; {temporary}
 @z
 
 @x [47.1071] l.21485 - pTeX: \tate, \yoko, \dtou
@@ -4801,10 +4916,19 @@ any_mode(make_box): begin_box(0);
 any_mode(make_box): begin_box(0);
 any_mode(chg_dir):
   begin  if cur_group<>align_group then
-    if head=tail then
-      begin direction:=cur_chr;
-      if mode=vmode then page_dir:=cur_chr;
+    if mode=hmode then 
+      begin print_err("Improper `"); print_cmd_chr(cur_cmd,cur_chr);
+      print("'"); 
+      help2("You cannot change the direction in unrestricted")
+      ("horizontal mode."); error;
       end
+    else if abs(mode)=mmode then
+      begin print_err("Improper `"); print_cmd_chr(cur_cmd,cur_chr);
+      print("'");
+      help1("You cannot change the direction in math mode."); error;
+      end
+    else if nest_ptr=0 then change_page_direction(cur_chr)
+    else if head=tail then direction:=cur_chr
     else begin print_err("Use `"); print_cmd_chr(cur_cmd,cur_chr);
       print("' at top of list");
       help2("Direction change command is available only while")
@@ -5122,7 +5246,7 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
     end
   else  begin
     if abs(box_dir(p))<>abs(adjust_dir) then
-      begin print_err("Direction Incompatible.");
+      begin print_err("Direction Incompatible");
       help1("\vadjust's argument and outer vlist must have same direction.");
       error; flush_node_list(list_ptr(p));
       end
@@ -5232,7 +5356,7 @@ case abs(box_dir(p)) of
     if abs(direction)<>abs(box_dir(p)) then begin
       print_err("Incompatible direction list can't be unboxed");
       help2("Sorry, Pandora. (You sneaky devil.)")@/
-      ("I refuse to unbox a box in differrent direction.");@/
+      ("I refuse to unbox a box in different direction.");@/
       error; return;
     end;
 endcases;
@@ -5315,6 +5439,48 @@ begin if tail<>head then
     end;
   end;
 @z
+
+@x pTeX: direction check in \discretionary 
+@!n:integer; {length of discretionary list}
+@y
+@!n:integer; {length of discretionary list}
+@!d:integer; {direction}
+@z
+
+@x pTeX: direction check in \discretionary 
+p:=link(head); pop_nest;
+case saved(-1) of
+0:pre_break(tail):=p;
+1:post_break(tail):=p;
+@y
+p:=link(head); d:=abs(direction); pop_nest;
+case saved(-1) of
+0:if abs(direction)=d then pre_break(tail):=p
+  else begin 
+    print_err("Direction Incompatible");
+    help2("\discretionary's argument and outer hlist must have same direction.")@/
+    ("I delete your first part."); error; pre_break(tail):=null; flush_node_list(p);
+  end;
+1:if abs(direction)=d then post_break(tail):=p
+  else begin 
+    print_err("Direction Incompatible");
+    help2("\discretionary's argument and outer hlist must have same direction.")@/
+    ("I delete your second part."); error; post_break(tail):=null; flush_node_list(p);
+  end;
+@z
+
+@x pTeX: direction check in \discretionary 
+else link(tail):=p;
+if n<=max_quarterword then replace_count(tail):=n
+@y
+else if (n>0)and(abs(direction)<>d) then
+  begin print_err("Direction Incompatible");
+  help2("\discretionary's argument and outer hlist must have same direction.")@/
+  ("I delete your third part."); flush_node_list(p); n:=0; error;
+  end
+else link(tail):=p;
+if n<=max_quarterword then replace_count(tail):=n
+@z 
 
 @x [47.1120] l.22119 - pTeX: discretionary with disp_node
 decr(save_ptr); return;
@@ -6112,7 +6278,7 @@ if (ep>=1)and(kchar_code(f)(sp)<=jc)and(jc<=kchar_code(f)(ep)) then
 get_jfm_pos:=kchar_type(f)(0);
 end;
 
-@ Following codes are used to calcutation a KANJI width and height.
+@ Following codes are used to calculate a KANJI width and height.
 
 @<Local variables for dimension calculations@>=
 @!t: eight_bits;
@@ -6148,13 +6314,13 @@ if not is_char_kanji(cur_val) then
   begin print_err("Invalid KANSUJI char (");
   print_hex(cur_val); print_char(")");
 @.Invalid KANSUJI char@>
-  help1("I'm skip this control sequences.");@/
+  help1("I'm skipping this control sequences.");@/
   error; return;
   end
 else if (n<0)or(n>9) then
   begin print_err("Invalid KANSUJI number ("); print_int(n); print_char(")");
 @.Invalid KANSUJI number@>
-  help1("I'm skip this control sequences.");@/
+  help1("I'm skipping this control sequences.");@/
   error; return;
   end
 else
@@ -6179,7 +6345,7 @@ begin k:=0;
   end;
 end;
 
-@ pTeX inserts a glue specified by \.{\\kanjiskip} between 2byte-characters,
+@ \pTeX\ inserts a glue specified by \.{\\kanjiskip} between 2byte-characters,
 automatically, if \.{\\autospacing}.  This glue is suppressed by
 \.{\\noautospacing}.
 \.{\\xkanjiskip}, \.{\\noautoxspacing}, \.{\\autoxspacing}, \.{\\xspcode} is
@@ -6232,6 +6398,8 @@ inserting a space between 2byte-char and 1byte-char.
 @d inhibit_both=0     {disable to insert space before 2byte-char and after it}
 @d inhibit_previous=1 {disable to insert space before 2byte-char}
 @d inhibit_after=2    {disable to insert space after 2byte-char}
+@d inhibit_none=3     {enable to insert space before/after 2byte-char}
+@d inhibit_unused=4   {unused entry}
 @d no_entry=1000
 @d new_pos=0
 @d cur_pos=1
@@ -6262,14 +6430,15 @@ var p,s:pointer;
 begin s:=calc_pos(c); p:=s;
 if n=new_pos then
   begin repeat
-  if (inhibit_xsp_code(p)=0)or(inhibit_xsp_code(p)=c) then goto done;
+  if (inhibit_xsp_type(p)=inhibit_unused)or(inhibit_xsp_code(p)=0)
+    or(inhibit_xsp_code(p)=c) then goto done;
   incr(p); if p>255 then p:=0;
   until s=p; p:=no_entry;
   end
 else
   begin repeat
-  if inhibit_xsp_code(p)=0 then goto done1;
-  if inhibit_xsp_code(p)=c then goto done;
+  if inhibit_xsp_code(p)=0 then goto done1
+  else if (inhibit_xsp_type(p)<>inhibit_unused)and(inhibit_xsp_code(p)=c) then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
 done1: p:=no_entry;
@@ -6282,24 +6451,27 @@ assign_inhibit_xsp_code:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
 if is_char_kanji(n) then
   begin j:=get_inhibit_pos(tokanji(n),new_pos);
-  if j=no_entry then
+  if (j<>no_entry)and(cur_val>inhibit_after) then
+    begin if global or(cur_level=level_one) then cur_val:=inhibit_unused
+      { remove the entry from inhibit table }
+	else cur_val:=inhibit_none; end
+  else if j=no_entry then
     begin print_err("Inhibit table is full!!");
-    help1("I'm skip this control sequences.");@/
-    error; return;
-  end;
+    help1("I'm skipping this control sequences.");@/
+    error; return; end;
   define(inhibit_xsp_code_base+j,cur_val,n);
   end
 else
   begin print_err("Invalid KANJI code ("); print_hex(n); print_char(")");
 @.Invalid KANJI code@>
-  help1("I'm skip this control sequences.");@/
+  help1("I'm skipping this control sequences.");@/
   error; return;
   end;
 end;
 
 @ @<Fetch inhibit type from some table@>=
 begin scan_int; q:=get_inhibit_pos(tokanji(cur_val),cur_pos);
-cur_val_level:=int_val; cur_val:=3;
+cur_val_level:=int_val; cur_val:=inhibit_none;
 if q<>no_entry then cur_val:=inhibit_xsp_type(q);
 end
 
@@ -6309,6 +6481,7 @@ The \.{\\postbreakpenalty} is inserted after the 2byte-char.
 
 @d pre_break_penalty_code=1
 @d post_break_penalty_code=2
+@d kinsoku_unused_code=3
 
 @<Put each...@>=
 primitive("prebreakpenalty",assign_kinsoku,pre_break_penalty_code);
@@ -6335,15 +6508,16 @@ if p+kinsoku_base<0 then
 gubed
 if n=new_pos then
   begin repeat
-  if (kinsoku_type(p)=0)or(kinsoku_code(p)=c) then goto done;
+  if (kinsoku_type(p)=0)or(kinsoku_type(p)=kinsoku_unused_code)
+    or(kinsoku_code(p)=c) then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
   p:=no_entry;
   end
 else
   begin repeat
-  if kinsoku_type(p)=0 then goto done1;
-  if kinsoku_code(p)=c then goto done;
+  if kinsoku_type(p)=0 then goto done1
+  else if (kinsoku_type(p)<>kinsoku_unused_code)and(kinsoku_code(p)=c) then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
 done1: p:=no_entry;
@@ -6356,17 +6530,20 @@ assign_kinsoku:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
 if is_char_ascii(n) or is_char_kanji(n) then
   begin j:=get_kinsoku_pos(tokanji(n),new_pos);
-  if j=no_entry then
-    begin print_err("KINSOKU table is full!!");
-    help1("I'm skip this control sequences.");@/
-    error; return;
-    end;
-  if (p=pre_break_penalty_code)or(p=post_break_penalty_code) then
-    begin define(kinsoku_base+j,p,tokanji(n));
-    word_define(kinsoku_penalty_base+j,cur_val);
-    end
-  else confusion("kinsoku");
+  if (j<>no_entry)and(cur_val=0)and(global or(cur_level=level_one)) then
+    define(kinsoku_base+j,kinsoku_unused_code,0) { remove the entry from KINSOKU table }
+  else begin
+    if j=no_entry then begin
+      print_err("KINSOKU table is full!!");
+      help1("I'm skipping this control sequences.");@/
+      error; return; end;
+    if (p=pre_break_penalty_code)or(p=post_break_penalty_code) then
+      begin define(kinsoku_base+j,p,tokanji(n));
+      word_define(kinsoku_penalty_base+j,cur_val);
+      end
+    else confusion("kinsoku");
 @:this can't happen kinsoku}{\quad kinsoku@>
+    end
   end
 else
   begin print_err("Invalid KANJI code for ");
@@ -6375,7 +6552,7 @@ else
   else print_char("?");
   print("breakpenalty ("); print_hex(n); print_char(")");
 @.Invalid KANJI code@>
-  help1("I'm skip this control sequences.");@/
+  help1("I'm skipping this control sequences.");@/
   error; return;
   end;
 end;
@@ -6391,7 +6568,7 @@ end
 
 @<Insert kinsoku penalty@>=
 begin kp:=get_kinsoku_pos(cx,cur_pos);
-if kp<>no_entry then
+if kp<>no_entry then if kinsoku_penalty(kp)<>0 then
   begin if kinsoku_type(kp)=pre_break_penalty_code then
     begin if not is_char_node(cur_q)and(type(cur_q)=penalty_node) then
       penalty(cur_q):=penalty(cur_q)+kinsoku_penalty(kp)
@@ -6409,7 +6586,7 @@ end;
 
 @ @<Insert |pre_break_penalty| of |cur_chr|@>=
 begin kp:=get_kinsoku_pos(cur_chr,cur_pos);
-if kp<>no_entry then
+if kp<>no_entry then if kinsoku_penalty(kp)<>0 then
   begin if kinsoku_type(kp)=pre_break_penalty_code then
     if not is_char_node(tail)and(type(tail)=penalty_node) then
       penalty(tail):=penalty(tail)+kinsoku_penalty(kp)
@@ -6422,7 +6599,7 @@ end;
 
 @ @<Insert |post_break_penalty|@>=
 begin kp:=get_kinsoku_pos(cx,cur_pos);
-if kp<>no_entry then
+if kp<>no_entry then if kinsoku_penalty(kp)<>0 then
   begin if kinsoku_type(kp)=post_break_penalty_code then
     begin tail_append(new_penalty(kinsoku_penalty(kp)));
     subtype(tail):=kinsoku_pena;
@@ -6486,9 +6663,9 @@ begin
   endcases
 end;
 
-@ This function is called from |adjust_hlist| to used to check, whether
-a list which pointed |box_p| contain a printing character.
-If the list contain such a character, then return `true', otherwise `false'.
+@ This function is called from |adjust_hlist| to check, whether
+a list which pointed |box_p| contains a printing character.
+If the list contains such a character, then return `true', otherwise `false'.
 If the first matter is a character, |first_char| is stored it.
 |last_char| is stored a last character.  If no printing characters exist
 in the list, |first_char| and |last_char| is null.
@@ -6584,9 +6761,9 @@ var q,s,t,u,v,x,z:pointer;
   i,k:halfword;
   a: pointer; { temporary pointer for accent }
   insert_skip:no_skip..after_wchar;
-  cx:KANJI_code; {temporaly register for KANJI character}
-  ax:ASCII_code; {temporaly register for ASCII character}
-  do_ins:boolean; {for inserting |xkanji_skip| into prevous (or after) KANJI}
+  cx:KANJI_code; {temporary register for KANJI character}
+  ax:ASCII_code; {temporary register for ASCII character}
+  do_ins:boolean; {for inserting |xkanji_skip| into previous (or after) KANJI}
 begin if link(p)=null then goto exit;
 if auto_spacing>0 then
   begin delete_glue_ref(space_ptr(p)); space_ptr(p):=kanji_skip;
@@ -6598,11 +6775,19 @@ if auto_xspacing>0 then
   end;
 u:=space_ptr(p); add_glue_ref(u);
 s:=xspace_ptr(p); add_glue_ref(s);
-if not is_char_node(link(p)) {p1.0.9d}
-    and(type(link(p))=glue_node)and(subtype(link(p))=jfm_skip+1) then
+if not is_char_node(link(p)) then
+  if (type(link(p))=glue_node)and(subtype(link(p))=jfm_skip+1) then
   begin v:=link(p); link(p):=link(v);
   fast_delete_glue_ref(glue_ptr(v)); free_node(v,small_node_size);
-  end;
+  end
+  else if (type(link(p))=penalty_node)and(subtype(link(p))=kinsoku_pena) then
+    begin v:=link(link(p));
+    if (not is_char_node(v)) and (type(v)=glue_node)and(subtype(v)=jfm_skip+1) then
+      begin link(link(p)):=link(v);
+      fast_delete_glue_ref(glue_ptr(v)); free_node(v,small_node_size);
+      end
+    end;
+
 i:=0; insert_skip:=no_skip; p:=link(p); v:=p; q:=p;
 while p<>null do
   begin if is_char_node(p) then
@@ -6707,7 +6892,7 @@ else
 
 @ @<Insert a space after the |last_char|@>=
 if type(last_char)=math_node then
-  begin ax:=qo("0"); 
+  begin ax:=qo("0");
   if auto_xsp_code(ax)>=2 then
     insert_skip:=after_schar else insert_skip:=no_skip;
   end
@@ -6914,7 +7099,7 @@ if d<0 then print("(math)");
 print(" direction");
 end;
 
-@ The procedure |set_math_kchar| is same as |set_math_char| which
+@ The procedure |set_math_kchar| is same as |set_math_char| which is
 written in section 48.
 
 @<Declare act...@>=
@@ -6964,7 +7149,11 @@ goto main_loop_j+3;
 @#
 main_loop_j+1: space_factor:=1000;
   if main_f<>null_font then
-    begin fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
+    begin if not disp_called then
+      begin prev_node:=tail; tail_append(get_node(small_node_size));
+      type(tail):=disp_node; disp_dimen(tail):=0; disp_called:=true
+	  end;
+	fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
     link(tail):=main_p; tail:=main_p; last_jchr:=tail;
     fast_get_avail(main_p); info(main_p):=KANJI(cur_chr);
     link(tail):=main_p; tail:=main_p;
@@ -7027,9 +7216,10 @@ begin if not is_char_node(tail)and(type(tail)=disp_node) then
   else disp_dimen(tail):=disp;
   end
 else
-  if disp<>0 then
+  if disp<>0 or not disp_called then
     begin prev_node:=tail; tail_append(get_node(small_node_size));
     type(tail):=disp_node; disp_dimen(tail):=disp; prev_disp:=disp;
+	disp_called:=true
     end;
 end;
 
@@ -7041,16 +7231,23 @@ begin if not is_char_node(tail)and(type(tail)=disp_node) then
 else
   begin prev_node:=tail; tail_append(get_node(small_node_size));
   type(tail):=disp_node; disp_dimen(tail):=0; prev_disp:=disp;
+  disp_called:=true
   end;
 end;
 
 @ @<Look ahead for glue or kerning@>=
 cur_q:=tail;
 if inhibit_glue_flag<>true then
-  begin if char_tag(main_i)=gk_tag then
+  begin if (tail=link(head))and(not is_char_node(tail))and(type(tail)=disp_node) then
+    goto skip_loop
+  else begin if char_tag(main_i)=gk_tag then
     begin main_k:=glue_kern_start(main_f)(main_i);
-    repeat main_j:=font_info[main_k].qqqq;
-    if next_char(main_j)=cur_l then
+    main_j:=font_info[main_k].qqqq;
+    if skip_byte(main_j)>stop_flag then {huge glue/kern table rearranged}
+      begin main_k:=glue_kern_restart(main_f)(main_j);
+        main_j:=font_info[main_k].qqqq;
+        end;
+    loop@+begin if next_char(main_j)=cur_l then if skip_byte(main_j)<=stop_flag then
       begin if op_byte(main_j)<kern_flag then
         begin gp:=font_glue[main_f]; cur_r:=rem_byte(main_j);
         if gp<>null then
@@ -7079,8 +7276,11 @@ if inhibit_glue_flag<>true then
         goto skip_loop;
         end;
     end;
-  incr(main_k);
-  until skip_byte(main_j)>=stop_flag;
+    if skip_byte(main_j)>=stop_flag then goto skip_loop;
+    main_k:=main_k+qo(skip_byte(main_j))+1; {SKIP property}
+    main_j:=font_info[main_k].qqqq;
+    end;
+  end;
   end;
 end;
 skip_loop: inhibit_glue_flag:=false;
@@ -7091,6 +7291,36 @@ begin
 if s>255 then
   begin print_char(Hi(s)); print_char(Lo(s));
   end else print_char(s);
+end;
+
+@ This procedure changes the direction of the page, if |page_contents|
+is |empty| and ``recent contributions'' does not contain any boxes,
+rules nor insertions.
+
+@<Declare act...@>=
+procedure change_page_direction(@!d: halfword);
+label done;
+var p: pointer; flag:boolean;
+begin flag:=(page_contents=empty);
+if flag and (head<>tail) then begin
+  p:=link(head);
+  while p<>null do
+    case type(p) of
+      hlist_node,vlist_node,dir_node,rule_node,ins_node:
+        begin flag:=false; goto done; end;
+      { |glue_node|, |kern_node|, |penalty_node| are discarded }
+      othercases p:=link(p);
+    endcases;
+  done: do_nothing;
+end;
+if flag then begin direction:=d; page_dir:=d; end
+else begin
+  print_err("Use `"); print_cmd_chr(cur_cmd,d);
+  print("' at top of the page");
+  help3("You can change the direction of the page only when")
+  ("the current page and recent contributions consist of only")
+  ("marks and whatsits."); error;
+  end;
 end;
 
 @* \[56] System-dependent changes.

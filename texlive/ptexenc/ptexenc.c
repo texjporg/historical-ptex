@@ -7,6 +7,7 @@
 #include <kpathsea/variable.h>
 #include <kpathsea/readable.h>
 #include <kpathsea/c-limits.h>
+#include <kpathsea/c-pathmx.h>
 
 #include <ptexenc/c-auto.h>
 #include <ptexenc/ptexenc.h>
@@ -154,7 +155,7 @@ void enable_UPTEX (boolean enable)
         internal_enc = ENC_UPTEX;
     } else {
 #ifdef WIN32
-        default_kanji_enc = ENC_SJIS;
+        default_kanji_enc = ENC_UTF8;
         internal_enc = ENC_SJIS;
 #else
         default_kanji_enc = ENC_UTF8;
@@ -840,12 +841,22 @@ long input_line2(FILE *fp, unsigned char *buff, long pos,
     return last;
 }
 
+/* set encode of stdin if fp = NULL */
 boolean setinfileenc(FILE *fp, const char *str)
 {
     int enc;
     enc = string_to_enc(str);
     if (enc < 0) return false;
     infile_enc[fileno(fp)] = enc;
+    return true;
+}
+
+boolean setstdinenc(const char *str)
+{
+    int enc;
+    enc = string_to_enc(str);
+    if (enc < 0) return false;
+    infile_enc[fileno(stdin)] = enc;
     return true;
 }
 
