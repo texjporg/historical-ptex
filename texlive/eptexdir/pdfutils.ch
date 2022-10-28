@@ -8,7 +8,6 @@
 %%
 %% \pdfsavepos and co.
 %%   (\pdfsavepos, \pdfpage{width,height}, \pdflast{x,y}pos)
-%%   papersize special automatically sets \pdfpage{width,height} (quick hack).
 %%
 %% \pdffiledump: for bmpsize package by Heiko Oberdiek
 %%
@@ -793,22 +792,38 @@ else if cur_tok=cs_token_flag+frozen_primitive then
 
 @x
 @d etex_convert_codes=etex_convert_base+1 {end of \eTeX's command codes}
+@d job_name_code=etex_convert_codes {command code for \.{\\jobname}}
 @y
-@d pdf_strcmp_code          = etex_convert_base+1 {command code for \.{\\pdfstrcmp}}
-@d pdf_creation_date_code   = etex_convert_base+2 {command code for \.{\\pdfcreationdate}}
-@d pdf_file_mod_date_code   = etex_convert_base+3 {command code for \.{\\pdffilemoddate}}
-@d pdf_file_size_code       = etex_convert_base+4 {command code for \.{\\pdffilesize}}
-@d pdf_mdfive_sum_code      = etex_convert_base+5 {command code for \.{\\pdfmdfivesum}}
-@d pdf_file_dump_code       = etex_convert_base+6 {command code for \.{\\pdffiledump}}
-@d uniform_deviate_code     = etex_convert_base+7 {command code for \.{\\pdfuniformdeviate}}
-@d normal_deviate_code      = etex_convert_base+8 {command code for \.{\\pdfnormaldeviate}}
-@d etex_convert_codes=etex_convert_base+9 {end of \eTeX's command codes}
+@d etex_convert_codes=etex_convert_base+1 {end of \eTeX's command codes}
+@d expanded_code            = etex_convert_codes {command code for \.{\\expanded}}
+@d pdf_first_expand_code    = expanded_code + 1 {base for \pdfTeX-like command codes}
+@d pdf_strcmp_code          = pdf_first_expand_code+0 {command code for \.{\\pdfstrcmp}}
+@d pdf_creation_date_code   = pdf_first_expand_code+1 {command code for \.{\\pdfcreationdate}}
+@d pdf_file_mod_date_code   = pdf_first_expand_code+2 {command code for \.{\\pdffilemoddate}}
+@d pdf_file_size_code       = pdf_first_expand_code+3 {command code for \.{\\pdffilesize}}
+@d pdf_mdfive_sum_code      = pdf_first_expand_code+4 {command code for \.{\\pdfmdfivesum}}
+@d pdf_file_dump_code       = pdf_first_expand_code+5 {command code for \.{\\pdffiledump}}
+@d uniform_deviate_code     = pdf_first_expand_code+6 {command code for \.{\\pdfuniformdeviate}}
+@d normal_deviate_code      = pdf_first_expand_code+7 {command code for \.{\\pdfnormaldeviate}}
+@d pdf_convert_codes        = pdf_first_expand_code+8 {end of \pdfTeX-like command codes}
+@d job_name_code=pdf_convert_codes {command code for \.{\\jobname}}
+@z
+
+@x
+primitive("jobname",convert,job_name_code);@/
+@y
+@#
+primitive("expanded",convert,expanded_code);@/ 
+@!@:expanded_}{\.{\\expanded} primitive@> 
+@#
+primitive("jobname",convert,job_name_code);@/
 @z
 
 @x
   eTeX_revision_code: print_esc("eTeXrevision");
 @y
   eTeX_revision_code: print_esc("eTeXrevision");
+  expanded_code:      print_esc("expanded");
   pdf_strcmp_code:        print_esc("pdfstrcmp");
   pdf_creation_date_code: print_esc("pdfcreationdate");
   pdf_file_mod_date_code: print_esc("pdffilemoddate");
@@ -857,6 +872,20 @@ u:=0; { will become non-nil if a string is already being built}
 eTeX_revision_code: do_nothing;
 @y
 eTeX_revision_code: do_nothing;
+expanded_code:
+  begin
+    save_scanner_status := scanner_status;
+    save_warning_index := warning_index;
+    save_def_ref := def_ref;
+    save_cur_string;
+    scan_pdf_ext_toks;
+    warning_index := save_warning_index;
+    scanner_status := save_scanner_status;
+    ins_list(link(def_ref));
+    def_ref := save_def_ref;
+    restore_cur_string;
+    return;
+  end;
 pdf_strcmp_code:
   begin
     save_scanner_status := scanner_status;
@@ -1167,7 +1196,7 @@ procedure special_out(@!p:pointer);
 label done;
 var old_setting:0..max_selector; {holds print |selector|}
 @!k:pool_pointer; {index into |str_pool|}
-@!s,@!t,@!cw: scaled;
+@!s,@!t,@!cw, @!num, @!denom: scaled;
 @!bl: boolean;
 @!i: small_number;
 @z
@@ -1175,7 +1204,8 @@ var old_setting:0..max_selector; {holds print |selector|}
 @x
 pool_ptr:=str_start[str_ptr]; {erase the string}
 @y
-@<Determine whether this \.{\\special} is a papersize special@>;
+if read_papersize_special>0 then
+  @<Determine whether this \.{\\special} is a papersize special@>;
 done: pool_ptr:=str_start[str_ptr]; {erase the string}
 @z
 
@@ -1376,8 +1406,8 @@ end;
 @ Next, we implement \.{\\pdfsavepos} and related primitives.
 
 @<Glob...@>=
-@!cur_page_width: scaled; {width of page being shipped}
-@!cur_page_height: scaled; {height of page being shipped}
+@!cur_page_width: scaled; {"physical" width of page being shipped}
+@!cur_page_height: scaled; {"physical" height of page being shipped}
 @!pdf_last_x_pos: integer;
 @!pdf_last_y_pos: integer;
 
@@ -1394,92 +1424,119 @@ begin
   dir_dtou: begin pdf_last_x_pos := cur_v;  pdf_last_y_pos := -cur_h; end;
   endcases;
   pdf_last_x_pos := pdf_last_x_pos + 4736286;
-  case dvi_dir of
-  dir_tate,dir_dtou:
-    pdf_last_y_pos := cur_page_height - pdf_last_y_pos - 4736286;
-  dir_yoko:
-    pdf_last_y_pos := cur_page_height - pdf_last_y_pos - 4736286;
-  endcases;
+  pdf_last_y_pos := cur_page_height - pdf_last_y_pos - 4736286;
   {4736286 = 1in, the funny DVI origin offset}
 end
 
 @ @<Calculate DVI page dimensions and margins@>=
   if pdf_page_height <> 0 then
     cur_page_height := pdf_page_height
-  else if (type(p)=dir_node) then begin
-    if (box_dir(list_ptr(p))=dir_tate)or(box_dir(list_ptr(p))=dir_dtou) then
-        cur_page_height := width(p) + 2*v_offset + 2*4736286
-    else
-      cur_page_height := height(p) + depth(p) + 2*v_offset + 2*4736286;
-    end
+  else if (box_dir(p)=dir_tate)or(box_dir(p)=dir_dtou) then
+    cur_page_height := width(p) + 2*v_offset + 2*4736286
   else
     cur_page_height := height(p) + depth(p) + 2*v_offset + 2*4736286;
+    {4736286 = 1in, the funny DVI origin offset}
   if pdf_page_width <> 0 then
     cur_page_width := pdf_page_width
-  else if (type(p)=dir_node) then begin
-    if (box_dir(list_ptr(p))=dir_tate)or(box_dir(list_ptr(p))=dir_dtou) then
-      cur_page_width := height(p) + depth(p) + 2*h_offset + 2*4736286
-    else
-      cur_page_width := width(p) + 2*h_offset + 2*4736286;
-    end
+  else if (box_dir(p)=dir_tate)or(box_dir(p)=dir_dtou) then
+    cur_page_width := height(p) + depth(p) + 2*h_offset + 2*4736286
   else
-    cur_page_width := width(p) + 2*h_offset + 2*4736286;
+    cur_page_width := width(p) + 2*h_offset + 2*4736286
+    {4736286 = 1in, the funny DVI origin offset}
 
 
 @ Of course \epTeX\ can produce a \.{DVI} file only, not a PDF file.
 A \.{DVI} file does not have the information of the page height,
 which is needed to implement \.{\\pdflastypos} correctly.
 To keep the information of the page height, I (H.~Kitagawa)
-adopted \.{\\pdfpageheight} primitive from pdf\TeX. However, in \pTeX (and \hbox{\epTeX}),
-the papersize special \.{\\special\{papersize=|width|,|height|\}} is commonly used
-for specifying page width/height. Hence, I decided that the papersize special also
+adopted \.{\\pdfpageheight} primitive from pdf\TeX.
+
+In \pTeX (and \hbox{\epTeX}), the papersize special
+\.{\\special\{papersize=\<width>,\<height>\}} is commonly used
+for specifying page width/height.
+If \.{\\readpapersizespecial} is greater than~0, the papersize special also
 changes the value of \.{\\pdfpagewidth} and \.{\\pdfpageheight}.
-The following routine does this.
+This process is done in the following routine.
 
-In present implementation, the ``valid'' papersize special, which can be interpreted by
-this routine, is in the following form:
-$$\hbox{\.{\\special\char"7Bpapersize=}$x$\.{pt,}$y$\.{pt\char"7D}}$$
-where $x$\thinspace pt and $y$\thinspace pt are positive dimensions which \TeX\ can comprehend.
-No spaces are allowed in the above form, and only ``pt'' is allowed for unit, for simplicity.
+{\def\<#1>{\langle\hbox{#1\/}\rangle}
+In present implementation, the papersize special $\<special>$,
+which can be interpreted by this routine, is defined as follows.
+$$\eqalign{%
+  \<special> &\longrightarrow \.{papersize=}\<length>\.{,}\<length>\cr
+  \<length>  &\longrightarrow \<decimal>
+    \<optional~\.{true}>\<physical unit>\cr
+  \<decimal> &\longrightarrow \.{.} \mid \<digit>\<decimal> \mid
+    \<decimal>\<digit>\cr
+}$$}
+Note that any space, ``\.{,}'' as a decimal separator, minus~symbol
+are neither permitted.
 
-@d ifps==if k=pool_ptr then goto done else if
-@d sop(#)==so(str_pool[(#)])
+@d ifps(#)==@+if k+(#)>pool_ptr then goto done @+ else @+ if
+@d sop(#)==so(str_pool[#])
+@f ifps==if
 
 @<Determine whether this \.{\\special} is a papersize special@>=
-if pool_ptr-str_start[str_ptr]<=10 then goto done;
-k:=str_start[str_ptr];
-if (sop(k+0)<>'p')or(sop(k+1)<>'a')or(sop(k+2)<>'p')or
-   (sop(k+3)<>'e')or(sop(k+4)<>'r')or(sop(k+5)<>'s')or
-   (sop(k+6)<>'i')or(sop(k+7)<>'z')or(sop(k+8)<>'e') then goto done;
-k:=k+9; ifps sop(k)='=' then incr(k);
+begin k:=str_start[str_ptr];@/
+ifps(10) @,
+   (sop(k+0)<>'p')or(sop(k+1)<>'a')or(sop(k+2)<>'p')or
+   (sop(k+3)<>'e')@|or(sop(k+4)<>'r')or(sop(k+5)<>'s')or
+   (sop(k+6)<>'i')or(sop(k+7)<>'z')@|or(sop(k+8)<>'e')or
+   (sop(k+9)<>'=')  then goto done;
+k:=k+10;
 @<Read dimensions in the argument in the papersize special@>;
-incr(k); ifps sop(k)<>',' then goto done else incr(k); cw:=t;
-@<Read dimensions in the argument in the papersize special@>;
-geq_word_define(dimen_base+pdf_page_width_code,cw);
-geq_word_define(dimen_base+pdf_page_height_code,t);
-cur_page_height := t; cur_page_width := cw;
-if (dvi_dir=dir_tate)or(dvi_dir=dir_dtou) then begin
-    t:=cur_page_height; cur_page_height:=cur_page_width;
-    cur_page_width:=t; end;
-
-@ @<Read dimensions in the argument in the papersize special@>=
-s:=1; t:=0; bl:=true;
-while (k<pool_ptr)and(bl)  do begin
-  if (sop(k)>='0')and (sop(k)<='9') then begin t:=10*t+sop(k)-'0'; incr(k); end
-  else begin bl:=false; end;
+ifps(1) @, sop(k)=',' then begin
+  incr(k); cw:=s;
+  @<Read dimensions in the argument in the papersize special@>;
+  if pool_ptr>k then goto done;
+  geq_word_define(dimen_base+pdf_page_width_code,cw);
+  geq_word_define(dimen_base+pdf_page_height_code,s);@|
+  cur_page_height := s; cur_page_width := cw;
 end;
-t:=t*unity;
-ifps sop(k)='.' then begin incr(k); bl:=true; i:=0;
-  while (k<pool_ptr)and(bl)and(i<=17)  do begin
-    if (sop(k)>='0')and (sop(k)<='9') then begin
-      dig[i]:=sop(k)-'0'; incr(k); incr(i); end
-    else begin bl:=false; incr(k); incr(i); end;
+end;
+
+@
+
+@d if_ps_unit(#)==if bl then @+ begin @+ ifps(2) sop(k)=(#) @, if_ps_unit_two
+@d if_ps_unit_two(#)==and (sop(k+1)=(#)) then begin bl:=false; k:=k+2; if_ps_unit_end
+@d if_ps_unit_end(#)==# @+ end @+ end;
+
+@d do_ps_conversion(#)==num:=#; do_ps_conversion_end
+@d do_ps_conversion_end(#)==
+  s:=xn_over_d(s,num,#); s:=s*unity+((num*t+@'200000*remainder) div #)
+
+@<Read dimensions in the argument in the papersize special@>=
+s:=0; t:=0; bl:=true;
+while (k<pool_ptr)and bl do
+  if (sop(k)>='0')and (sop(k)<='9') then begin s:=10*s+sop(k)-'0'; incr(k); @+end
+  else bl:=false;
+ifps(1) sop(k)='.' then 
+  begin incr(k); bl:=true; i:=0; dig[0]:=0;
+  while (k<pool_ptr)and bl do begin
+    if (sop(k)>='0')and (sop(k)<='9') then
+      begin if i<17 then begin dig[i]:=sop(k)-'0'; incr(i); @+end;
+      incr(k); end
+    else bl:=false;
   end;
-  t:=s*(t+round_decimals(i-1));
-end
-else if (sop(k)>='0')and(sop(k)<='9') then goto done
-else begin t:=s*t; incr(k); end;
-ifps sop(k-1)<>'p' then goto done; ifps sop(k)<>'t' then goto done;
+  t:=round_decimals(i);
+  end;
+if k+4>pool_ptr then
+  if (sop(k)='t')and(sop(k+1)='r')and(sop(k+2)='u')and(sop(k+3)='e') then
+    k:=k+4;
+if mag<>1000 then 
+  begin s:=xn_over_d(s,1000,mag);
+  t:=(1000*t+@'200000*remainder) div mag;
+  s:=s+(t div @'200000); t:=t mod @'200000;
+end;
+bl:=true;@/
+if_ps_unit('p')('t')(s:=s*unity+t)@/
+if_ps_unit('i')('n')(do_ps_conversion(7227)(100))@/
+if_ps_unit('p')('c')(do_ps_conversion(12)(1))@/
+if_ps_unit('c')('m')(do_ps_conversion(7227)(254))@/
+if_ps_unit('m')('m')(do_ps_conversion(7227)(2540))@/
+if_ps_unit('b')('p')(do_ps_conversion(7227)(7200))@/
+if_ps_unit('d')('d')(do_ps_conversion(1238)(1157))@/
+if_ps_unit('c')('c')(do_ps_conversion(14856)(1157))@/
+if_ps_unit('s')('p')(do_nothing)
 
 @ Finally, we declare some routine needed for \.{\\pdffilemoddate}.
 
