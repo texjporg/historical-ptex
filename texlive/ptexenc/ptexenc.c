@@ -31,7 +31,7 @@
 # define NOFILE OPEN_MAX
 #endif
 
-const char *ptexenc_version_string = "ptetex " PTEXENC_VERSION;
+const char *ptexenc_version_string = "ptexenc " PTEXENC_VERSION;
 
 static int     file_enc = ENC_UNKNOWN;
 static int internal_enc = ENC_UNKNOWN;
@@ -264,7 +264,7 @@ static long fromUCS(long kcode)
 }
 
 /* internal (EUC/SJIS) to UCS code conversion */
-static long toUCS(long kcode)
+long toUCS(long kcode)
 {
     return JIStoUCS2(toJIS(kcode));
 }

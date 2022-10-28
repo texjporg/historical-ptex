@@ -1,6 +1,20 @@
 ChangeLog.TL: TeX Live (TL) changes for ptexenc
 ===============================================
 
+2011-01-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	For e-pTeX, adapted from eptex-110102.tar.xz by Hironori Kitagawa.
+	* ptexenc.c, ptexenc/ptexenc.h: Export toUCS().
+	* ptexenc/unicode.h: Export UCStoUTF8().
+	* ptexenc.c: Change version string "ptetex" => "ptexenc".
+	* Makefile.am: Install ptexenc/unicode.h.
+
+	* configure.ac: Version 1.2.0.
+
+2010-10-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (libptexenc_la_LDFLAGS): Add -no-undefined.
+
 2010-06-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am (libptexenc_la_CPPFLAGS): Define MAKE_PTENC_DLL

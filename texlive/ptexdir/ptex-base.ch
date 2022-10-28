@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.1.11
+% This is a change file for pTeX 3.2
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
@@ -43,13 +43,22 @@
 % (07/18/2006) ST  pTeX p3.1.10
 % (08/17/2009) ST  pTeX p3.1.11
 % (05/23/2010) AK  Bug fix by Hironori Kitagawa.
+% (31/12/2010) AK  Bug fix and accent Kanji by Hironori Kitagawa.
+% (19/01/2011) PB  Let \lastkern etc act through disp node.
+% (15/04/2011) PB  pTeX p3.2 Add \ifdbox and \ifddir
 %
-@x [1.2] l.195 - pTeX:
-@d TeX_banner_k=='This is TeXk, Version 3.1415926' {printed when \TeX\ starts}
-@d TeX_banner=='This is TeX, Version 3.1415926' {printed when \TeX\ starts}
+@x [1.2] l.200 - pTeX:
+@d banner==TeX_banner
+@d banner_k==TeX_banner_k
 @y
-@d TeX_banner_k=='This is pTeXk, Version 3.1415926-p3.1.11' {printed when p\TeX\ starts}
-@d TeX_banner=='This is pTeX, Version 3.1415926-p3.1.11' {printed when p\TeX\ starts}
+@d pTeX_version_string=='-p3.2' {current p\TeX\ version}
+@#
+@d pTeX_banner=='This is pTeX, Version 3.1415926',pTeX_version_string
+@d pTeX_banner_k==pTeX_banner
+  {printed when p\TeX\ starts}
+@#
+@d banner==pTeX_banner
+@d banner_k==pTeX_banner_k
 @z
 
 @x [2.??] l.586 - pTeX:
@@ -59,50 +68,7 @@
 @!KANJI_code=0..65535; {sixteen-bit numbers}
 @z
 
-@x l.632 - pTeX
-mubyte_read: array [ASCII_code] of pointer;
-   { non zero iff character begins the multi byte code }
-mubyte_write: array [ASCII_code] of str_number;
-   { non zero iff character expands to multi bytes in log and write files }
-mubyte_cswrite: array [0..127] of pointer;
-   { non null iff cs mod 128 expands to multi bytes in log and write files }
-mubyte_skip: integer;  { the number of bytes to skip in |buffer| }
-mubyte_keep: integer; { the number of chars we need to keep unchanged }
-mubyte_skeep: integer; { saved |mubyte_keep| }
-mubyte_prefix: integer; { the type of mubyte prefix }
-mubyte_tablein: boolean; { the input side of table will be updated }
-mubyte_tableout: boolean; { the output side of table will be updated }
-mubyte_relax: boolean; { the relax prefix is used }
-mubyte_start: boolean; { we are making the token at the start of the line }
-mubyte_sstart: boolean; { saved |mubyte_start| }
-mubyte_token: pointer; { the token returned by |read_buffer| }
-mubyte_stoken: pointer; { saved first token in mubyte primitive }
-mubyte_sout: integer; { saved value of |mubyte_out| }
-mubyte_slog: integer; { saved value of |mubyte_log| }
-spec_sout: integer; { saved value of |spec_out| }
-no_convert: boolean; { conversion supressed by noconvert primitive }
-active_noconvert: boolean; { true if noconvert primitive is active }
-write_noexpanding: boolean; { true only if we need not write expansion }
-cs_converting: boolean; { true only if we need csname converting }
-special_printing: boolean; { true only if we need converting in special }
-message_printing: boolean; { true if message or errmessage prints to string }
-@y
-@z
-
-@x l.803 - pTeX
-{Initialize enc\TeX\ data.}
-for i:=0 to 255 do mubyte_read[i]:=null;
-for i:=0 to 255 do mubyte_write[i]:=0;
-for i:=0 to 128 do mubyte_cswrite[i]:=null;
-mubyte_keep := 0; mubyte_start := false;
-write_noexpanding := false; cs_converting := false;
-special_printing := false; message_printing := false;
-no_convert := false; active_noconvert := false;
-@y
-@z
-
-
-@x [4.??] l.870 - pTeX:
+@x [3.??] l.870 - pTeX:
 @!eight_bits=0..255; {unsigned one-byte quantity}
 @y
 @!eight_bits=0..255; {unsigned one-byte quantity}
@@ -265,22 +231,13 @@ begin if s>=str_ptr then s:="???" {this can't happen}
 @.???@>
 else if s<256 then
   if s<0 then s:="???" {can't happen}
-  else begin if (selector>pseudo) and (not special_printing)
-                 and (not message_printing) then
+  else begin if selector>pseudo then
       begin print_char(s); return; {internal strings are not expanded}
       end;
     if (@<Character |s| is the current new-line character@>) then
       if selector<pseudo then
-        begin print_ln; no_convert := false; return;
-        end
-      else if message_printing then
-        begin print_char(s); no_convert := false; return;
+        begin print_ln; return;
         end;
-    if (mubyte_log>0) and (not no_convert) and (mubyte_write[s]>0) then
-      s := mubyte_write[s]
-    else if xprn[s] or special_printing then
-      begin print_char(s); no_convert := false; return; end;
-    no_convert := false;
     nl:=new_line_char; new_line_char:=-1;
       {temporarily disable new-line character}
     j:=str_start[s];
@@ -357,7 +314,14 @@ if last<>first then for k:=first to last-1 do print(buffer[k]);
 @d tonum(#)==# {pTeX: to put an KANJI code into a halfword}
 @z
 
-@x [10.135] l.3008 - pTeX: box_dir, space_ptr, xspace_ptr
+@x [10.135] l.2895 - pTeX: box_dir
+|fil|, |fill|, or |filll|). The |subtype| field is not used.
+@y
+|fil|, |fill|, or |filll|). The |subtype| field is not used in \TeX.
+In p\TeX\ the |subtype| field records the box direction |box_dir|.
+@z
+
+@x [10.135] l.2897 - pTeX: box_dir, space_ptr, xspace_ptr
 @d hlist_node=0 {|type| of hlist nodes}
 @d box_node_size=7 {number of words to allocate for a box node}
 @d width_offset=1 {position of |width| field in a box node}
@@ -381,11 +345,14 @@ if last<>first then for k:=first to last-1 do print(buffer[k]);
 @d hlist_node=0 {|type| of hlist nodes}
 @d box_node_size=8 {number of words to allocate for a box node}
 @#
-@d box_dir(#) == subtype(#) {direction mode of a box}
-@d dir_default == qi(0) {direction of the box, default Left to Right}
-@d dir_dtou == qi(1) {direction of the box, Bottom to Top}
-@d dir_tate == qi(3) {direction of the box, Top to Bottom}
-@d dir_yoko == qi(4) {direction of the box, equal default}
+@d box_dir(#) == (qo(subtype(#))) {direction of a box}
+@d set_box_dir(#) == subtype(#):=set_box_dir_end
+@d set_box_dir_end(#) == qi(#)
+@#
+@d dir_default = 0 {direction of the box, default Left to Right}
+@d dir_dtou = 1 {direction of the box, Bottom to Top}
+@d dir_tate = 3 {direction of the box, Top to Bottom}
+@d dir_yoko = 4 {direction of the box, equal default}
 @d any_dir == dir_yoko,dir_tate,dir_dtou
 @#
 @d width_offset=1 {position of |width| field in a box node}
@@ -432,7 +399,7 @@ add_glue_ref(zero_glue); add_glue_ref(zero_glue);
 @p function new_dir_node(b:pointer; dir:eight_bits):pointer;
 var p:pointer; {the new node}
 begin if type(b)>vlist_node then confusion("new_dir_node:not box");
-p:=new_null_box; type(p):=dir_node; box_dir(p):=dir;
+p:=new_null_box; type(p):=dir_node; set_box_dir(p)(dir);
 case box_dir(b) of
   dir_yoko: @<Yoko to other direction@>;
   dir_tate: @<Tate to other direction@>;
@@ -657,9 +624,14 @@ begin case type(p) of
   if shift_amount(p)<>0 then
     begin print(", shifted "); print_scaled(shift_amount(p));
     end;
+@z
+@x [12.184] l.3845 - pTeX: display dir_node.
+  end;
+@y
   if box_dir(p)<>dir_default then
     begin print(", "); print_direction(box_dir(p));
     end;
+  end;
 @z
 
 @x [12.188] l.3896 - pTeX: Display insertion and ins_dir.
@@ -769,6 +741,18 @@ kern_node,disp_node,math_node,penalty_node:
 @d vmove=22 {vertical motion ( \.{\\raise}, \.{\\lower} )}
 @d un_hbox=23 {unglue a box ( \.{\\unhbox}, \.{\\unhcopy} )}
 @d un_vbox=24 {unglue a box ( \.{\\unvbox}, \.{\\unvcopy} )}
+@y
+@d char_num=max_char_code+1 {character specified numerically ( \.{\\char} )}
+@d math_char_num=char_num+1 {explicit math code ( \.{\\mathchar} )}
+@d mark=math_char_num+1 {mark definition ( \.{\\mark} )}
+@d xray=mark+1 {peek inside of \TeX\ ( \.{\\show}, \.{\\showbox}, etc.~)}
+@d make_box=xray+1 {make a box ( \.{\\box}, \.{\\copy}, \.{\\hbox}, etc.~)}
+@d hmove=make_box+1 {horizontal motion ( \.{\\moveleft}, \.{\\moveright} )}
+@d vmove=hmove+1 {vertical motion ( \.{\\raise}, \.{\\lower} )}
+@d un_hbox=vmove+1 {unglue a box ( \.{\\unhbox}, \.{\\unhcopy} )}
+@d un_vbox=un_hbox+1 {unglue a box ( \.{\\unvbox}, \.{\\unvcopy} )}
+@z
+@x [15.208] l.4207 - pTeX: Add inhibit_glue, chg_dir.
 @d remove_item=25 {nullify last item ( \.{\\unpenalty},
   \.{\\unkern}, \.{\\unskip} )}
 @d hskip=26 {horizontal glue ( \.{\\hskip}, \.{\\hfil}, etc.~)}
@@ -779,6 +763,19 @@ kern_node,disp_node,math_node,penalty_node:
 @d leader_ship=31 {use a box ( \.{\\shipout}, \.{\\leaders}, etc.~)}
 @d halign=32 {horizontal table alignment ( \.{\\halign} )}
 @d valign=33 {vertical table alignment ( \.{\\valign} )}
+@y
+@d remove_item=un_vbox+1 {nullify last item ( \.{\\unpenalty},
+  \.{\\unkern}, \.{\\unskip} )}
+@d hskip=remove_item+1 {horizontal glue ( \.{\\hskip}, \.{\\hfil}, etc.~)}
+@d vskip=hskip+1 {vertical glue ( \.{\\vskip}, \.{\\vfil}, etc.~)}
+@d mskip=vskip+1 {math glue ( \.{\\mskip} )}
+@d kern=mskip+1 {fixed space ( \.{\\kern})}
+@d mkern=kern+1 {math kern ( \.{\\mkern} )}
+@d leader_ship=mkern+1 {use a box ( \.{\\shipout}, \.{\\leaders}, etc.~)}
+@d halign=leader_ship+1 {horizontal table alignment ( \.{\\halign} )}
+@d valign=halign+1 {vertical table alignment ( \.{\\valign} )}
+@z
+@x [15.208] l.4207 - pTeX: Add inhibit_glue, chg_dir.
 @d no_align=34 {temporary escape from alignment ( \.{\\noalign} )}
 @d vrule=35 {vertical rule ( \.{\\vrule} )}
 @d hrule=36 {horizontal rule ( \.{\\hrule} )}
@@ -795,6 +792,25 @@ kern_node,disp_node,math_node,penalty_node:
 @d discretionary=47 {discretionary texts ( \.{\\-}, \.{\\discretionary} )}
 @d eq_no=48 {equation number ( \.{\\eqno}, \.{\\leqno} )}
 @d left_right=49 {variable delimiter ( \.{\\left}, \.{\\right} )}
+@y
+@d no_align=valign+1 {temporary escape from alignment ( \.{\\noalign} )}
+@d vrule=no_align+1 {vertical rule ( \.{\\vrule} )}
+@d hrule=vrule+1 {horizontal rule ( \.{\\hrule} )}
+@d insert=hrule+1 {vlist inserted in box ( \.{\\insert} )}
+@d vadjust=insert+1 {vlist inserted in enclosing paragraph ( \.{\\vadjust} )}
+@d ignore_spaces=vadjust+1 {gobble |spacer| tokens ( \.{\\ignorespaces} )}
+@d after_assignment=ignore_spaces+1 {save till assignment is done ( \.{\\afterassignment} )}
+@d after_group=after_assignment+1 {save till group is done ( \.{\\aftergroup} )}
+@d break_penalty=after_group+1 {additional badness ( \.{\\penalty} )}
+@d start_par=break_penalty+1 {begin paragraph ( \.{\\indent}, \.{\\noindent} )}
+@d ital_corr=start_par+1 {italic correction ( \.{\\/} )}
+@d accent=ital_corr+1 {attach accent in text ( \.{\\accent} )}
+@d math_accent=accent+1 {attach accent in math ( \.{\\mathaccent} )}
+@d discretionary=math_accent+1 {discretionary texts ( \.{\\-}, \.{\\discretionary} )}
+@d eq_no=discretionary+1 {equation number ( \.{\\eqno}, \.{\\leqno} )}
+@d left_right=eq_no+1 {variable delimiter ( \.{\\left}, \.{\\right} )}
+@z
+@x [15.208] l.4207 - pTeX: Add inhibit_glue, chg_dir.
 @d math_comp=50 {component of formula ( \.{\\mathbin}, etc.~)}
 @d limit_switch=51 {diddle limit conventions ( \.{\\displaylimits}, etc.~)}
 @d above=52 {generalized fraction ( \.{\\above}, \.{\\atop}, etc.~)}
@@ -820,41 +836,6 @@ kern_node,disp_node,math_node,penalty_node:
   \.{\\lastkern}, \.{\\lastskip} )}
 @d max_non_prefixed_command=70 {largest command code that can't be \.{\\global}}
 @y
-@d char_num=max_char_code+1 {character specified numerically ( \.{\\char} )}
-@d math_char_num=char_num+1 {explicit math code ( \.{\\mathchar} )}
-@d mark=math_char_num+1 {mark definition ( \.{\\mark} )}
-@d xray=mark+1 {peek inside of \TeX\ ( \.{\\show}, \.{\\showbox}, etc.~)}
-@d make_box=xray+1 {make a box ( \.{\\box}, \.{\\copy}, \.{\\hbox}, etc.~)}
-@d hmove=make_box+1 {horizontal motion ( \.{\\moveleft}, \.{\\moveright} )}
-@d vmove=hmove+1 {vertical motion ( \.{\\raise}, \.{\\lower} )}
-@d un_hbox=vmove+1 {unglue a box ( \.{\\unhbox}, \.{\\unhcopy} )}
-@d un_vbox=un_hbox+1 {unglue a box ( \.{\\unvbox}, \.{\\unvcopy} )}
-@d remove_item=un_vbox+1 {nullify last item ( \.{\\unpenalty},
-  \.{\\unkern}, \.{\\unskip} )}
-@d hskip=remove_item+1 {horizontal glue ( \.{\\hskip}, \.{\\hfil}, etc.~)}
-@d vskip=hskip+1 {vertical glue ( \.{\\vskip}, \.{\\vfil}, etc.~)}
-@d mskip=vskip+1 {math glue ( \.{\\mskip} )}
-@d kern=mskip+1 {fixed space ( \.{\\kern})}
-@d mkern=kern+1 {math kern ( \.{\\mkern} )}
-@d leader_ship=mkern+1 {use a box ( \.{\\shipout}, \.{\\leaders}, etc.~)}
-@d halign=leader_ship+1 {horizontal table alignment ( \.{\\halign} )}
-@d valign=halign+1 {vertical table alignment ( \.{\\valign} )}
-@d no_align=valign+1 {temporary escape from alignment ( \.{\\noalign} )}
-@d vrule=no_align+1 {vertical rule ( \.{\\vrule} )}
-@d hrule=vrule+1 {horizontal rule ( \.{\\hrule} )}
-@d insert=hrule+1 {vlist inserted in box ( \.{\\insert} )}
-@d vadjust=insert+1 {vlist inserted in enclosing paragraph ( \.{\\vadjust} )}
-@d ignore_spaces=vadjust+1 {gobble |spacer| tokens ( \.{\\ignorespaces} )}
-@d after_assignment=ignore_spaces+1 {save till assignment is done ( \.{\\afterassignment} )}
-@d after_group=after_assignment+1 {save till group is done ( \.{\\aftergroup} )}
-@d break_penalty=after_group+1 {additional badness ( \.{\\penalty} )}
-@d start_par=break_penalty+1 {begin paragraph ( \.{\\indent}, \.{\\noindent} )}
-@d ital_corr=start_par+1 {italic correction ( \.{\\/} )}
-@d accent=ital_corr+1 {attach accent in text ( \.{\\accent} )}
-@d math_accent=accent+1 {attach accent in math ( \.{\\mathaccent} )}
-@d discretionary=math_accent+1 {discretionary texts ( \.{\\-}, \.{\\discretionary} )}
-@d eq_no=discretionary+1 {equation number ( \.{\\eqno}, \.{\\leqno} )}
-@d left_right=eq_no+1 {variable delimiter ( \.{\\left}, \.{\\right} )}
 @d math_comp=left_right+1 {component of formula ( \.{\\mathbin}, etc.~)}
 @d limit_switch=math_comp+1 {diddle limit conventions ( \.{\\displaylimits}, etc.~)}
 @d above=limit_switch+1 {generalized fraction ( \.{\\above}, \.{\\atop}, etc.~)}
@@ -897,28 +878,6 @@ kern_node,disp_node,math_node,penalty_node:
 @d set_prev_graf=80 {specify state info ( \.{\\prevgraf} )}
 @d set_page_dimen=81 {specify state info ( \.{\\pagegoal}, etc.~)}
 @d set_page_int=82 {specify state info ( \.{\\deadcycles},
-  \.{\\insertpenalties} )}
-@d set_box_dimen=83 {change dimension of box ( \.{\\wd}, \.{\\ht}, \.{\\dp} )}
-@d set_shape=84 {specify fancy paragraph shape ( \.{\\parshape} )}
-@d def_code=85 {define a character code ( \.{\\catcode}, etc.~)}
-@d def_family=86 {declare math fonts ( \.{\\textfont}, etc.~)}
-@d set_font=87 {set current font ( font identifiers )}
-@d def_font=88 {define a font file ( \.{\\font} )}
-@d register=89 {internal register ( \.{\\count}, \.{\\dimen}, etc.~)}
-@d max_internal=89 {the largest code that can follow \.{\\the}}
-@d advance=90 {advance a register or parameter ( \.{\\advance} )}
-@d multiply=91 {multiply a register or parameter ( \.{\\multiply} )}
-@d divide=92 {divide a register or parameter ( \.{\\divide} )}
-@d prefix=93 {qualify a definition ( \.{\\global}, \.{\\long}, \.{\\outer} )}
-@d let=94 {assign a command code ( \.{\\let}, \.{\\futurelet} )}
-@d shorthand_def=95 {code definition ( \.{\\chardef}, \.{\\countdef}, etc.~)}
-  {or \.{\\charsubdef}}
-@d read_to_cs=96 {read into a control sequence ( \.{\\read} )}
-@d def=97 {macro definition ( \.{\\def}, \.{\\gdef}, \.{\\xdef}, \.{\\edef} )}
-@d set_box=98 {set a box ( \.{\\setbox} )}
-@d hyph_data=99 {hyphenation data ( \.{\\hyphenation}, \.{\\patterns} )}
-@d set_interaction=100 {define level of interaction ( \.{\\batchmode}, etc.~)}
-@d max_command=100 {the largest command code seen at |big_switch|}
 @y
 @d toks_register=max_non_prefixed_command+1 {token list register ( \.{\\toks} )}
 @d assign_toks=toks_register+1
@@ -944,9 +903,26 @@ kern_node,disp_node,math_node,penalty_node:
 @d set_prev_graf=set_aux+1 {specify state info ( \.{\\prevgraf} )}
 @d set_page_dimen=set_prev_graf+1 {specify state info ( \.{\\pagegoal}, etc.~)}
 @d set_page_int=set_page_dimen+1 {specify state info ( \.{\\deadcycles},
-  \.{\\insertpenalties} )}
+@z
+@x [15.209] l.4272 - pTeX: def_jfont, def_tfont, set_auto_spacing
+@d set_box_dimen=83 {change dimension of box ( \.{\\wd}, \.{\\ht}, \.{\\dp} )}
+@d set_shape=84 {specify fancy paragraph shape ( \.{\\parshape} )}
+@y
 @d set_box_dimen=set_page_int+1 {change dimension of box ( \.{\\wd}, \.{\\ht}, \.{\\dp} )}
 @d set_shape=set_box_dimen+1 {specify fancy paragraph shape ( \.{\\parshape} )}
+@z
+@x [15.209] l.4272 - pTeX: def_jfont, def_tfont, set_auto_spacing
+@d def_code=85 {define a character code ( \.{\\catcode}, etc.~)}
+@d def_family=86 {declare math fonts ( \.{\\textfont}, etc.~)}
+@d set_font=87 {set current font ( font identifiers )}
+@d def_font=88 {define a font file ( \.{\\font} )}
+@d register=89 {internal register ( \.{\\count}, \.{\\dimen}, etc.~)}
+@d max_internal=89 {the largest code that can follow \.{\\the}}
+@d advance=90 {advance a register or parameter ( \.{\\advance} )}
+@d multiply=91 {multiply a register or parameter ( \.{\\multiply} )}
+@d divide=92 {divide a register or parameter ( \.{\\divide} )}
+@d prefix=93 {qualify a definition ( \.{\\global}, \.{\\long}, \.{\\outer} )}
+@y
 @d def_code=set_shape+1 {define a character code ( \.{\\catcode}, etc.~)}
 @d def_family=def_code+1 {declare math fonts ( \.{\\textfont}, etc.~)}
 @d set_font=def_family+1 {set current font ( font identifiers )}
@@ -959,15 +935,31 @@ kern_node,disp_node,math_node,penalty_node:
 @d multiply=advance+1 {multiply a register or parameter ( \.{\\multiply} )}
 @d divide=multiply+1 {divide a register or parameter ( \.{\\divide} )}
 @d prefix=divide+1 {qualify a definition ( \.{\\global}, \.{\\long}, \.{\\outer} )}
+@z
+@x [15.209] l.4272 - pTeX: def_jfont, def_tfont, set_auto_spacing
+@d let=94 {assign a command code ( \.{\\let}, \.{\\futurelet} )}
+@d shorthand_def=95 {code definition ( \.{\\chardef}, \.{\\countdef}, etc.~)}
+  {or \.{\\charsubdef}}
+@d read_to_cs=96 {read into a control sequence ( \.{\\read} )}
+@y
 @d let=prefix+1 {assign a command code ( \.{\\let}, \.{\\futurelet} )}
 @d shorthand_def=let+1 {code definition ( \.{\\chardef}, \.{\\countdef}, etc.~)}
+  {or \.{\\charsubdef}}
 @d read_to_cs=shorthand_def+1 {read into a control sequence ( \.{\\read} )}
+@z
+@x [15.209] l.4272 - pTeX: def_jfont, def_tfont, set_auto_spacing
+@d def=97 {macro definition ( \.{\\def}, \.{\\gdef}, \.{\\xdef}, \.{\\edef} )}
+@d set_box=98 {set a box ( \.{\\setbox} )}
+@d hyph_data=99 {hyphenation data ( \.{\\hyphenation}, \.{\\patterns} )}
+@d set_interaction=100 {define level of interaction ( \.{\\batchmode}, etc.~)}
+@d max_command=100 {the largest command code seen at |big_switch|}
+@y
 @d def=read_to_cs+1 {macro definition ( \.{\\def}, \.{\\gdef}, \.{\\xdef}, \.{\\edef} )}
 @d set_box=def+1 {set a box ( \.{\\setbox} )}
 @d hyph_data=set_box+1 {hyphenation data ( \.{\\hyphenation}, \.{\\patterns} )}
 @d set_interaction=hyph_data+1 {define level of interaction ( \.{\\batchmode}, etc.~)}
 @d set_auto_spacing=set_interaction+1 {set auto spaceing mode
-  ( \.{\\autospacing}, \.{\\noautospacing}, ( \.{\\autospacing}, \.{\\noautospacing} )}
+  ( \.{\\autospacing}, \.{\\noautospacing}, ( \.{\\autoxspacing}, \.{\\noautoxspacing} )}
 @d max_command=set_auto_spacing {the largest command code seen at |big_switch|}
 @z
 
@@ -978,7 +970,7 @@ kern_node,disp_node,math_node,penalty_node:
 @y
 @<Types...@>=
 @!list_state_record=record@!mode_field:-mmode..mmode;@+
-  @!dir_field,@!adj_dir_field: -dir_dtou..dir_dtou;
+  @!dir_field,@!adj_dir_field: -dir_yoko..dir_yoko;
   @!pdisp_field: scaled;
   @!head_field,@!tail_field,@!pnode_field,@!last_jchr_field: pointer;
 @z
@@ -1087,10 +1079,7 @@ primitive("xkanjiskip",assign_glue,glue_base+xkanji_skip_code);@/
 @z
 
 @x [17.230] l.4867 - pTeX: cat_code_size, cur_jfont_loc, auto_spacing, auto_xspacing, inhibit_xsp_code, cur_tfont_loc
-@d xord_code_base=cur_font_loc+1
-@d xchr_code_base=xord_code_base+1
-@d xprn_code_base=xchr_code_base+1
-@d math_font_base=xprn_code_base+1
+@d math_font_base=cur_font_loc+1 {table of 48 math font numbers}
 @d cat_code_base=math_font_base+48
   {table of 256 command codes (the ``catcodes'')}
 @d lc_code_base=cat_code_base+256 {table of 256 lowercase mappings}
@@ -1196,7 +1185,7 @@ for k:="A" to "Z" do
 @+@t\1@>for k:=3 to 6 do kcat_code(@"20+k):=kana; {3 ku ... 6 ku}
 @+@t\1@>for k:=7 to 8 do kcat_code(@"20+k):=other_kchar; {7 ku ... 8 ku}
 @+@t\1@>for k:=16 to 84 do kcat_code(@"20+k):=kanji; {16 ku ... 84 ku}
-{ @"20+k = kcatcodekey(fromKUTEN(HILO(k,1)) }
+{ $\.{@@"20}+|k| = |kcatcodekey|(|fromKUTEN|(|HILO|(k,1))$ }
 @z
 
 @x [17.236] l.5092 - pTeX: cur_jfam_code, jchr_widow_penalty
@@ -1217,11 +1206,7 @@ for k:="A" to "Z" do
 @d char_sub_def_min_code=web2c_int_base {smallest value in the charsubdef list}
 @d char_sub_def_max_code=web2c_int_base+1 {largest value in the charsubdef list}
 @d tracing_char_sub_def_code=web2c_int_base+2 {traces changes to a charsubdef def}
-@d mubyte_in_code=web2c_int_base+3 {if positive then reading mubytes is active}
-@d mubyte_out_code=web2c_int_base+4 {if positive then printing mubytes is active}
-@d mubyte_log_code=web2c_int_base+5 {if positive then print mubytes to log and terminal}
-@d spec_out_code=web2c_int_base+6 {if positive then print specials by mubytes}
-@d web2c_int_pars=web2c_int_base+7 {total number of web2c's integer parameters}
+@d web2c_int_pars=web2c_int_base+3 {total number of web2c's integer parameters}
 @#
 @d int_pars=web2c_int_pars {total number of integer parameters}
 @d count_base=int_base+int_pars {256 user \.{\\count} registers}
@@ -1257,32 +1242,12 @@ for k:="A" to "Z" do
 @d jchr_widow_penalty==int_par(jchr_widow_penalty_code)
 @z
 
-@x l.5181 - pTeX
-@d tracing_char_sub_def==int_par(tracing_char_sub_def_code)
-@d mubyte_in==int_par(mubyte_in_code)
-@d mubyte_out==int_par(mubyte_out_code)
-@d mubyte_log==int_par(mubyte_log_code)
-@d spec_out==int_par(spec_out_code)
-@y
-@d tracing_char_sub_def==int_par(tracing_char_sub_def_code)
-@z
-
 @x [17.237] l.5244 - pTeX: cur_jfam_code, jchr_window_penalty_code
 new_line_char_code:print_esc("newlinechar");
 @y
 new_line_char_code:print_esc("newlinechar");
 cur_jfam_code:print_esc("jfam");
 jchr_widow_penalty_code:print_esc("jcharwidowpenalty");
-@z
-
-@x l.5252 - pTeX
-tracing_char_sub_def_code:print_esc("tracingcharsubdef");
-mubyte_in_code:print_esc("mubytein");
-mubyte_out_code:print_esc("mubyteout");
-mubyte_log_code:print_esc("mubytelog");
-spec_out_code:print_esc("specialout");
-@y
-tracing_char_sub_def_code:print_esc("tracingcharsubdef");
 @z
 
 @x [17.238] l.5365 - pTeX: cur_jfam_code, jchr_window_penalty_code
@@ -1295,21 +1260,6 @@ primitive("jfam",assign_int,int_base+cur_jfam_code);@/
 @!@:cur_jfam_}{\.{\\jfam} primitive@>
 primitive("jcharwidowpenalty",assign_int,int_base+jchr_widow_penalty_code);@/
 @!@:jchr_widow_penalty}{\.{\\jcharwidowpenalty} primitive@>
-@z
-
-@x l.5387 - pTeX
-if enctex_p then
-  begin enctex_enabled_p:=true;
-  primitive("mubytein",assign_int,int_base+mubyte_in_code);@/
-@!@:mubyte_in_}{\.{\\mubytein} primitive@>
-  primitive("mubyteout",assign_int,int_base+mubyte_out_code);@/
-@!@:mubyte_out_}{\.{\\mubyteout} primitive@>
-  primitive("mubytelog",assign_int,int_base+mubyte_log_code);@/
-@!@:mubyte_log_}{\.{\\mubytelog} primitive@>
-  primitive("specialout",assign_int,int_base+spec_out_code);@/
-@!@:spec_out_}{\.{\\specialout} primitive@>
-end;
-@y
 @z
 
 @x [17.247] l.5490 - pTeX: kinsoku, t_baseline_shift, y_baseline_shift
@@ -1395,64 +1345,6 @@ end;
 tats
 @z
 
-@x l.5777 - pTeX
-The conversion from control sequence to byte sequence for enc\TeX is
-implemented here. Of course, the simplest way is to implement an array
-of string pointers with |hash_size| length, but we assume that only a
-few control sequences will need to be converted. So |mubyte_cswrite|,
-an array with only 128 items, is used. The items point to the token
-lists. First token includes a csname number and the second points the
-string to be output. The third token includes the number of another
-csname and fourth token its pointer to the string etc. We need to do
-the sequential searching in one of the 128 token lists.
-
-@y
-@z
-
-@x l.5788 - pTeX
-procedure print_cs(@!p:integer); {prints a purported control sequence}
-var q: pointer;
-    s: str_number;
-begin
-  if active_noconvert and (not no_convert) and
-     (eq_type(p) = let) and (equiv(p) = normal+11) then { noconvert }
-  begin
-     no_convert := true;
-     return;
-  end;
-  s := 0;
-  if cs_converting and (not no_convert) then
-  begin
-    q := mubyte_cswrite [p mod 128] ;
-    while q <> null do
-    if info (q) = p then
-    begin
-      s := info (link(q)); q := null;
-    end else  q := link (link (q));
-  end;
-  no_convert := false;
-  if s > 0 then print (s)
-  else if p<hash_base then {single character}
-@y
-procedure print_cs(@!p:integer); {prints a purported control sequence}
-begin if p<hash_base then {single character}
-@z
-
-@x l.5828 - pTeX
-exit: end;
-@y
-end;
-@z
-
-@x l.5893 - pTeX
-if enctex_p then
-begin
-  primitive("endmubyte",end_cs_name,10);@/
-@!@:end_mubyte_}{\.{\\endmubyte} primitive@>
-end;
-@y
-@z
-
 @x [18.265] l.5903 - pTeX: \jfont \tfont
 primitive("font",def_font,0);@/
 @!@:font_}{\.{\\font} primitive@>
@@ -1471,13 +1363,6 @@ def_font: print_esc("font");
 def_font: print_esc("font");
 def_jfont: print_esc("jfont");
 def_tfont: print_esc("tfont");
-@z
-
-@x l.5982 - pTeX
-end_cs_name: if chr_code = 10 then print_esc("endmubyte")
-             else print_esc("endcsname");
-@y
-end_cs_name: print_esc("endcsname");
 @z
 
 @x [20.289] l.6387 - pTeX: cs_token_flag
@@ -1506,9 +1391,9 @@ if (p<hi_mem_min) or (p>mem_end) then
   begin print_esc("CLOBBERED."); return;
 @.CLOBBERED@>
   end;
-if info(p)>=cs_token_flag then print_cs(info(p)-cs_token_flag) {wchar_token}
+if info(p)>=cs_token_flag then print_cs(info(p)-cs_token_flag) {|wchar_token|}
 else  begin
-  if check_kanji(info(p)) then {wchar_token}
+  if check_kanji(info(p)) then {|wchar_token|}
     begin m:=kcat_code(kcatcodekey(info(p))); c:=info(p);
     end
   else  begin m:=Hi(info(p)); c:=Lo(info(p));
@@ -1617,30 +1502,6 @@ if m+n<=error_line then p:=first_count+m else p:=first_count+(error_line-n-3);
 if trick_buf2[(p-1) mod error_line]=1 then p:=p-1;
 @z
 
-@x l.7148 - pTeX
-@<Pseudoprint the line@>=
-begin_pseudoprint;
-if buffer[limit]=end_line_char then j:=limit
-else j:=limit+1; {determine the effective end of the line}
-i := start; mubyte_skeep := mubyte_keep;
-mubyte_sstart := mubyte_start; mubyte_start := false;
-if j>0 then while i < j do
-begin
-  if i=loc then set_trick_count;
-  print_buffer(i);
-end;
-mubyte_keep := mubyte_skeep; mubyte_start := mubyte_sstart
-@y
-@<Pseudoprint the line@>=
-begin_pseudoprint;
-if buffer[limit]=end_line_char then j:=limit
-else j:=limit+1; {determine the effective end of the line}
-if j>0 then for i:=start to j-1 do
-  begin if i=loc then set_trick_count;
-  print(buffer[i]);
-  end
-@z
-
 @x [22.319] l.7157 - pTeX: adjust kanji code token
 @ @<Pseudoprint the token list@>=
 begin_pseudoprint;
@@ -1651,7 +1512,7 @@ else show_token_list(link(start),loc,100000) {avoid reference count}
 begin_pseudoprint;
 if token_type<macro then
   begin  if (token_type=backed_up)and(loc<>null) then
-    begin  if (link(start)=null)and(check_kanji(info(start))) then {wchar_token}
+    begin  if (link(start)=null)and(check_kanji(info(start))) then {|wchar_token|}
       begin cur_input:=input_stack[base_ptr-1];
       s:=get_avail; info(s):=Lo(buffer[loc]);
       cur_input:=input_stack[base_ptr];
@@ -1667,22 +1528,6 @@ else show_token_list(link(start),loc,100000); {avoid reference count}
 done1:
 @z
 
-@x l.7354 - pTeX
-Some additional routines used by the enc\TeX extension have to be
-declared at this point.
-
-@p @t\4@>@<Declare additional routines for enc\TeX@>@/
-
-@y
-@z
-
-@x l.7476 - pTeX
-@!i,@!j: 0..buf_size; {more indexes for encTeX}
-@!mubyte_incs: boolean; {control sequence is converted by mubyte}
-@!p:pointer;  {for encTeX test if noexpanding}
-@y
-@z
-
 @x [24.341] l.7479 - pTeX: set last_chr
 @!cat:0..max_char_code; {|cat_code(cur_chr)|, usually}
 @y
@@ -1694,25 +1539,15 @@ declared at this point.
 @ @<Input from external file, |goto restart| if no input found@>=
 @^inner loop@>
 begin switch: if loc<=limit then {current line not yet finished}
-  begin
-    { Use |k| instead of |loc| for type correctness. }
-    k := loc;
-    cur_chr := read_buffer (k);
-    loc := k; incr (loc);
-    if (mubyte_token > 0) then
-    begin
-      state := mid_line;
-      cur_cs := mubyte_token - cs_token_flag;
-      goto found;
-    end;
+  begin cur_chr:=buffer[loc]; incr(loc);
   reswitch: cur_cmd:=cat_code(cur_chr);
 @y
 @ @<Input from external file, |goto restart| if no input found@>=
 @^inner loop@>
 begin switch: if loc<=limit then {current line not yet finished}
   begin cur_chr:=buffer[loc]; incr(loc);
-    if (multistrlen(buffer, limit+1, loc-1)=2) then
-      begin cur_chr:=fromBUFF(buffer, limit+1, loc-1);
+    if multistrlen(stringcast(buffer), limit+1, loc-1)=2 then
+      begin cur_chr:=fromBUFF(stringcast(buffer), limit+1, loc-1);
       cur_cmd:=kcat_code(kcatcodekey(cur_chr));
       incr(loc);
       end
@@ -1780,18 +1615,8 @@ skip_mode:=true;
 @x [24.354] l.7659 - pTeX: scan control sequence
 @<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
-else  begin start_cs:
-   mubyte_incs := false; k := loc; mubyte_skeep := mubyte_keep;
-   cur_chr := read_buffer (k); cat := cat_code (cur_chr);
-   if (mubyte_in>0) and (not mubyte_incs) and
-     ((mubyte_skip>0) or (cur_chr<>buffer[k])) then mubyte_incs := true;
-   incr (k);
-   if mubyte_token > 0 then
-   begin
-     state := mid_line;
-     cur_cs := mubyte_token - cs_token_flag;
-     goto found;
-   end;
+else  begin start_cs: k:=loc; cur_chr:=buffer[k]; cat:=cat_code(cur_chr);
+  incr(k);
   if cat=letter then state:=skip_blanks
   else if cat=spacer then state:=skip_blanks
   else state:=mid_line;
@@ -1802,27 +1627,17 @@ else  begin start_cs:
     sequence is found, adjust |cur_cs| and |loc|, and
     |goto found|@>
   else @<If an expanded code is present, reduce it and |goto start_cs|@>;
-  mubyte_keep := mubyte_skeep;
-  cur_cs:=single_base + read_buffer(loc); incr(loc);
+  cur_cs:=single_base+buffer[loc]; incr(loc);
   end;
 found: cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
 if cur_cmd>=outer_call then check_outer_validity;
-if write_noexpanding then
-begin
-  p := mubyte_cswrite [cur_cs mod 128];
-  while p <> null do
-    if info (p) = cur_cs then
-    begin
-      cur_cmd := relax; cur_chr := 256; p := null;
-    end else p := link (link (p));
-end;
 end
 @y
 @<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin k:=loc; cur_chr:=buffer[k]; incr(k);
-  if (multistrlen(buffer, limit+1, k-1)=2) then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(buffer, limit+1, k-1))); incr(k);
+  if multistrlen(stringcast(buffer), limit+1, k-1)=2 then
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(stringcast(buffer), limit+1, k-1))); incr(k);
     end
   else cat:=cat_code(cur_chr);
 start_cs:
@@ -1893,51 +1708,20 @@ end
 
 @x [24.356] l.7727 - pTeX: scan control sequence (cont)
 @ @<Scan ahead in the buffer...@>=
-begin
-  repeat cur_chr := read_buffer (k); cat := cat_code (cur_chr);
-    if mubyte_token>0 then cat := escape;
-    if (mubyte_in>0) and (not mubyte_incs) and (cat=letter) and
-      ((mubyte_skip>0) or (cur_chr<>buffer[k])) then mubyte_incs := true;
-    incr (k);
-  until (cat <> letter) or (k > limit);
-  @<If an expanded...@>;
-  if cat <> letter then
-  begin
-    decr (k); k := k - mubyte_skip;
-  end;
-  if k > loc + 1 then { multiletter control sequence has been scanned }
-  begin
-    if mubyte_incs then { multibyte in csname occurrs }
-    begin
-      i := loc; j := first; mubyte_keep := mubyte_skeep;
-      if j - loc + k > max_buf_stack then
-      begin
-        max_buf_stack := j - loc + k;
-        if max_buf_stack >= buf_size then
-        begin
-          max_buf_stack := buf_size;
-          overflow ("buffer size", buf_size);
-        end;
-      end;
-      while i < k do
-      begin
-        buffer [j] := read_buffer (i);
-        incr (i); incr (j);
-      end;
-      if j = first+1 then
-        cur_cs := single_base + buffer [first]
-      else
-        cur_cs := id_lookup (first, j-first);
-    end else cur_cs := id_lookup (loc, k-loc) ;
-    loc := k;
-    goto found;
+begin repeat cur_chr:=buffer[k]; cat:=cat_code(cur_chr); incr(k);
+until (cat<>letter)or(k>limit);
+@<If an expanded...@>;
+if cat<>letter then decr(k);
+  {now |k| points to first nonletter}
+if k>loc+1 then {multiletter control sequence has been scanned}
+  begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
   end;
 end
 @y
 @ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; incr(k);
-  if (multistrlen(buffer, limit+1, k-1)=2) then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(buffer, limit+1, k-1))); incr(k);
+  if multistrlen(stringcast(buffer), limit+1, k-1)=2 then
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(stringcast(buffer), limit+1, k-1))); incr(k);
     end
   else cat:=cat_code(cur_chr);
   while (buffer[k]=cur_chr)and(cat=sup_mark)and(k<limit) do
@@ -1985,15 +1769,6 @@ if loc<>null then {list not exhausted}
       if cur_cmd=dont_expand then
         @<Get the next token, suppressing expansion@>
       else check_outer_validity;
-    if write_noexpanding then
-    begin
-      p := mubyte_cswrite [cur_cs mod 128];
-      while p <> null do
-        if info (p) = cur_cs then
-        begin
-          cur_cmd := relax; cur_chr := 256; p := null;
-        end else p := link (link (p));
-    end;
     end
   else  begin cur_cmd:=t div @'400; cur_chr:=t mod @'400;
     case cur_cmd of
@@ -2021,7 +1796,7 @@ if loc<>null then {list not exhausted}
         @<Get the next token, suppressing expansion@>
       else check_outer_validity;
     end
-  else if check_kanji(t) then {wchar_token}
+  else if check_kanji(t) then {|wchar_token|}
     begin cur_chr:=t; cur_cmd:=kcat_code(kcatcodekey(t));
     end
   else
@@ -2039,13 +1814,6 @@ else  begin {we are done with this token list}
   end
 @z
 
-@x l.7898 - pTeX
-  k := start;
-  while k < limit do begin print_buffer(k) end;
-@y
-  if start<limit then for k:=start to limit-1 do print(buffer[k]);
-@z
-
 @x [24.365] l.7935 - pTeX: get_token
 @p procedure get_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|}
 begin no_new_control_sequence:=false; get_next; no_new_control_sequence:=true;
@@ -2058,34 +1826,12 @@ end;
 begin no_new_control_sequence:=false; get_next; no_new_control_sequence:=true;
 @^inner loop@>
 if cur_cs=0 then
-  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {|wchar_token|}
     cur_tok:=cur_chr
   else cur_tok:=(cur_cmd*@'400)+cur_chr
 else cur_tok:=cs_token_flag+cur_cs;
 end;
 @z
-
-%@x [25.367] l.8019 - pTeX: expand
-%@<Suppress expansion...@>=
-%begin save_scanner_status:=scanner_status; scanner_status:=normal;
-%get_token; scanner_status:=save_scanner_status; t:=cur_tok;
-%back_input; {now |start| and |loc| point to the backed-up token |t|}
-%if t>=cs_token_flag then
-%  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
-%  link(p):=loc; start:=p; loc:=p;
-%  end;
-%end
-%@y
-%@<Suppress expansion...@>=
-%begin save_scanner_status:=scanner_status; scanner_status:=normal;
-%get_token; scanner_status:=save_scanner_status; t:=cur_tok;
-%back_input; {now |start| and |loc| point to the backed-up token |t|}
-%if t>=cs_token_flag then
-%  begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
-%  link(p):=loc; start:=p; loc:=p;
-%  end;
-%end
-%@z
 
 @x [25.374] l.8073 - pTeX: get_chr
 @ @<Look up the characters of list |r| in the hash table...@>=
@@ -2109,7 +1855,7 @@ while p<>null do
       overflow("buffer size",buf_size);
 @:TeX capacity exceeded buffer size}{\quad buffer size@>
     end;
-  if check_kanji(info(p)) then {wchar_token}
+  if check_kanji(info(p)) then {|wchar_token|}
     begin buffer[j]:=Hi(info(p)); incr(j);
     end;
   buffer[j]:=Lo(info(p)); incr(j); p:=link(p);
@@ -2176,23 +1922,27 @@ if cur_cs=0 then
 else cur_tok:=cs_token_flag+cur_cs;
 @z
 
-@x [26.413] l.8659 - pTeX: scan_somthing_internal
+@x [26.413] l.8341 - pTeX: scan_something_internal
 @p procedure scan_something_internal(@!level:small_number;@!negative:boolean);
-  {fetch an internal parameter}
+@y
+@p @t\4@>@<Declare procedures needed in |scan_something_internal|@>@t@>@/
+procedure scan_something_internal(@!level:small_number;@!negative:boolean);
+@z
+@x [26.413] l.8343 - pTeX: scan_something_internal
 var m:halfword; {|chr_code| part of the operand token}
-@!p:0..nest_size; {index into |nest|}
+@y
+var m:halfword; {|chr_code| part of the operand token}
+@!tx:pointer; {effective tail node}
+@!qx:halfword; {general purpose index}
+@z
+@x [26.413] l.8345 - pTeX: scan_something_internal
 begin m:=cur_chr;
 case cur_cmd of
 def_code: @<Fetch a character code from some table@>;
 toks_register,assign_toks,def_family,set_font,def_font: @<Fetch a token list or
   font identifier, provided that |level=tok_val|@>;
 @y
-@p @t\4@>@<Declare procedures needed in |scan_something|@>@t@>@/
-procedure scan_something_internal(@!level:small_number;@!negative:boolean);
-  {fetch an internal parameter}
-var m:halfword; {|chr_code| part of the operand token}
-@!p:0..nest_size; {index into |nest|}
-@!q:pointer;
+@!q,@!r:pointer;
 begin m:=cur_chr;
 case cur_cmd of
 assign_kinsoku: @<Fetch breaking penalty from some table@>;
@@ -2202,11 +1952,8 @@ toks_register,assign_toks,def_family,set_font,def_font,def_jfont,def_tfont:
   @<Fetch a token list or font identifier, provided that |level=tok_val|@>;
 @z
 
-@x [26.414] l.8693 - pTeX:
-if m=xord_code_base then scanned_result(xord[cur_val])(int_val)
-else if m=xchr_code_base then scanned_result(xchr[cur_val])(int_val)
-else if m=xprn_code_base then scanned_result(xprn[cur_val])(int_val)
-else if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
+@x [26.414] l.8373 - pTeX:
+if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m<math_code_base then scanned_result(equiv(m+cur_val))(int_val)
 else scanned_result(eqtb[m+cur_val].int)(int_val);
 @y
@@ -2220,21 +1967,87 @@ else if m<math_code_base then
 else scanned_result(eqtb[m+cur_val].int)(int_val);
 @z
 
-@x [26.420] l.8799 - pTeX: Fetch a box dimension: dir_node
+@x [26.420] l.8474 - pTeX: Fetch a box dimension: dir_node
+begin scan_eight_bit_int;
 if box(cur_val)=null then cur_val:=0 @+else cur_val:=mem[box(cur_val)+m].sc;
 @y
-if box(cur_val)=null then cur_val:=0
-else
-   begin q:=box(cur_val);
+begin scan_eight_bit_int; q:=box(cur_val);
+if q=null then cur_val:=0
+else  begin qx:=q;
   while (q<>null)and(box_dir(q)<>abs(direction)) do q:=link(q);
   if q=null then
-    begin q:=new_dir_node(box(cur_val),abs(direction));
+    begin r:=link(qx); link(qx):=null;
+    q:=new_dir_node(qx,abs(direction)); link(qx):=r;
     cur_val:=mem[q+m].sc;
     delete_glue_ref(space_ptr(q)); delete_glue_ref(xspace_ptr(q));
     free_node(q,box_node_size);
     end
   else cur_val:=mem[q+m].sc;
   end;
+@z
+
+@x [26.424] l.8508 - pTeX: disp_node
+legal in similar contexts.
+@y
+legal in similar contexts.
+
+The macro |find_effective_tail_pTeX| sets |tx| to the last non-|disp_node|
+of the current list.
+@z
+
+@x [26.424] l.8510 - pTeX: disp_node
+@<Fetch an item in the current node...@>=
+@y
+@d find_effective_tail_pTeX==
+tx:=tail;
+if not is_char_node(tx) then
+  if type(tx)=disp_node then
+    begin tx:=prev_node;
+    if not is_char_node(tx) then
+      if type(tx)=disp_node then {|disp_node| from a discretionary}
+        begin tx:=head; q:=link(head);
+        while q<>prev_node do
+          begin if is_char_node(q) then tx:=q
+          else if type(q)<>disp_node then tx:=q;
+          end;
+        q:=link(q);
+        end;
+    end
+@#
+@d find_effective_tail==find_effective_tail_pTeX
+
+@<Fetch an item in the current node...@>=
+@z
+
+@x [26.424] l.8516 - pTeX: Fetch an item ...: disp_node
+else begin if cur_chr=glue_val then cur_val:=zero_glue@+else cur_val:=0;
+@y
+else begin if cur_chr=glue_val then cur_val:=zero_glue@+else cur_val:=0;
+  find_effective_tail;
+@z
+@x [26.424] l.8518 - pTeX: Fetch an item ...: disp_node
+  if not is_char_node(tail)and(mode<>0) then
+    case cur_chr of
+    int_val: if type(tail)=penalty_node then cur_val:=penalty(tail);
+    dimen_val: if type(tail)=kern_node then cur_val:=width(tail);
+    glue_val: if type(tail)=glue_node then
+      begin cur_val:=glue_ptr(tail);
+      if subtype(tail)=mu_glue then cur_val_level:=mu_val;
+      end;
+@y
+  if not is_char_node(tx)and(tx<>head)and(mode<>0) then
+    case cur_chr of
+    int_val: if type(tx)=penalty_node then cur_val:=penalty(tx);
+    dimen_val: if type(tx)=kern_node then cur_val:=width(tx);
+    glue_val: if type(tx)=glue_node then
+      begin cur_val:=glue_ptr(tx);
+      if subtype(tx)=mu_glue then cur_val_level:=mu_val;
+      end;
+@z
+@x [26.424] l.8527 - pTeX: Fetch an item ...: disp_node
+  else if (mode=vmode)and(tail=head) then
+@y
+  else if (mode=vmode)and(tx=head) then
 @z
 
 @x [26.435] l.8940 - pTeX: scan_char_num
@@ -2250,7 +2063,7 @@ end;
 @y
 procedure scan_char_num;
 begin scan_int;
-if (not is_char_ascii(cur_val))and(not check_kanji(cur_val)) then {wchar_token}
+if not is_char_ascii(cur_val)and not check_kanji(cur_val) then {|wchar_token|}
   begin print_err("Bad character code");
 @.Bad character code@>
   help2("A character number must be between 0 and 255, or KANJI code.")@/
@@ -2284,7 +2097,7 @@ end
 @<Scan an alphabetic character code into |cur_val|@>=
 begin get_token; {suppress macro expansion}
 if cur_tok<cs_token_flag then
-  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {|wchar_token|}
     begin skip_mode:=false; cur_val:=tonum(cur_chr);
     end
   else begin cur_val:=cur_chr;
@@ -2341,8 +2154,8 @@ else if scan_keyword("sp") then goto done
   if t=" " then t:=space_token
   else t:=other_token+t;
 @y
-  if (multistrlen(str_pool, pool_ptr, k)=2) then
-    begin t:=fromBUFF(str_pool, pool_ptr, k); incr(k);
+  if multistrlen(stringcast(str_pool), pool_ptr, k)=2 then
+    begin t:=fromBUFF(stringcast(str_pool), pool_ptr, k); incr(k);
     end
   else if t=" " then t:=space_token
   else t:=other_token+t;
@@ -2422,7 +2235,7 @@ number_code,roman_numeral_code,
 kansuji_code,euc_code,sjis_code,jis_code,kuten_code: scan_int;
 string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token;
-  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {wchar_token}
+  if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {|wchar_token|}
     KANJI(cx):=cur_tok;
   scanner_status:=save_scanner_status;
   end;
@@ -2450,18 +2263,21 @@ string_code:if cur_cs<>0 then sprint_cs(cur_cs)
   else print_kanji(cx);
 @z
 
-@x [28.487] l.9852 - pTeX: iftdir, ifydir, iftbox, ifybox
+@x [28.487] l.9852 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
 @d if_case_code=16 { `\.{\\ifcase}' }
 @y
 @d if_case_code=16 { `\.{\\ifcase}' }
-@d if_tdir_code=17 { `\.{\\iftdir}' }
-@d if_ydir_code=18 { `\.{\\ifydir}' }
-@d if_mdir_code=19 { `\.{\\ifmdir}' }
-@d if_tbox_code=20 { `\.{\\iftbox}' }
-@d if_ybox_code=21 { `\.{\\ifybox}' }
+@#
+@d if_tdir_code=if_case_code+1 { `\.{\\iftdir}' }
+@d if_ydir_code=if_tdir_code+1 { `\.{\\ifydir}' }
+@d if_ddir_code=if_ydir_code+1 { `\.{\\ifddir}' }
+@d if_mdir_code=if_ddir_code+1 { `\.{\\ifmdir}' }
+@d if_tbox_code=if_mdir_code+1 { `\.{\\iftbox}' }
+@d if_ybox_code=if_tbox_code+1 { `\.{\\ifybox}' }
+@d if_dbox_code=if_ybox_code+1 { `\.{\\ifdbox}' }
 @z
 
-@x [28.487] l.9887 - pTeX: iftdir, ifydir, iftbox, ifybox
+@x [28.487] l.9887 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
 primitive("ifcase",if_test,if_case_code);
 @!@:if_case_}{\.{\\ifcase} primitive@>
 @y
@@ -2471,36 +2287,43 @@ primitive("iftdir",if_test,if_tdir_code);
 @!@:if_tdir_}{\.{\\iftdir} primitive@>
 primitive("ifydir",if_test,if_ydir_code);
 @!@:if_ydir_}{\.{\\ifydir} primitive@>
+primitive("ifddir",if_test,if_ddir_code);
+@!@:if_ddir_}{\.{\\ifddir} primitive@>
 primitive("ifmdir",if_test,if_mdir_code);
 @!@:if_mdir_}{\.{\\ifmdir} primitive@>
 primitive("iftbox",if_test,if_tbox_code);
 @!@:if_tbox_}{\.{\\iftbox} primitive@>
 primitive("ifybox",if_test,if_ybox_code);
 @!@:if_ybox_}{\.{\\ifybox} primitive@>
+primitive("ifdbox",if_test,if_dbox_code);
+@!@:if_dbox_}{\.{\\ifdbox} primitive@>
 @z
 
-@x [28.488] l.9907 - pTeX: iftdir, ifydir, iftbox, ifybox
+@x [28.488] l.9907 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
   if_case_code:print_esc("ifcase");
 @y
   if_case_code:print_esc("ifcase");
   if_tdir_code:print_esc("iftdir");
   if_ydir_code:print_esc("ifydir");
+  if_ddir_code:print_esc("ifddir");
   if_mdir_code:print_esc("ifmdir");
   if_tbox_code:print_esc("iftbox");
   if_ybox_code:print_esc("ifybox");
+  if_dbox_code:print_esc("ifdbox");
 @z
 
-@x [28.501] l.10073 - pTeX: iftdir, ifydir, iftbox, ifybox
+@x [28.501] l.10073 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
 if_void_code, if_hbox_code, if_vbox_code: @<Test box register status@>;
 @y
 if_tdir_code: b:=(abs(direction)=dir_tate);
 if_ydir_code: b:=(abs(direction)=dir_yoko);
+if_ddir_code: b:=(abs(direction)=dir_dtou);
 if_mdir_code: b:=(direction<0);
-if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code:
+if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code:
   @<Test box register status@>;
 @z
 
-@x [28.505] l.10118 - pTeX: Test box register status : iftbox, ifybox
+@x [28.505] l.10118 - pTeX: Test box register status : iftbox, ifybox, ifdbox
 if this_if=if_void_code then b:=(p=null)
 else if p=null then b:=false
 else if this_if=if_hbox_code then b:=(type(p)=hlist_node)
@@ -2513,7 +2336,8 @@ else begin
   if this_if=if_hbox_code then b:=(type(p)=hlist_node)
   else if this_if=if_vbox_code then b:=(type(p)=vlist_node)
   else if this_if=if_tbox_code then b:=(box_dir(p)=dir_tate)
-  else b:=(box_dir(p)=dir_yoko);
+  else if this_if=if_ybox_code then b:=(box_dir(p)=dir_yoko)
+  else b:=(box_dir(p)=dir_dtou);
   end
 @z
 
@@ -2543,20 +2367,6 @@ if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
 else if (cur_cmd>active_char)or(cur_chr>255) then
   begin cur_cmd:=relax; cur_chr:=256;
   end;
-@z
-
-@x [29.523] l.10571 - pTeX: xord
-for j:=1 to n do append_to_name(xord[TEX_format_default[j]]);
-for j:=a to b do append_to_name(buffer[j]);
-for j:=format_default_length-format_ext_length+1 to format_default_length do
-  append_to_name(xord[TEX_format_default[j]]);
-@y
-if name_of_file then libc_free (name_of_file);
-name_of_file := xmalloc (1 + n + (b - a + 1) + format_ext_length + 1);
-for j:=1 to n do append_to_name(xord[TEX_format_default[j]]);
-for j:=a to b do append_to_name(buffer[j]);
-for j:=format_default_length-format_ext_length+1 to format_default_length do
-  append_to_name(xord[TEX_format_default[j]]);
 @z
 
 @x [29.526] l.10668 - pTeX: scan file name
@@ -2590,17 +2400,6 @@ loop@+begin
   end;
 done: end_name; name_in_progress:=false;
 skip_mode:=true;
-@z
-
-@x l.10797 - pTeX
-if enctex_enabled_p then
-  begin wlog_cr; wlog(encTeX_banner); wlog(', reencoding enabled');
-    if translate_filename then
-      begin wlog_cr;
-        wlog(' (\xordcode, \xchrcode, \xprncode overridden by TCX)');
-    end;
-  end;
-@y
 @z
 
 @x [29.536] l.10834 - pTeX:
@@ -2892,26 +2691,18 @@ else if cur_cmd=def_tfont then f:=cur_tfont
 else if cur_cmd=def_font then f:=cur_font
 @z
 
-@x
+@x [30.581]
 @p procedure char_warning(@!f:internal_font_number;@!c:eight_bits);
-begin if tracing_lost_chars>0 then
-  begin begin_diagnostic;
-  print_nl("Missing character: There is no ");
-@.Missing character@>
-  print_ASCII(c); print(" in font ");
-  slow_print(font_name[f]); print_char("!"); end_diagnostic(false);
-  end;
-end;
 @y
 @d print_lc_hex(#)==l:=#;
   if l<10 then print_char(l+"0")@+else print_char(l-10+"a")
 
 @p procedure char_warning(@!f:internal_font_number;@!c:eight_bits);
 var @!l:0..255; {small indices or counters}
-begin if tracing_lost_chars>0 then
-  begin begin_diagnostic;
-  print_nl("Missing character: There is no ");
-@.Missing character@>
+@z
+@x [30.581]
+  print_ASCII(c); print(" in font ");
+@y
   if (c<" ")or(c>"~") then
     begin print_char("^"); print_char("^");
     if c<64 then print_char(c+64)
@@ -2920,9 +2711,6 @@ begin if tracing_lost_chars>0 then
     end
   else print_ASCII(c);
   print(" in font ");
-  slow_print(font_name[f]); print_char("!"); end_diagnostic(false);
-  end;
-end;
 @z
 
 @x [31.586] l.12189 - pTeX: define set2
@@ -2979,7 +2767,7 @@ doing_leaders:=false; dead_cycles:=0; cur_s:=-1; dir_used:=false;
 dvi_h:=0; dvi_v:=0; cur_h:=h_offset; dvi_f:=null_font;
 @y
 dvi_h:=0; dvi_v:=0; cur_h:=h_offset; dvi_f:=null_font;
-dvi_dir:=dir_yoko; cur_dir:=dvi_dir;
+dvi_dir:=dir_yoko; cur_dir_hv:=dvi_dir;
 @z
 
 @x [32.619] l.12892 - pTeX: hlist_out Kanji, disp_node
@@ -3106,24 +2894,25 @@ disp_node: begin disp:=disp_dimen(p); cur_v:=base_line+disp; end;
 if list_ptr(p)=null then cur_h:=cur_h+width(p)
 else  begin save_h:=dvi_h; save_v:=dvi_v;
   cur_v:=base_line+shift_amount(p); {shift the box down}
-  temp_ptr:=p; edge:=cur_h;
-  if type(p)=vlist_node then vlist_out@+else hlist_out;
-  dvi_h:=save_h; dvi_v:=save_v;
-  cur_h:=edge+width(p); cur_v:=base_line;
-  end
 @y
 @ @<Output a box in an hlist@>=
 if list_ptr(p)=null then cur_h:=cur_h+width(p)
 else  begin save_h:=dvi_h; save_v:=dvi_v; save_dir:=dvi_dir;
   cur_v:=base_line+disp+shift_amount(p); {shift the box down}
-  temp_ptr:=p; edge:=cur_h;
+@z
+@x [32.624] l.13005 - pTeX: output a box(and dir_node) with disp
+  if type(p)=vlist_node then vlist_out@+else hlist_out;
+  dvi_h:=save_h; dvi_v:=save_v;
+  cur_h:=edge+width(p); cur_v:=base_line;
+  end
+@y
   case type(p) of
     hlist_node:hlist_out;
     vlist_node:vlist_out;
     dir_node:dir_out;
   endcases;
   dvi_h:=save_h; dvi_v:=save_v; dvi_dir:=save_dir;
-  cur_h:=edge+width(p); cur_v:=base_line+disp; cur_dir:=save_dir;
+  cur_h:=edge+width(p); cur_v:=base_line+disp; cur_dir_hv:=save_dir;
   end
 @z
 
@@ -3141,17 +2930,18 @@ if is_running(rule_dp) then rule_dp:=depth(this_box)-disp;
 @<Output a leader box at |cur_h|, ...@>=
 begin cur_v:=base_line+shift_amount(leader_box); synch_v; save_v:=dvi_v;@/
 synch_h; save_h:=dvi_h; temp_ptr:=leader_box;
-outer_doing_leaders:=doing_leaders; doing_leaders:=true;
+@y
+@<Output a leader box at |cur_h|, ...@>=
+begin cur_v:=base_line+disp+shift_amount(leader_box); synch_v; save_v:=dvi_v;@/
+synch_h; save_h:=dvi_h; save_dir:=dvi_dir; temp_ptr:=leader_box;
+@z
+@x [32.629] l.13107 - pTeX: Output a leader box(and dir_node) with disp
 if type(leader_box)=vlist_node then vlist_out@+else hlist_out;
 doing_leaders:=outer_doing_leaders;
 dvi_v:=save_v; dvi_h:=save_h; cur_v:=base_line;
 cur_h:=save_h+leader_wd+lx;
 end
 @y
-@<Output a leader box at |cur_h|, ...@>=
-begin cur_v:=base_line+disp+shift_amount(leader_box); synch_v; save_v:=dvi_v;@/
-synch_h; save_h:=dvi_h; save_dir:=dvi_dir; temp_ptr:=leader_box;
-outer_doing_leaders:=doing_leaders; doing_leaders:=true;
 case type(leader_box) of
   hlist_node:hlist_out;
   vlist_node:vlist_out;
@@ -3159,7 +2949,7 @@ case type(leader_box) of
 endcases;
 doing_leaders:=outer_doing_leaders;
 dvi_v:=save_v; dvi_h:=save_h; dvi_dir:=save_dir;
-cur_v:=base_line; cur_h:=save_h+leader_wd+lx; cur_dir:=save_dir;
+cur_v:=base_line; cur_h:=save_h+leader_wd+lx; cur_dir_hv:=save_dir;
 end
 @z
 
@@ -3205,32 +2995,34 @@ rule_node: begin rule_ht:=height(p); rule_dp:=depth(p); rule_wd:=width(p);
 if list_ptr(p)=null then cur_v:=cur_v+height(p)+depth(p)
 else  begin cur_v:=cur_v+height(p); synch_v;
   save_h:=dvi_h; save_v:=dvi_v;
-  cur_h:=left_edge+shift_amount(p); {shift the box right}
-  temp_ptr:=p;
-  if type(p)=vlist_node then vlist_out@+else hlist_out;
-  dvi_h:=save_h; dvi_v:=save_v;
-  cur_v:=save_v+depth(p); cur_h:=left_edge;
-  end
 @y
 @<Output a box in a vlist@>=
 if list_ptr(p)=null then cur_v:=cur_v+height(p)+depth(p)
 else begin cur_v:=cur_v+height(p); synch_v;
   save_h:=dvi_h; save_v:=dvi_v; save_dir:=dvi_dir;
-  cur_h:=left_edge+shift_amount(p); {shift the box right}
-  temp_ptr:=p;
+@z
+@x [32.633] l.13181 - pTeX: Output a box in a vlist
+  if type(p)=vlist_node then vlist_out@+else hlist_out;
+  dvi_h:=save_h; dvi_v:=save_v;
+  cur_v:=save_v+depth(p); cur_h:=left_edge;
+  end
+@y
   case type(p) of
     hlist_node:hlist_out;
     vlist_node:vlist_out;
     dir_node:dir_out;
   endcases;
   dvi_h:=save_h; dvi_v:=save_v; dvi_dir:=save_dir;
-  cur_v:=save_v+depth(p); cur_h:=left_edge; cur_dir:=save_dir;
+  cur_v:=save_v+depth(p); cur_h:=left_edge; cur_dir_hv:=save_dir;
   end
 @z
 
 @x [32.637] l.13256 - pTeX: Output a leader in a vlist
 @<Output a leader box at |cur_v|, ...@>=
-begin cur_h:=left_edge+shift_amount(leader_box); synch_h; save_h:=dvi_h;@/
+@y
+@<Output a leader box at |cur_v|, ...@>=
+@z
+@x [32.637] l.13258 - pTeX: Output a leader in a vlist
 cur_v:=cur_v+height(leader_box); synch_v; save_v:=dvi_v;
 temp_ptr:=leader_box;
 outer_doing_leaders:=doing_leaders; doing_leaders:=true;
@@ -3240,8 +3032,6 @@ dvi_v:=save_v; dvi_h:=save_h; cur_h:=left_edge;
 cur_v:=save_v-height(leader_box)+leader_ht+lx;
 end
 @y
-@<Output a leader box at |cur_v|, ...@>=
-begin cur_h:=left_edge+shift_amount(leader_box); synch_h; save_h:=dvi_h;@/
 cur_v:=cur_v+height(leader_box); synch_v; save_v:=dvi_v; save_dir:=dvi_dir;
 temp_ptr:=leader_box;
 outer_doing_leaders:=doing_leaders; doing_leaders:=true;
@@ -3253,7 +3043,7 @@ endcases;
 doing_leaders:=outer_doing_leaders;
 dvi_v:=save_v; dvi_h:=save_h; dvi_dir:=save_dir;
 cur_h:=left_edge; cur_v:=save_v-height(leader_box)+leader_ht+lx;
-cur_dir:=save_dir;
+cur_dir_hv:=save_dir;
 end
 @z
 
@@ -3334,11 +3124,18 @@ var r:pointer; {the box node that will be returned}
 @!disp:scaled; {displacement}
 @z
 
-@x [33.649] l.13533 - pTeX: hpack
-begin last_badness:=0; r:=get_node(box_node_size); type(r):=hlist_node;
-subtype(r):=min_quarterword; shift_amount(r):=0;
+@x [33.649] l.13535 - pTeX: hpack
 q:=r+list_offset; link(q):=p;@/
 h:=0; @<Clear dimensions to zero@>;
+@y
+space_ptr(r):=cur_kanji_skip; xspace_ptr(r):=cur_xkanji_skip;
+add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
+k:=cur_kanji_skip;
+q:=r+list_offset; link(q):=p;@/
+h:=0; @<Clear dimensions to zero@>;
+disp:=0;
+@z
+@x [33.649] l.13537 - pTeX: hpack
 while p<>null do @<Examine node |p| in the hlist, taking account of its effect
   on the dimensions of the new box, or moving it to the adjustment list;
   then advance |p| to the next node@>;
@@ -3351,14 +3148,6 @@ common_ending: @<Finish issuing a diagnostic message
 exit: hpack:=r;
 end;
 @y
-begin last_badness:=0; r:=get_node(box_node_size); type(r):=hlist_node;
-subtype(r):=min_quarterword; shift_amount(r):=0;
-space_ptr(r):=cur_kanji_skip; xspace_ptr(r):=cur_xkanji_skip;
-add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
-k:=cur_kanji_skip;
-q:=r+list_offset; link(q):=p;@/
-h:=0; @<Clear dimensions to zero@>;
-disp:=0;
 while p<>null do @<Examine node |p| in the hlist, taking account of its effect
   on the dimensions of the new box, or moving it to the adjustment list;
   then advance |p| to the next node@>;
@@ -3386,15 +3175,6 @@ if p<>null then
   ins_node,mark_node,adjust_node: if adjust_tail<>null then
     @<Transfer node |p| to the adjustment list@>;
   whatsit_node:@<Incorporate a whatsit node into an hbox@>;
-  glue_node:@<Incorporate glue into the horizontal totals@>;
-  kern_node,math_node: x:=x+width(p);
-  ligature_node: @<Make node |p| look like a |char_node|
-    and |goto reswitch|@>;
-  othercases do_nothing
-  endcases;@/
-  p:=link(p);
-  end;
-end
 @y
 @ @<Examine node |p| in the hlist, taking account of its effect...@>=
 @^inner loop@>
@@ -3411,14 +3191,6 @@ if p<>null then
     if adjust_tail<>null then @<Transfer node |p| to the adjustment list@>;
   whatsit_node:@<Incorporate a whatsit node into an hbox@>;
   disp_node:disp:=disp_dimen(p);
-  glue_node:@<Incorporate glue into the horizontal totals@>;
-  kern_node,math_node:x:=x+width(p);
-  ligature_node:@<Make node |p| look like a |char_node| and |goto reswitch|@>;
-  othercases do_nothing
-  endcases;@/
-  p:=link(p);
-  end;
-end
 @z
 
 @x [33.653] l.13589 - pTeX: displacement
@@ -3516,6 +3288,18 @@ internal kanji code number.
 @#
 @d math_jchar=5
 @d math_text_jchar=6
+@z
+
+@x [34.683] radical with japanese char
+@d left_delimiter(#)==#+4 {first delimiter field of a noad}
+@d right_delimiter(#)==#+5 {second delimiter field of a fraction noad}
+@d radical_noad=inner_noad+1 {|type| of a noad for square roots}
+@d radical_noad_size=5 {number of |mem| words in a radical noad}
+@y
+@d left_delimiter(#)==#+5 {first delimiter field of a noad}
+@d right_delimiter(#)==#+4 {second delimiter field of a fraction noad}
+@d radical_noad=inner_noad+1 {|type| of a noad for square roots}
+@d radical_noad_size=6 {number of |mem| words in a radical noad}
 @z
 
 @x [34.686] l.14129 - pTeX: new_noad
@@ -3987,7 +3771,7 @@ glue_order(q):=glue_order(p); glue_sign(q):=glue_sign(p);
 glue_set(q):=glue_set(p); shift_amount(q):=o;
 r:=link(list_ptr(q)); s:=link(list_ptr(p));
 @y
-box_dir(q):=abs(direction);
+set_box_dir(q)(abs(direction));
 glue_order(q):=glue_order(p); glue_sign(q):=glue_sign(p);
 glue_set(q):=glue_set(p); shift_amount(q):=o;
 r:=link(list_ptr(q)); s:=link(list_ptr(p));
@@ -4003,7 +3787,7 @@ s:=link(s); link(u):=new_null_box; u:=link(u); t:=t+width(s);
 if mode=-vmode then width(u):=width(s)@+else
   begin type(u):=vlist_node; height(u):=width(s);
   end;
-box_dir(u):=abs(direction)
+set_box_dir(u)(abs(direction))
 @z
 
 @x [37.810] l.16564 - pTeX: unset box -> BOX
@@ -4011,7 +3795,7 @@ width(r):=w; type(r):=hlist_node;
 end
 @y
 width(r):=w; type(r):=hlist_node;
-box_dir(r):=abs(direction);
+set_box_dir(r)(abs(direction));
 end
 @z
 
@@ -4019,7 +3803,7 @@ end
 height(r):=w; type(r):=vlist_node;
 @y
 height(r):=w; type(r):=vlist_node;
-box_dir(r):=abs(direction);
+set_box_dir(r)(abs(direction));
 @z
 
 @x [38.816] l.16687 - pTeX: init chain, delete disp_node
@@ -4032,7 +3816,7 @@ delete_glue_ref(cur_kanji_skip); delete_glue_ref(cur_xkanji_skip);
 cur_kanji_skip:=space_ptr(head); cur_xkanji_skip:=xspace_ptr(head);
 add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
 link(temp_head):=link(head);
-if (not is_char_node(tail))and(type(tail)=disp_node) then
+if not is_char_node(tail)and(type(tail)=disp_node) then
   begin free_node(tail,small_node_size); tail:=prev_node; link(tail):=null
   end;
 if is_char_node(tail) then tail_append(new_penalty(inf_penalty))
@@ -4259,7 +4043,7 @@ end
   else if (type(prev_p)=kern_node)and(subtype(prev_p)<>explicit) then
     try_break(0,unhyphenated);
 @y
-  else if (type(prev_p)=kern_node) then
+  else if type(prev_p)=kern_node then
     if (subtype(prev_p)<>explicit)and(subtype(prev_p)<>ita_kern) then
     try_break(0,unhyphenated);
 @z
@@ -4336,8 +4120,6 @@ if q<>null then {|q| cannot be a |char_node|}
   else  begin if type(q)=disc_node then
       @<Change discretionary to compulsory and set
         |disc_break:=true|@>
-    else if (type(q)=math_node)or(type(q)=kern_node) then width(q):=0;
-    end
 @y
 if q<>null then {|q| may be a |char_node|}
   begin if not is_char_node(q) then
@@ -4350,7 +4132,10 @@ if q<>null then {|q| may be a |char_node|}
     else  begin if type(q)=disc_node then
         @<Change discretionary to compulsory and set
           |disc_break:=true|@>
-      else if (type(q)=math_node)or(type(q)=kern_node) then width(q):=0;
+@z
+@x [39.881] l.17961 - pTeX: |q| may be a |char_node|
+    end
+@y
       end
   end
 @z
@@ -4422,10 +4207,10 @@ vsplit:=vpackage(p,h,exactly,split_max_depth);
 q:=prune_page_top(q); p:=list_ptr(v);
 if q=null then box(n):=null {the |eq_level| of the box stays the same}
 else begin
-  box(n):=vpack(q,natural); box_dir(box(n)):=box_dir(v);
+  box(n):=vpack(q,natural); set_box_dir(box(n))(box_dir(v));
   end;
 q:=vpackage(p,h,exactly,split_max_depth);
-box_dir(q):=box_dir(v);
+set_box_dir(q)(box_dir(v));
 delete_glue_ref(space_ptr(v)); delete_glue_ref(xspace_ptr(v));
 free_node(v,box_node_size);
 vsplit:=q;
@@ -4464,7 +4249,7 @@ if p<>null then if type(p)=hlist_node then
   begin print_err("Insertions can only be added to a vbox");
 @y
 begin p:=box(n);
-if p<>null then if (type(p)=dir_node) then
+if p<>null then if type(p)=dir_node then
   begin p:=list_ptr(p);
   delete_glue_ref(space_ptr(box(n)));
   delete_glue_ref(xspace_ptr(box(n)));
@@ -4508,7 +4293,7 @@ else
 box(255):=vpackage(link(page_head),best_size,exactly,page_max_depth);
 @y
 box(255):=vpackage(link(page_head),best_size,exactly,page_max_depth);
-box_dir(box(255)):=page_dir;
+set_box_dir(box(255))(page_dir);
 @z
 
 @x [45.1020] l.20513 - pTeX: check ins_dir
@@ -4530,7 +4315,7 @@ else  begin wait:=false;
         box(n):=new_null_box; last_ins_ptr(r):=box(n)+list_offset;
       end;
     othercases
-      box_dir(box(n)):=ins_dir(p);
+      set_box_dir(box(n))(ins_dir(p));
   endcases;
   s:=last_ins_ptr(r); link(s):=ins_ptr(p);
 @z
@@ -4551,7 +4336,7 @@ delete_glue_ref(space_ptr(box(n)));
 delete_glue_ref(xspace_ptr(box(n)));
 flush_node_list(link(box(n)));
 free_node(box(n),box_node_size);
-box(n):=vpack(temp_ptr,natural); box_dir(box(n)):=ins_dir(p);
+box(n):=vpack(temp_ptr,natural); set_box_dir(box(n))(ins_dir(p));
 @z
 
 @x [46.1030] l.20687 -  pTeX:main_control
@@ -4728,7 +4513,7 @@ end
 @x [46.1041] l.20999 - pTeX: disp_node
 link(tail):=temp_ptr; tail:=temp_ptr;
 @y
-if (not is_char_node(tail))and(type(tail)=disp_node) then
+if not is_char_node(tail)and(type(tail)=disp_node) then
   begin link(prev_node):=temp_ptr; link(temp_ptr):=tail; prev_node:=temp_ptr;
   end
 else begin link(tail):=temp_ptr; tail:=temp_ptr;
@@ -4738,7 +4523,7 @@ else begin link(tail):=temp_ptr; tail:=temp_ptr;
 @x [46.1043] l.21029 - pTeX: disp_node
 link(tail):=q; tail:=q;
 @y
-if (not is_char_node(tail))and(type(tail)=disp_node) then
+if not is_char_node(tail)and(type(tail)=disp_node) then
   begin link(prev_node):=q; link(q):=tail; prev_node:=q;
   end
 else begin link(tail):=q; tail:=q;
@@ -4751,7 +4536,7 @@ tail_append(new_kern(cur_val)); subtype(tail):=s;
 end;
 @y
 begin s:=cur_chr; scan_dimen(s=mu_glue,false,false);
-if (not is_char_node(tail))and(type(tail)=disp_node) then
+if not is_char_node(tail)and(type(tail)=disp_node) then
   begin prev_append(new_kern(cur_val)); subtype(prev_node):=s;
   end
 else
@@ -4828,29 +4613,8 @@ q:pointer;
 @z
 
 @x [47.1076] l.21553 - pTeX: box_dir adjust
-begin if cur_box<>null then
   begin shift_amount(cur_box):=box_context;
-  if abs(mode)=vmode then
-    begin append_to_vlist(cur_box);
-    if adjust_tail<>null then
-      begin if adjust_head<>adjust_tail then
-        begin link(tail):=link(adjust_head); tail:=adjust_tail;
-        end;
-      adjust_tail:=null;
-      end;
-    if mode>0 then build_page;
-    end
-  else  begin if abs(mode)=hmode then space_factor:=1000
-    else  begin p:=new_noad;
-      math_type(nucleus(p)):=sub_box;
-      info(nucleus(p)):=cur_box; cur_box:=p;
-      end;
-    link(tail):=cur_box; tail:=cur_box;
-    end;
-  end;
-end
 @y
-begin if cur_box<>null then
   begin p:=link(cur_box); link(cur_box):=null;
   while p<>null do begin
     q:=p; p:=link(p);
@@ -4866,27 +4630,6 @@ begin if cur_box<>null then
   if box_dir(cur_box)<>abs(direction) then
     cur_box:=new_dir_node(cur_box,abs(direction));
   shift_amount(cur_box):=box_context;
-  if abs(mode)=vmode then
-    begin append_to_vlist(cur_box);
-    if adjust_tail<>null then
-      begin if adjust_head<>adjust_tail then
-        begin link(tail):=link(adjust_head); tail:=adjust_tail;
-        end;
-      adjust_tail:=null;
-      end;
-    if mode>0 then build_page;
-    end
-  else begin
-    if abs(mode)=hmode then
-      space_factor:=1000
-    else  begin p:=new_noad;
-      math_type(nucleus(p)):=sub_box;
-      info(nucleus(p)):=cur_box; cur_box:=p;
-      end;
-    link(tail):=cur_box; tail:=cur_box;
-  end;
-end;
-end
 @z
 
 @x [47.1078] l.21585 - pTeX: box_dir adjust
@@ -4915,52 +4658,78 @@ end
   end
 @z
 
-@x [47.1079] l.21605  - pTeX: disp_node, adjust direction
-var @!p,@!q:pointer; {run through the current list}
+@x [47.1079] l.20920  - pTeX: disp_node, adjust direction
 @!m:quarterword; {the length of a replacement list}
-@!k:halfword; {0 or |vmode| or |hmode|}
-@!n:eight_bits; {a box number}
 @y
-var @!p,@!q:pointer; {run through the current list}
-@!m:quarterword; {the length of a replacement list}
-@!k:halfword; {0 or |vmode| or |hmode|}
-@!n:eight_bits; {a box number}
-@!a_dir:eight_bits; {adjust direction}
-@!d:pointer; {last |disp_node|}
+@!r:pointer; {running behind |p|}
+@!fd:boolean; {a final |disp_node| pair?}
 @!disp,@!pdisp:scaled; {displacement}
-@!pp,pnode:pointer;
-@!f:boolean; {will |d| free?}
+@!a_dir:eight_bits; {adjust direction}
+@!tx:pointer; {effective tail node}
+@!m:quarterword; {the length of a replacement list}
 @z
 
-@x [47.1080] l.21636 - pTeX: disp_node, check head=tail
+@x [47.1080] l.20937 - pTeX: disp_node, check head=tail
+@ Note that the condition |not is_char_node(tail)| implies that |head<>tail|,
+since |head| is a one-word node.
+@y
+@ Note that in \TeX\ the condition |not is_char_node(tail)| implies that
+|head<>tail|, since |head| is a one-word node; this is not so for p\TeX.
+@z
+
+@x [47.1080] l.20940 - pTeX: disp_node
+@<If the current list ends with a box node, delete it...@>=
+@y
+@d check_effective_tail_pTeX(#)==
+tx:=tail;
+if not is_char_node(tx) then
+  if type(tx)=disp_node then
+    begin tx:=prev_node;
+    if not is_char_node(tx) then
+      if type(tx)=disp_node then #; {|disp_node| from a discretionary}
+    end
+@#
+@d fetch_effective_tail_pTeX(#)== {extract |tx|, merge |disp_node| pair}
+q:=head; p:=null; disp:=0; pdisp:=0;
+repeat r:=p; p:=q; fd:=false;
+if not is_char_node(q) then
+  if type(q)=disc_node then
+    begin for m:=1 to replace_count(q) do p:=link(p);
+    if p=tx then #;
+    end
+  else if type(q)=disp_node then
+    begin pdisp:=disp; disp:=disp_dimen(q); fd:=true;@+end;
+q:=link(p);
+until q=tx; {found |r|$\to$|p|$\to$|q=tx|}
+q:=link(tx); link(p):=q; link(tx):=null;
+if q=null then tail:=p
+else if fd then {|r|$\to$|p=disp_node|$\to$|q=disp_node|} 
+  begin prev_node:=r; prev_disp:=pdisp; link(p):=null; tail:=p;
+  disp_dimen(p):=disp_dimen(q); free_node(q,small_node_size);
+  end
+else prev_node:=p
+@#
+@d check_effective_tail==check_effective_tail_pTeX
+@d fetch_effective_tail==fetch_effective_tail_pTeX
+
+@<If the current list ends with a box node, delete it...@>=
+@z
+
+@x [47.1080] l.20950 - pTeX: disp_node, check head=tail
 else  begin if not is_char_node(tail) then
     if (type(tail)=hlist_node)or(type(tail)=vlist_node) then
       @<Remove the last box, unless it's part of a discretionary@>;
   end;
 @y
-else  begin f:=false;
-  if (not is_char_node(tail))and(type(tail)=disp_node) then
-    begin d:=tail; tail:=prev_node;
-    end
-  else d:=null;
-  if (not is_char_node(tail))and(head<>tail) then
-    if (type(tail)=hlist_node)or(type(tail)=vlist_node)
-          or(type(tail)=dir_node) then
+else  begin check_effective_tail(goto done);
+  if not is_char_node(tx)and(head<>tx) then
+    if (type(tx)=hlist_node)or(type(tx)=vlist_node)
+       or(type(tx)=dir_node) then
       @<Remove the last box, unless it's part of a discretionary@>;
-  if d<>null then
-    if (not is_char_node(tail))and(type(tail)=disp_node) then
-      begin prev_node:=pnode; prev_disp:=pdisp;
-      {|if prev_disp=disp_dimen(d) then free_node(tail,small_node_size)|}
-      if prev_disp<>disp_dimen(d) then disp_dimen(tail):=disp_dimen(d);
-      if f then free_node(d,small_node_size)
-      else begin prev_node:=tail; tail_append(d); end;
-      end
-    else tail_append(d);
-  end;
+  done:end;
 @z
 
-@x [47.1081] l.21642 - pTeX: disp_node
-@ @<Remove the last box...@>=
+@x [47.1081] l.20957 - pTeX: disp_node
 begin q:=head;
 repeat p:=q;
 if not is_char_node(q) then if type(q)=disc_node then
@@ -4973,32 +4742,19 @@ cur_box:=tail; shift_amount(cur_box):=0;
 tail:=p; link(p):=null;
 done:end
 @y
-@ @<Remove the last box...@>=
-begin q:=head; disp:=0; pdisp:=0;
-repeat p:=q;
-if not is_char_node(q) then
-  if type(q)=disc_node then
-    begin for m:=1 to replace_count(q) do p:=link(p);
-    if p=tail then goto done;
-    end
-  else if type(q)=disp_node then
-    begin pnode:=pp; pdisp:=disp; disp:=disp_dimen(q);
-    end;
-pp:=q; q:=link(p);
-until q=tail;
-cur_box:=tail; shift_amount(cur_box):=0;
-tail:=p; link(p):=null;
+begin fetch_effective_tail(goto done);
+cur_box:=tx; shift_amount(cur_box):=0;
 if type(cur_box)=dir_node then
   begin link(list_ptr(cur_box)):=cur_box;
   cur_box:=list_ptr(cur_box);
   list_ptr(link(cur_box)):=null;
   end
 else
-  if box_dir(cur_box)=dir_default then box_dir(cur_box):=abs(direction);
-done:end
+  if box_dir(cur_box)=dir_default then set_box_dir(cur_box)(abs(direction));
+end
 @z
 
-@x [47.1083] l.21675 - pTeX: adjust_dir
+@x [47.1083] l.20989 - pTeX: adjust_dir
 if k=hmode then
   if (box_context<box_flag)and(abs(mode)=vmode) then
     scan_spec(adjusted_hbox_group,true)
@@ -5024,7 +4780,7 @@ else  begin if k=vmode then scan_spec(vbox_group,true)
 push_nest; mode:=-k; adjust_dir:=a_dir;
 @z
 
-@x [47.1085] l.21717 - pTeX: end of box, call adjust_hlist
+@x [47.1085] l.21031 - pTeX: end of box, call adjust_hlist
 hbox_group: package(0);
 adjusted_hbox_group: begin adjust_tail:=adjust_head; package(0);
   end;
@@ -5036,7 +4792,7 @@ adjusted_hbox_group: begin adjust_hlist(head,false);
   end;
 @z
 
-@x [47.1086] l.21730 - pTeX: set cur_kanji_skip, cur_xkanji_skip
+@x [47.1086] l.21044 - pTeX: set cur_kanji_skip, cur_xkanji_skip
 begin d:=box_max_depth; unsave; save_ptr:=save_ptr-3;
 if mode=-hmode then cur_box:=hpack(link(head),saved(2),saved(1))
 else  begin cur_box:=vpackage(link(head),saved(2),saved(1),d);
@@ -5056,10 +4812,10 @@ begin d:=box_max_depth;
   unsave; save_ptr:=save_ptr-3;
   if mode=-hmode then begin
     cur_box:=hpack(link(head),saved(2),saved(1));
-    box_dir(cur_box):=abs(direction); pop_nest;
+    set_box_dir(cur_box)(abs(direction)); pop_nest;
   end else begin
     cur_box:=vpackage(link(head),saved(2),saved(1),d);
-    box_dir(cur_box):=abs(direction); pop_nest;
+    set_box_dir(cur_box)(abs(direction)); pop_nest;
     if c=vtop_code then
       @<Readjust the height and depth of |cur_box|, for \.{\\vtop}@>;
   end;
@@ -5067,7 +4823,7 @@ begin d:=box_max_depth;
 end;
 @z
 
-@x [47.1090] l.21765 - pTeX: apend vmode case
+@x [47.1090] l.21079 - pTeX: apend vmode case
 vmode+letter,vmode+other_char,vmode+char_num,vmode+char_given,
    vmode+math_shift,vmode+un_hbox,vmode+vrule,
    vmode+accent,vmode+discretionary,vmode+hskip,vmode+valign,
@@ -5084,14 +4840,14 @@ vmode+letter,vmode+other_char,vmode+char_num,vmode+char_given,
   end;
 @z
 
-@x [47.1091] l.21782 - pTeX: new_graf, adjust direction
+@x [47.1091] l.21096 - pTeX: new_graf, adjust direction
 push_nest; mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @y
 push_nest; adjust_dir:=abs(direction);
 mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @z
 
-@x [47.1096] l.21842 - pTeX: end_graf, call adjust_hlist
+@x [47.1096] l.21155 - pTeX: end_graf, call adjust_hlist
   begin if head=tail then pop_nest {null paragraphs are ignored}
   else line_break(widow_penalty);
 @y
@@ -5100,7 +4856,7 @@ mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
        end;
 @z
 
-@x [47.1099] l.21871 - pTeX: insert and adjust
+@x [47.1099] l.21184 - pTeX: insert and adjust
 new_save_level(insert_group); scan_left_brace; normal_paragraph;
 push_nest; mode:=-vmode; prev_depth:=ignore_depth;
 @y
@@ -5108,7 +4864,7 @@ new_save_level(insert_group); scan_left_brace; normal_paragraph;
 push_nest; mode:=-vmode; direction:=adjust_dir; prev_depth:=ignore_depth;
 @z
 
-@x [47.1100] l.21876 - pTeX: free box node, ins_dir
+@x [47.1100] l.21189 - pTeX: free box node, ins_dir
 insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
   d:=split_max_depth; f:=floating_penalty; unsave; decr(save_ptr);
   {now |saved(0)| is the insertion number, or 255 for |vadjust|}
@@ -5131,14 +4887,14 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
 insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
   d:=split_max_depth; f:=floating_penalty; unsave; decr(save_ptr);
   {now |saved(0)| is the insertion number, or 255 for |vadjust|}
-  p:=vpack(link(head),natural); box_dir(p):=abs(direction); pop_nest;
+  p:=vpack(link(head),natural); set_box_dir(p)(abs(direction)); pop_nest;
   if saved(0)<255 then
     begin r:=get_node(ins_node_size);
     type(r):=ins_node; subtype(r):=qi(saved(0));
     height(r):=height(p)+depth(p); ins_ptr(r):=list_ptr(p);
     split_top_ptr(r):=q; depth(r):=d; float_cost(r):=f;
     ins_dir(r):=box_dir(p);
-    if (not is_char_node(tail))and(type(tail)=disp_node) then
+    if not is_char_node(tail)and(type(tail)=disp_node) then
       prev_append(r)
     else tail_append(r);
     end
@@ -5151,7 +4907,7 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
     else  begin
       r:=get_node(small_node_size); type(r):=adjust_node;@/
       adjust_ptr(r):=list_ptr(p); delete_glue_ref(q);
-      if (not is_char_node(tail))and(type(tail)=disp_node) then
+      if not is_char_node(tail)and(type(tail)=disp_node) then
         prev_append(r)
       else tail_append(r);
       end;
@@ -5163,16 +4919,16 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
   end;
 @z
 
-@x [47.1101] l.21901 - pTeX: mark_node, prev_append
+@x [47.1101] l.21214 - pTeX: mark_node, prev_append
 mark_ptr(p):=def_ref; link(tail):=p; tail:=p;
 @y
 mark_ptr(p):=def_ref;
-if (not is_char_node(tail))and(type(tail)=disp_node) then
+if not is_char_node(tail)and(type(tail)=disp_node) then
   prev_append(p)
 else tail_append(p);
 @z
 
-@x [47.1103] l.21911 - pTeX: penalty, prev_append
+@x [47.1103] l.21224 - pTeX: penalty, prev_append
 procedure append_penalty;
 begin scan_int; tail_append(new_penalty(cur_val));
 if mode=vmode then build_page;
@@ -5180,26 +4936,24 @@ end;
 @y
 procedure append_penalty;
 begin scan_int;
-  if (not is_char_node(tail))and(type(tail)=disp_node) then
+  if not is_char_node(tail)and(type(tail)=disp_node) then
     prev_append(new_penalty(cur_val))
   else tail_append(new_penalty(cur_val));
   if mode=vmode then build_page;
 end;
 @z
 
-@x [47.1105] l.21932 - pTeX: delete_last: disp_node
-var @!p,@!q:pointer; {run through the current list}
+@x [47.1105] l.21246 - pTeX: delete_last: disp_node
 @!m:quarterword; {the length of a replacement list}
 @y
-var @!p,@!q:pointer; {run through the current list}
-@!m:quarterword; {the length of a replacement list}
-@!d:pointer; {last |disp_node|}
+@!r:pointer; {running behind |p|}
+@!fd:boolean; {a final |disp_node| pair?}
 @!disp,@!pdisp:scaled; {displacement}
-@!pp,pnode:pointer;
-@!f:boolean;  {whether remove disp node d }
+@!tx:pointer; {effective tail node}
+@!m:quarterword; {the length of a replacement list}
 @z
 
-@x [47.1105] l.21937 - pTeX: delete_last: disp_node
+@x [47.1105] l.21250 - pTeX: delete_last: disp_node
 else  begin if not is_char_node(tail) then if type(tail)=cur_chr then
     begin q:=head;
     repeat p:=q;
@@ -5210,53 +4964,14 @@ else  begin if not is_char_node(tail) then if type(tail)=cur_chr then
     q:=link(p);
     until q=tail;
     link(p):=null; flush_node_list(tail); tail:=p;
-    end;
-  end;
-exit:end;
 @y
-else  begin
-  if (not is_char_node(tail))and(type(tail)=disp_node) then
-    begin f:=true; d:=tail; tail:=prev_node; link(tail):=null;
-    end
-  else d:=null;
-  if not is_char_node(tail) then if type(tail)=cur_chr then
-    begin q:=head; pp:=null; disp:=0; pdisp:=0;
-    repeat p:=q;
-    if not is_char_node(q) then
-      if type(q)=disc_node then
-        begin for m:=1 to replace_count(q) do p:=link(p);
-        if p=tail then
-          begin if d<>null then tail_append(d);
-          return;
-          end
-        else if link(p)=tail then f:=false;
-        end
-      else  if type(q)=disp_node then
-        begin pnode:=pp; pdisp:=disp; disp:=disp_dimen(q);
-        end;
-    pp:=q; q:=link(p);
-    until q=tail;
-    link(p):=null; flush_node_list(tail); tail:=p;
-    end
-  else { |tail| will not be deleted }
-    begin if d<>null then tail_append(d); return; end;
-    prev_node:=pnode; prev_disp:=pdisp;
-    if d<>null then
-      if (not is_char_node(tail))and(type(tail)=disp_node) then
-        begin if prev_disp=disp_dimen(d) then
-          {|free_node(tail,small_node_size)|}
-          else disp_dimen(tail):=disp_dimen(d);
-        if f then free_node(d,small_node_size) 
-          else begin prev_node:=tail; prev_disp:=disp; tail_append(d) end
-        end
-      else
-        begin prev_node:=tail; prev_disp:=disp; tail_append(d)
-        end
-  end;
-exit:end;
+else  begin check_effective_tail(return);
+  if not is_char_node(tx) then if type(tx)=cur_chr then
+    begin fetch_effective_tail(return);
+    flush_node_list(tx);
 @z
 
-@x [47.1110] l.21997 -pTeX:  free box node, delete kanji_skip
+@x [47.1110] l.21310 -pTeX:  free box node, delete kanji_skip
 var p:pointer; {the box}
 @!c:box_code..copy_code; {should we copy?}
 @y
@@ -5265,7 +4980,7 @@ var p:pointer; {the box}
 @!disp:scaled; {displacement}
 @z
 
-@x [47.1110] l.22001 - pTeX: free box node, delete kanji_skip
+@x [47.1110] l.21314 - pTeX: free box node, delete kanji_skip
 if (abs(mode)=mmode)or((abs(mode)=vmode)and(type(p)<>vlist_node))or@|
    ((abs(mode)=hmode)and(type(p)<>hlist_node)) then
   begin print_err("Incompatible list can't be unboxed");
@@ -5279,7 +4994,6 @@ if c=copy_code then link(tail):=copy_node_list(list_ptr(p))
 else  begin link(tail):=list_ptr(p); box(cur_val):=null;
   free_node(p,box_node_size);
   end;
-while link(tail)<>null do tail:=link(tail);
 @y
 if type(p)=dir_node then p:=list_ptr(p);
 if (abs(mode)=mmode)or((abs(mode)=vmode)and(type(p)<>vlist_node))or@|
@@ -5314,6 +5028,10 @@ else
   delete_glue_ref(xspace_ptr(p));
   free_node(p,box_node_size);
   end;
+@z
+@x [47.1110] l.22014 - pTeX: free box node, delete kanji_skip
+while link(tail)<>null do tail:=link(tail);
+@y
 while link(tail)<>null do
   begin p:=tail; tail:=link(tail);
   if not is_char_node(tail) then
@@ -5358,7 +5076,7 @@ var p:pointer; {|char_node| at the tail of the current list}
 @!d:pointer; {|disp_node|}
 begin if tail<>head then
   begin
-  if (not is_char_node(tail))and(type(tail)=disp_node) then
+  if not is_char_node(tail)and(type(tail)=disp_node) then
     begin d:=tail; tail:=prev_node;
     end
   else d:=null;
@@ -5412,7 +5130,7 @@ var s,@!t: real; {amount of slant}
 begin scan_char_num; f:=cur_font; p:=new_character(f,cur_val);
 @y
 begin scan_char_num;
-if (not is_char_ascii(cur_val)) then
+if not is_char_ascii(cur_val) then
   begin KANJI(cx):=cur_val;
   if direction=dir_tate then f:=cur_tfont else f:=cur_jfont;
   p:=new_character(f,get_jfm_pos(KANJI(cx),f));
@@ -5458,10 +5176,10 @@ else if cur_cmd=char_given then
     end
   else if cur_cmd=char_num then
     begin scan_char_num;
-    if is_char_ascii(cur_chr) then q:=new_character(f,cur_val)
+    if is_char_ascii(cur_val) then q:=new_character(f,cur_val)
     else  begin
       if direction=dir_tate then f:=cur_tfont else f:=cur_jfont;
-      KANJI(cx):=cur_chr
+      KANJI(cx):=cur_val
     end
   end
 else back_input;
@@ -5477,7 +5195,7 @@ else  begin if font_dir[f]=dir_yoko then disp:=0
 @<Append |disp_node| at begin of displace area@>;
 if KANJI(cx)<>empty then
   begin q:=new_character(f,get_jfm_pos(KANJI(cx),f));
-  link(q):=get_avail; info(link(q)):=KANJI(cx);
+  link(q):=get_avail; info(link(q)):=KANJI(cx); last_jchr:=q;
   end;
 @z
 
@@ -5492,6 +5210,18 @@ if h<>x then {the accent must be shifted up or down}
   add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
   p:=hpack(p,natural); shift_amount(p):=x-h;
   end;
+@z
+
+@x [47.1125] pTeX: make accent Kanji
+tail:=new_kern(-a-delta); subtype(tail):=acc_kern; link(p):=tail; p:=q;
+@y
+tail:=new_kern(-a-delta); subtype(tail):=acc_kern;
+if h=x then begin
+  if font_dir[font(p)]<>dir_default then link(link(p)):=tail
+  else link(p):=tail; end
+else link(p):=tail;
+{ bugfix: if |p| is KANJI char, |link(p)|:=|tail| collapses |p| and kern after accent. }
+p:=q;
 @z
 
 @x l.22334 - pTeX
@@ -5685,7 +5415,7 @@ vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
 @y
 vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   p:=vpack(link(head),saved(1),saved(0));
-  box_dir(p):=abs(direction); pop_nest;
+  set_box_dir(p)(abs(direction)); pop_nest;
   if box_dir(p)<>abs(direction) then p:=new_dir_node(p,abs(direction));
   tail_append(new_noad); type(tail):=vcenter_noad;
   math_type(nucleus(tail)):=sub_box; info(nucleus(tail)):=p;
@@ -5795,12 +5525,6 @@ var a:small_number; {accumulated prefix codes so far}
 @!m:integer; {ditto}
 @z
 
-@x l.23403 - pTeX
-@!p,@!q,@!r:pointer; {for temporary short-term use}
-@y
-@!p,@!q:pointer; {for temporary short-term use}
-@z
-
 @x [49.1217] l.23487 - pTeX: select cur font
 set_font: define(cur_font_loc,data,cur_chr);
 @y
@@ -5817,118 +5541,12 @@ end;
 @x l.23504 - pTeX
 primitive("futurelet",let,normal+1);@/
 @!@:future_let_}{\.{\\futurelet} primitive@>
-if enctex_p then
-begin
-  primitive("mubyte",let,normal+10);@/
-@!@:mubyte_}{\.{\\mubyte} primitive@>
-  primitive("noconvert",let,normal+11);@/
-@!@:noconvert_}{\.{\\noconvert} primitive@>
-end;
 
 @ @<Cases of |print_cmd_chr|...@>=
-let: if chr_code<>normal then
-      if chr_code = normal+10 then print_esc("mubyte")
-      else if chr_code = normal+11 then print_esc("noconvert")
-      else print_esc("futurelet")
-  else print_esc("let");
+let: if chr_code<>normal then print_esc("futurelet")@+else print_esc("let");
 
 @ @<Assignments@>=
-let:  if cur_chr = normal+11 then do_nothing  { noconvert primitive }
-      else if cur_chr = normal+10 then        { mubyte primitive }
-      begin
-        selector:=term_and_log;
-        get_token;
-        mubyte_stoken := cur_tok;
-        if cur_tok <= cs_token_flag then mubyte_stoken := cur_tok mod 256;
-        mubyte_prefix := 60;  mubyte_relax := false;
-        mubyte_tablein := true; mubyte_tableout := true;
-        get_x_token;
-        if cur_cmd = spacer then get_x_token;
-        if cur_cmd = sub_mark then
-        begin
-          mubyte_tableout := false; get_x_token;
-          if cur_cmd = sub_mark then
-          begin
-            mubyte_tableout := true; mubyte_tablein := false;
-            get_x_token;
-          end;
-        end else if (mubyte_stoken > cs_token_flag) and
-                    (cur_cmd = mac_param) then
-                 begin
-                   mubyte_tableout := false;
-                   scan_int; mubyte_prefix := cur_val; get_x_token;
-                   if mubyte_prefix > 50 then mubyte_prefix := 52;
-                   if mubyte_prefix <= 0 then mubyte_prefix := 51;
-                 end
-        else if (mubyte_stoken > cs_token_flag) and (cur_cmd = relax) then
-             begin
-               mubyte_tableout := true; mubyte_tablein := false;
-               mubyte_relax := true; get_x_token;
-             end;
-        r := get_avail; p := r;
-        while cur_cs = 0 do begin store_new_token (cur_tok); get_x_token; end;
-        if (cur_cmd <> end_cs_name) or (cur_chr <> 10) then
-        begin
-          print_err("Missing "); print_esc("endmubyte"); print(" inserted");
-          help2("The control sequence marked <to be read again> should")@/
-("not appear in <byte sequence> between \mubyte and \endmubyte.");
-          back_error;
-        end;
-        p := link(r);
-        if (p = null) and mubyte_tablein then
-        begin
-          print_err("The empty <byte sequence>, ");
-          print_esc("mubyte"); print(" ignored");
-          help2("The <byte sequence> in")@/
-("\mubyte <token> <byte sequence>\endmubyte should not be empty.");
-          error;
-        end else begin
-          while p <> null do
-          begin
-            append_char (info(p) mod 256);
-            p := link (p);
-          end;
-          flush_list (r);
-          if (str_start [str_ptr] + 1 = pool_ptr) and
-            (str_pool [pool_ptr-1] = mubyte_stoken) then
-          begin
-            if mubyte_read [mubyte_stoken] <> null
-               and mubyte_tablein then  { clearing data }
-                  dispose_munode (mubyte_read [mubyte_stoken]);
-            if mubyte_tablein then mubyte_read [mubyte_stoken] := null;
-            if mubyte_tableout then mubyte_write [mubyte_stoken] := 0;
-            pool_ptr := str_start [str_ptr];
-          end else begin
-            if mubyte_tablein then mubyte_update;    { updating input side }
-            if mubyte_tableout then  { updating output side }
-            begin
-              if mubyte_stoken > cs_token_flag then { control sequence }
-              begin
-                dispose_mutableout (mubyte_stoken-cs_token_flag);
-                if (str_start [str_ptr] < pool_ptr) or mubyte_relax then
-                begin       { store data }
-                  r := mubyte_cswrite[(mubyte_stoken-cs_token_flag) mod 128];
-                  p := get_avail;
-                  mubyte_cswrite[(mubyte_stoken-cs_token_flag) mod 128] := p;
-                  info (p) := mubyte_stoken-cs_token_flag;
-                  link (p) := get_avail;
-                  p := link (p);
-                  if mubyte_relax then begin
-                    info (p) := 0; pool_ptr := str_start [str_ptr];
-                  end else info (p) := slow_make_string;
-                  link (p) := r;
-                end;
-              end else begin                       { single character  }
-                if str_start [str_ptr] = pool_ptr then
-                  mubyte_write [mubyte_stoken] := 0
-                else
-                  mubyte_write [mubyte_stoken] := slow_make_string;
-              end;
-            end else pool_ptr := str_start [str_ptr];
-          end;
-        end;
-      end else begin   { let primitive }
-        n:=cur_chr;
+let:  begin n:=cur_chr;
 @y
 primitive("futurelet",let,normal+1);@/
 @!@:future_let_}{\.{\\futurelet} primitive@>
@@ -5969,24 +5587,8 @@ primitive("xspcode",def_code,auto_xsp_code_base);
 @!@:auto_xsp_code_}{\.{\\xspcode} primitive@>
 @z
 
-@x l.23815 - pTeX
-if enctex_p then
-begin
-  primitive("xordcode",def_code,xord_code_base);
-@!@:xord_code_}{\.{\\xordcode} primitive@>
-  primitive("xchrcode",def_code,xchr_code_base);
-@!@:xchr_code_}{\.{\\xchrcode} primitive@>
-  primitive("xprncode",def_code,xprn_code_base);
-@!@:xprn_code_}{\.{\\xprncode} primitive@>
-end;
-@y
-@z
-
 @x [49.1231] l.23842 - pTeX: xspcode, kcatcode
-def_code: if chr_code=xord_code_base then print_esc("xordcode")
-  else if chr_code=xchr_code_base then print_esc("xchrcode")
-  else if chr_code=xprn_code_base then print_esc("xprncode")
-  else if chr_code=cat_code_base then print_esc("catcode")
+def_code: if chr_code=cat_code_base then print_esc("catcode")
   else if chr_code=math_code_base then print_esc("mathcode")
 @y
 def_code: if chr_code=cat_code_base then print_esc("catcode")
@@ -5997,12 +5599,7 @@ def_code: if chr_code=cat_code_base then print_esc("catcode")
 
 @x [49.1232] l.23857 - pTeX: kcatcode
 def_code: begin @<Let |n| be the largest legal code value, based on |cur_chr|@>;
-  p:=cur_chr; scan_char_num;
-  if p=xord_code_base then p:=cur_val
-  else if p=xchr_code_base then p:=cur_val+256
-  else if p=xprn_code_base then p:=cur_val+512
-  else p:=p+cur_val;
-  scan_optional_equals;
+  p:=cur_chr; scan_char_num; p:=p+cur_val; scan_optional_equals;
   scan_int;
   if ((cur_val<0)and(p<del_code_base))or(cur_val>n) then
     begin print_err("Invalid code ("); print_int(cur_val);
@@ -6013,10 +5610,7 @@ def_code: begin @<Let |n| be the largest legal code value, based on |cur_chr|@>;
     help1("I'm going to use 0 instead of that illegal code value.");@/
     error; cur_val:=0;
     end;
-  if p<256 then xord[p]:=cur_val
-  else if p<512 then xchr[p-256]:=cur_val
-  else if p<768 then xprn[p-512]:=cur_val
-  else if p<math_code_base then define(p,data,cur_val)
+  if p<math_code_base then define(p,data,cur_val)
   else if p<del_code_base then define(p,data,hi(cur_val))
   else word_define(p,cur_val);
   end;
@@ -6066,17 +5660,16 @@ else if cur_chr=kcat_code_base then n:=max_char_code
 @x [49.1247] l.24083 - pTeX: alter_box_dimen : box_dir
 procedure alter_box_dimen;
 var c:small_number; {|width_offset| or |height_offset| or |depth_offset|}
-@!b:eight_bits; {box number}
-begin c:=cur_chr; scan_eight_bit_int; b:=cur_val; scan_optional_equals;
+@y
+procedure alter_box_dimen;
+var c:small_number; {|width_offset| or |height_offset| or |depth_offset|}
+@!p,q:pointer; {temporary registers}
+@z
+@x [49.1247] l.24087 - pTeX: alter_box_dimen : box_dir
 scan_normal_dimen;
 if box(b)<>null then mem[box(b)+c].sc:=cur_val;
 end;
 @y
-procedure alter_box_dimen;
-var c:small_number; {|width_offset| or |height_offset| or |depth_offset|}
-@!b:eight_bits; {box number}
-@!p,q:pointer; {temporary registers}
-begin c:=cur_chr; scan_eight_bit_int; b:=cur_val; scan_optional_equals;
 scan_normal_dimen;
 if box(b)<>null then
   begin q:=box(b); p:=link(q);
@@ -6085,8 +5678,9 @@ if box(b)<>null then
     p:=link(p);
     end;
   if box_dir(q)<>abs(direction) then
-    begin q:=new_dir_node(q,abs(direction)); list_ptr(q):=null;
-    link(q):=link(box(b)); link(box(b)):=q;
+    begin p:=link(box(b)); link(box(b)):=null;
+    q:=new_dir_node(q,abs(direction)); list_ptr(q):=null;
+    link(q):=p; link(box(b)):=q;
     end;
     mem[q+c].sc:=cur_val;
   end;
@@ -6097,15 +5691,6 @@ end;
 def_font: new_font(a);
 @y
 def_tfont,def_jfont,def_font: new_font(a);
-@z
-
-@x l.24369 - pTeX
-message_printing := true; active_noconvert := true;
-token_show(def_ref);
-message_printing := false; active_noconvert := false;
-selector:=old_setting;
-@y
-token_show(def_ref); selector:=old_setting;
 @z
 
 @x [49.1292] l.24451 - pTeX: shift_case
@@ -6142,10 +5727,8 @@ primitive("showmode",xray,show_mode);
 @z
 
 @x [49.1292] l.24483 - pTeX: show_mode
-  show_lists:print_esc("showlists");
   othercases print_esc("show")
 @y
-  show_lists:print_esc("showlists");
   show_mode:print_esc("showmode");
   othercases print_esc("show")
 @z
@@ -6155,20 +5738,6 @@ show_code: @<Show the current meaning of a token, then |goto common_ending|@>;
 @y
 show_code: @<Show the current meaning of a token, then |goto common_ending|@>;
 show_mode: @<Show the current japanese processing mode@>;
-@z
-
-@x l.24597 - pTeX
-@<Dump ML\TeX-specific data@>;
-@<Dump enc\TeX-specific data@>;
-@y
-@<Dump ML\TeX-specific data@>;
-@z
-
-@x l.24631 - pTeX
-@<Undump ML\TeX-specific data@>;
-@<Undump enc\TeX-specific data@>;
-@y
-@<Undump ML\TeX-specific data@>;
 @z
 
 @x l.24982
@@ -6234,16 +5803,6 @@ undump_things(char_base[null_font], font_ptr+1-null_font);
   font_info:=xmalloc_array (memory_word, font_mem_size);
 @z
 
-@x l.25539 - pTeX
-if enctex_enabled_p then
-  begin wterm(encTeX_banner); wterm_ln(', reencoding enabled.');
-    if translate_filename then begin
-      wterm_ln(' (\xordcode, \xchrcode, \xprncode overridden by TCX)');
-    end;
-  end;
-@y
-@z
-
 @x [51.1337] l.25563 - pTeX:
   font_check:=xmalloc_array(four_quarters, font_max);
 @y
@@ -6273,124 +5832,6 @@ if enctex_enabled_p then
   ctype_base[null_font]:=0; char_base[null_font]:=0; width_base[null_font]:=0;
 @z
 
-@x l.25747 - pTeX
-@d write_stream(#) == type(#+1) {stream number (0 to 17)}
-@d mubyte_zero == 64
-@d write_mubyte(#) == subtype(#+1) {mubyte value + |mubyte_zero|}
-@y
-@d write_stream(#) == info(#+1) {stream number (0 to 17)}
-@z
-
-@x l.25849 - pTeX
-  else if (cur_val>15) and (cur_val <> 18) then cur_val:=16;
-  end;
-write_stream(tail):=cur_val;
-if mubyte_out + mubyte_zero < 0 then write_mubyte(tail) := 0
-else if mubyte_out + mubyte_zero >= 2*mubyte_zero then
-       write_mubyte(tail) := 2*mubyte_zero - 1
-     else write_mubyte(tail) := mubyte_out + mubyte_zero;
-@y
-  else if (cur_val>15) and (cur_val <> 18) then cur_val:=16;
-  end;
-write_stream(tail):=cur_val;
-@z
-
-@x l.25881 - pTeX
-begin new_whatsit(special_node,write_node_size);
-if spec_out + mubyte_zero < 0 then write_stream(tail) := 0
-else if spec_out + mubyte_zero >= 2*mubyte_zero then
-       write_stream(tail) := 2*mubyte_zero - 1
-     else write_stream(tail) := spec_out + mubyte_zero;
-if mubyte_out + mubyte_zero < 0 then write_mubyte(tail) := 0
-else if mubyte_out + mubyte_zero >= 2*mubyte_zero then
-       write_mubyte(tail) := 2*mubyte_zero - 1
-     else write_mubyte(tail) := mubyte_out + mubyte_zero;
-if (spec_out = 2) or (spec_out = 3) then
-  if (mubyte_out > 2) or (mubyte_out = -1) or (mubyte_out = -2) then
-    write_noexpanding := true;
-p:=scan_toks(false,true); write_tokens(tail):=def_ref;
-write_noexpanding := false;
-@y
-begin new_whatsit(special_node,write_node_size); write_stream(tail):=null;
-p:=scan_toks(false,true); write_tokens(tail):=def_ref;
-@z
-
-@x l.25909 - pTeX
-if (s = "write") and (write_mubyte (p) <> mubyte_zero) then
-begin
-  print_char ("<"); print_int (write_mubyte(p)-mubyte_zero); print_char (">");
-end;
-@y
-@z
-
-@x l.25925 - pTeX
-if write_stream(p) <> mubyte_zero then
-begin
-  print_char ("<"); print_int (write_stream(p)-mubyte_zero);
-  if (write_stream(p)-mubyte_zero = 2) or
-     (write_stream(p)-mubyte_zero = 3) then
-  begin
-    print_char (":"); print_int (write_mubyte(p)-mubyte_zero);
-  end;
-  print_char (">");
-end;
-@y
-@z
-
-@x l.26009 - pTeX
-spec_sout := spec_out;  spec_out := write_stream(p) - mubyte_zero;
-mubyte_sout := mubyte_out;  mubyte_out := write_mubyte(p) - mubyte_zero;
-active_noconvert := true;
-mubyte_slog := mubyte_log;
-mubyte_log := 0;
-if (mubyte_out > 0) or (mubyte_out = -1) then mubyte_log := 1;
-if (spec_out = 2) or (spec_out = 3) then
-begin
-  if (mubyte_out > 0) or (mubyte_out = -1) then
-  begin
-    special_printing := true; mubyte_log := 1;
-  end;
-  if mubyte_out > 1 then cs_converting := true;
-end;
-@y
-@z
-
-@x l.26031 - pTeX
-if (spec_out = 1) or (spec_out = 3) then
-  for k:=str_start[str_ptr] to pool_ptr-1 do
-    str_pool[k] := si(xchr[so(str_pool[k])]);
-for k:=str_start[str_ptr] to pool_ptr-1 do dvi_out(so(str_pool[k]));
-spec_out := spec_sout; mubyte_out := mubyte_sout; mubyte_log := mubyte_slog;
-special_printing := false; cs_converting := false;
-active_noconvert := false;
-@y
- for k:=str_start[str_ptr] to pool_ptr-1 do dvi_out(so(str_pool[k]));
-@z
-
-@x l.26062 - pTeX
-begin
-mubyte_sout := mubyte_out;  mubyte_out := write_mubyte(p) - mubyte_zero;
-if (mubyte_out > 2) or (mubyte_out = -1) or (mubyte_out = -2) then
-  write_noexpanding := true;
-@<Expand macros in the token list
-@y
-begin @<Expand macros in the token list
-@z
-
-@x l.26077 - pTeX
-active_noconvert := true;
-if mubyte_out > 1 then cs_converting := true;
-mubyte_slog := mubyte_log;
-if (mubyte_out > 0) or (mubyte_out = -1) then mubyte_log := 1
-else mubyte_log := 0;
-token_show(def_ref); print_ln;
-cs_converting := false; write_noexpanding := false;
-active_noconvert := false;
-mubyte_out := mubyte_sout; mubyte_log := mubyte_slog;
-@y
- token_show(def_ref); print_ln;
-@z
-
 @x [53.1376] l.26309 - pTeX:
 @<Glob...@> =
 @!debug_format_file: boolean;
@@ -6400,308 +5841,6 @@ mubyte_out := mubyte_sout; mubyte_log := mubyte_slog;
 
 @ @<Set init...@>=
 @!debug debug_format_file:=true; @+gubed;
-@z
-
-@x l.26685 - pTeX
-@* \[54/enc\TeX] System-dependent changes for enc\TeX.
-
-@d encTeX_banner == ' encTeX v. Jun. 2004'
-
-@ The boolean variable |enctex_p| is set by web2c according to the given
-command line option (or an entry in the configuration file) before any
-\TeX{} function is called.
-
-@<Global...@> =
-@!enctex_p: boolean;
-
-
-@ The boolean variable |enctex_enabled_p| is used to enable enc\TeX's
-primitives.  It is initialised to |false|.  When loading a \.{FMT} it
-is set to the value of the boolean |enctex_p| saved in the \.{FMT} file.
-Additionally it is set to the value of |enctex_p| in Ini\TeX.
-
-@<Glob...@>=
-@!enctex_enabled_p:boolean;  {enable encTeX}
-
-
-@ @<Set init...@>=
-enctex_enabled_p:=false;
-
-
-@ Auxiliary functions/procedures for enc\TeX{} (by Petr Olsak) follow.
-These functions implement the \.{\\mubyte} code to convert
-the multibytes in |buffer| to one byte or to one control
-sequence. These functions manipulate a mubyte tree: each node of
-this tree is token list with n+1 tokens (first token consist the byte
-from the byte sequence itself and the other tokens point to the
-branches). If you travel from root of the tree to a leaf then you
-find exactly one byte sequence which we have to convert to one byte or
-control sequence. There are two variants of the leaf: the ``definitive
-end'' or the ``middle leaf'' if a longer byte sequence exists and the mubyte
-tree continues under this leaf. First variant is implemented as one
-memory word where the link part includes the token to
-which we have to convert and type part includes the number 60 (normal
-conversion) or 1..52 (insert the control sequence).
-The second variant of ``middle leaf'' is implemented as two memory words:
-first one has a type advanced by 64 and link points to the second
-word where info part includes the token to which we have to convert
-and link points to the next token list with the branches of
-the subtree.
-
-The inverse: one byte to multi byte (for log printing and \.{\\write}
-printing) is implemented via a pool. Each multibyte sequence is stored
-in a pool as a string and |mubyte_write|[{\it printed char\/}] points
-to this string.
-
-@d new_mubyte_node ==
-  link (p) := get_avail; p := link (p); info (p) := get_avail; p := info (p)
-@d subinfo (#) == subtype (#)
-
-@<Basic printing...@>=
-{ read |buffer|[|i|] and convert multibyte.  |i| should have been
-  of type 0..|buf_size|, but web2c doesn't like that construct in
-  argument lists. }
-function read_buffer(var i:integer):ASCII_code;
-var p: pointer;
-    last_found: integer;
-    last_type: integer;
-begin
-  mubyte_skip := 0; mubyte_token := 0;
-  read_buffer := buffer[i];
-  if mubyte_in = 0 then
-  begin
-    if mubyte_keep > 0 then mubyte_keep := 0;
-    return ;
-  end;
-  last_found := -2;
-  if (i = start) and (not mubyte_start) then
-  begin
-    mubyte_keep := 0;
-    if (end_line_char >= 0) and (end_line_char < 256) then
-      if mubyte_read [end_line_char] <> null then
-      begin
-        mubyte_start := true; mubyte_skip := -1;
-        p := mubyte_read [end_line_char];
-        goto continue;
-      end;
-  end;
-restart:
-  mubyte_start := false;
-  if (mubyte_read [buffer[i]] = null) or (mubyte_keep > 0) then
-  begin
-    if mubyte_keep > 0 then decr (mubyte_keep);
-    return ;
-  end;
-  p := mubyte_read [buffer[i]];
-continue:
-  if type (p) >= 64 then
-  begin
-    last_type := type (p) - 64;
-    p := link (p);
-    mubyte_token := info (p); last_found := mubyte_skip;
-  end else if type (p) > 0 then
-  begin
-    last_type := type (p);
-    mubyte_token := link (p);
-    goto found;
-  end;
-  incr (mubyte_skip);
-  if i + mubyte_skip > limit then
-  begin
-    mubyte_skip := 0;
-    if mubyte_start then goto restart;
-    return;
-  end;
-  repeat
-    p := link (p);
-    if subinfo (info(p)) = buffer [i+mubyte_skip] then
-    begin
-      p := info (p); goto continue;
-    end;
-  until link (p) = null;
-  mubyte_skip := 0;
-  if mubyte_start then goto restart;
-  if last_found = -2 then return;  { no found }
-  mubyte_skip := last_found;
-found:
-  if mubyte_token < 256 then  { multibyte to one byte }
-  begin
-    read_buffer := mubyte_token;  mubyte_token := 0;
-    i := i + mubyte_skip;
-    if mubyte_start and (i >= start) then mubyte_start := false;
-    return;
-  end else begin     { multibyte to control sequence }
-    read_buffer := 0;
-    if last_type = 60 then { normal conversion }
-      i := i + mubyte_skip
-    else begin            { insert control sequence }
-      decr (i); mubyte_keep := last_type;
-      if i < start then mubyte_start := true;
-      if last_type = 52 then mubyte_keep := 10000;
-      if last_type = 51 then mubyte_keep := mubyte_skip + 1;
-      mubyte_skip := -1;
-    end;
-    if mubyte_start and (i >= start) then mubyte_start := false;
-    return;
-  end;
-exit: end;
-
-@ @<Declare additional routines for enc\TeX@>=
-procedure mubyte_update; { saves new string to mubyte tree }
-var j: pool_pointer;
-    p: pointer;
-    q: pointer;
-    in_mutree: integer;
-begin
-  j := str_start [str_ptr];
-  if mubyte_read [so(str_pool[j])] = null then
-  begin
-    in_mutree := 0;
-    p := get_avail;
-    mubyte_read [so(str_pool[j])] := p;
-    subinfo (p) := so(str_pool[j]); type (p) := 0;
-  end else begin
-    in_mutree := 1;
-    p := mubyte_read [so(str_pool[j])];
-  end;
-  incr (j);
-  while j < pool_ptr do
-  begin
-    if in_mutree = 0 then
-    begin
-      new_mubyte_node; subinfo (p) := so(str_pool[j]); type (p) := 0;
-    end else { |in_mutree| = 1 }
-      if (type (p) > 0) and (type (p) < 64) then
-      begin
-        type (p) := type (p) + 64;
-        q := link (p); link (p) := get_avail; p := link (p);
-        info (p) := q;
-        new_mubyte_node; subinfo (p) := so(str_pool[j]); type (p) := 0;
-        in_mutree := 0;
-      end else begin
-        if type (p) >= 64 then p := link (p);
-        repeat
-          p := link (p);
-          if subinfo (info(p)) = so(str_pool[j]) then
-          begin
-            p := info (p);
-            goto continue;
-          end;
-        until link (p) = null;
-        new_mubyte_node; subinfo (p) := so(str_pool[j]); type (p) := 0;
-        in_mutree := 0;
-      end;
-continue:
-    incr (j);
-  end;
-  if in_mutree = 1 then
-  begin
-    if type (p) = 0 then
-    begin
-       type (p) := mubyte_prefix + 64;
-       q := link (p);  link (p) := get_avail; p := link (p);
-       link (p) := q; info (p) := mubyte_stoken;
-       return;
-    end;
-    if type (p) >= 64 then
-    begin
-      type (p) := mubyte_prefix + 64;
-      p := link (p); info (p) := mubyte_stoken;
-      return;
-    end;
-  end;
-  type (p) := mubyte_prefix;
-  link (p) := mubyte_stoken;
-exit: end;
-@#
-procedure dispose_munode (p: pointer); { frees a mu subtree recursivelly }
-var q: pointer;
-begin
-  if (type (p) > 0) and (type (p) < 64) then free_avail (p)
-  else begin
-    if type (p) >= 64 then
-    begin
-      q := link (p); free_avail (p); p := q;
-    end;
-    q := link (p); free_avail (p); p := q;
-    while p <> null do
-    begin
-      dispose_munode (info (p));
-      q := link (p);
-      free_avail (p);
-      p := q;
-    end;
-  end;
-end;
-@#
-procedure dispose_mutableout (cs: pointer); { frees record from out table }
-var p, q, r: pointer;
-begin
-  p := mubyte_cswrite [cs mod 128];
-  r := null;
-  while p <> null do
-    if info (p) = cs then
-    begin
-      if r <> null then link (r) := link (link (p))
-      else mubyte_cswrite[cs mod 128] := link (link (p));
-      q := link (link(p));
-      free_avail (link(p)); free_avail (p);
-      p := q;
-    end else begin
-      r := link (p); p := link (r);
-    end;
-end;
-
-@ The |print_buffer| procedure prints one character from |buffer|[|i|].
-It also increases |i| to the next character in the buffer.
-
-@<Basic printing...@>=
-{ print one char from |buffer|[|i|]. |i| should have been of type
-  0..|buf_size|, but web2c doesn't like that construct in argument lists. }
-procedure print_buffer(var i:integer);
-var c: ASCII_code;
-begin
-  if mubyte_in = 0 then print (buffer[i]) { normal TeX }
-  else if mubyte_log > 0 then print_char (buffer[i])
-       else begin
-         c := read_buffer (i);
-         if mubyte_token > 0 then print_cs (mubyte_token-cs_token_flag)
-         else print (c);
-       end;
-  incr (i);
-end;
-
-@ Additional material to dump for enc\TeX.  This includes whether
-enc\TeX is enabled, and if it is we also have to dump the \.{\\mubyte}
-arrays.
-
-@<Dump enc\TeX-specific data@>=
-dump_int(@"45435458);  {enc\TeX's magic constant: "ECTX"}
-if not enctex_p then dump_int(0)
-else begin
-  dump_int(1);
-  dump_things(mubyte_read[0], 256);
-  dump_things(mubyte_write[0], 256);
-  dump_things(mubyte_cswrite[0], 128);
-end;
-
-@ Undumping the additional material we dumped for enc\TeX.  This includes
-conditionally undumping the \.{\\mubyte} arrays.
-
-@<Undump enc\TeX-specific data@>=
-undump_int(x);   {check magic constant of enc\TeX}
-if x<>@"45435458 then goto bad_fmt;
-undump_int(x);   {undump |enctex_p| flag into |enctex_enabled_p|}
-if x=0 then enctex_enabled_p:=false
-else if x<>1 then goto bad_fmt
-else begin
-  enctex_enabled_p:=true;
-  undump_things(mubyte_read[0], 256);
-  undump_things(mubyte_write[0], 256);
-  undump_things(mubyte_cswrite[0], 128);
-end;
-
-@y
 @z
 
 @x l.26984 - pTeX
@@ -6719,7 +5858,7 @@ begin@/
 jc:=toDVI(kcode);
 sp:=1; { start position }
 ep:=font_num_ext[f]-1; { end position }
-if (kchar_code(f)(sp)<=jc)and(jc<=kchar_code(f)(ep)) then
+if (ep>=1)and(kchar_code(f)(sp)<=jc)and(jc<=kchar_code(f)(ep)) then
   begin while (sp <= ep) do
     begin mp:=sp+((ep-sp) div 2);
     if jc<kchar_code(f)(mp) then ep:=mp-1
@@ -6783,7 +5922,7 @@ end;
 
 @ |print_kansuji| procedure converts a number to KANJI number.
 
-@ @<Declare procedures needed in |scan_something|@>=
+@ @<Declare procedures needed in |scan_something_internal|@>=
 procedure print_kansuji(@!n:integer);
 var @!k:0..23; {index to current digit; we assume that $|n|<10^{23}$}
 @!cx: KANJI_code; {temporary register for KANJI}
@@ -6875,7 +6014,7 @@ primitive("inhibitxspcode",assign_inhibit_xsp_code,inhibit_xsp_code_base);
 inhibit_glue: print_esc("inhibitglue");
 assign_inhibit_xsp_code: print_esc("inhibitxspcode");
 
-@ @<Declare procedures needed in |scan_something|@>=
+@ @<Declare procedures needed in |scan_something_internal|@>=
 function get_inhibit_pos(c:KANJI_code; n:small_number):pointer;
 label done, done1;
 var p,s:pointer;
@@ -6942,7 +6081,7 @@ assign_kinsoku: case chr_code of
   post_break_penalty_code: print_esc("postbreakpenalty");
   endcases;
 
-@ @<Declare procedures needed in |scan_something|@>=
+@ @<Declare procedures needed in |scan_something_internal|@>=
 function get_kinsoku_pos(c:KANJI_code; n:small_number):pointer;
 label done, done1;
 var p,s:pointer;
@@ -6974,7 +6113,7 @@ end;
 @ @<Assignments@>=
 assign_kinsoku:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
-if (is_char_ascii(n) or check_kanji(n)) then
+if is_char_ascii(n) or check_kanji(n) then
   begin j:=get_kinsoku_pos(tokanji(n),new_pos);
   if j=no_entry then
     begin print_err("KINSOKU table is full!!");
@@ -6990,8 +6129,8 @@ if (is_char_ascii(n) or check_kanji(n)) then
   end
 else
   begin print_err("Invalid KANJI code for ");
-  if (p=pre_break_penalty_code) then print("pre")
-  else if (p=post_break_penalty_code) then print("post")
+  if p=pre_break_penalty_code then print("pre")
+  else if p=post_break_penalty_code then print("post")
   else print_char("?");
   print("breakpenalty ("); print_hex(n); print_char(")");
 @.Invalid KANJI code@>
@@ -7011,16 +6150,16 @@ end
 
 @<Insert kinsoku penalty@>=
 begin kp:=get_kinsoku_pos(cx,cur_pos);
-if (kp<>no_entry) then
-  begin if (kinsoku_type(kp)=pre_break_penalty_code) then
-    begin if (not is_char_node(cur_q))and(type(cur_q)=penalty_node) then
+if kp<>no_entry then
+  begin if kinsoku_type(kp)=pre_break_penalty_code then
+    begin if not is_char_node(cur_q)and(type(cur_q)=penalty_node) then
       penalty(cur_q):=penalty(cur_q)+kinsoku_penalty(kp)
     else
       begin main_p:=link(cur_q); link(cur_q):=new_penalty(kinsoku_penalty(kp));
       subtype(link(cur_q)):=kinsoku_pena; link(link(cur_q)):=main_p;
       end;
     end
-  else if (kinsoku_type(kp)=post_break_penalty_code) then
+  else if kinsoku_type(kp)=post_break_penalty_code then
     begin tail_append(new_penalty(kinsoku_penalty(kp)));
     subtype(tail):=kinsoku_pena;
     end;
@@ -7029,9 +6168,9 @@ end;
 
 @ @<Insert |pre_break_penalty| of |cur_chr|@>=
 begin kp:=get_kinsoku_pos(cur_chr,cur_pos);
-if (kp<>no_entry) then
-  begin if (kinsoku_type(kp)=pre_break_penalty_code) then
-    if (not is_char_node(tail))and(type(tail)=penalty_node) then
+if kp<>no_entry then
+  begin if kinsoku_type(kp)=pre_break_penalty_code then
+    if not is_char_node(tail)and(type(tail)=penalty_node) then
       penalty(tail):=penalty(tail)+kinsoku_penalty(kp)
     else
       begin tail_append(new_penalty(kinsoku_penalty(kp)));
@@ -7042,8 +6181,8 @@ end;
 
 @ @<Insert |post_break_penalty|@>=
 begin kp:=get_kinsoku_pos(cx,cur_pos);
-if (kp<>no_entry) then
-  begin if (kinsoku_type(kp)=post_break_penalty_code) then
+if kp<>no_entry then
+  begin if kinsoku_type(kp)=post_break_penalty_code then
     begin tail_append(new_penalty(kinsoku_penalty(kp)));
     subtype(tail):=kinsoku_pena;
     end;
@@ -7060,7 +6199,7 @@ The procedure |synch_dir| is used in |hlist_out| and |vlist_out|.
 
 @<Glob...@>=
 @!dvi_dir:integer; {a \.{DVI} reader program thinks we direct to}
-@!cur_dir:integer; {\TeX\ thinks we direct to}
+@!cur_dir_hv:integer; {\TeX\ thinks we direct to}
 @!page_dir:eight_bits;
 
 @ @<Set init...@>=
@@ -7070,36 +6209,36 @@ page_dir:=dir_yoko;
 procedure synch_dir;
 var tmp:scaled; {temporary resister}
 begin
-  case cur_dir of
+  case cur_dir_hv of
   dir_yoko:
-    if dvi_dir<>cur_dir then begin
+    if dvi_dir<>cur_dir_hv then begin
       synch_h; synch_v; dvi_out(dirchg); dvi_out(dvi_yoko);
       dir_used:=true;
       case dvi_dir of
         dir_tate: begin tmp:=cur_h; cur_h:=-cur_v; cur_v:=tmp end;
         dir_dtou: begin tmp:=cur_h; cur_h:=cur_v; cur_v:=-tmp end;
       endcases;
-      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir;
+      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir_hv;
     end;
   dir_tate:
-    if dvi_dir<>cur_dir then begin
+    if dvi_dir<>cur_dir_hv then begin
       synch_h; synch_v; dvi_out(dirchg); dvi_out(dvi_tate);
       dir_used:=true;
       case dvi_dir of
         dir_yoko: begin tmp:=cur_h; cur_h:=cur_v; cur_v:=-tmp end;
         dir_dtou: begin cur_v:=-cur_v; cur_h:=-cur_h; end;
       endcases;
-      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir;
+      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir_hv;
     end;
   dir_dtou:
-    if dvi_dir<>cur_dir then begin
+    if dvi_dir<>cur_dir_hv then begin
       synch_h; synch_v; dvi_out(dirchg); dvi_out(dvi_dtou);
       dir_used:=true;
       case dvi_dir of
         dir_yoko: begin tmp:=cur_h; cur_h:=-cur_v; cur_v:=tmp end;
         dir_tate: begin cur_v:=-cur_v; cur_h:=-cur_h; end;
       endcases;
-      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir;
+      dvi_h:=cur_h; dvi_v:=cur_v; dvi_dir:=cur_dir_hv;
     end;
   othercases
     confusion("synch_dir");
@@ -7175,6 +6314,7 @@ procedure adjust_hlist(p:pointer;pf:boolean);
 label exit;
 var q,s,t,u,v,x,z:pointer;
   i,k:halfword;
+  a: pointer; { temporary pointer for accent }
   insert_skip:no_skip..after_wchar;
   cx:KANJI_code; {temporaly register for KANJI character}
   ax:ASCII_code; {temporaly register for ASCII character}
@@ -7190,7 +6330,7 @@ if auto_xspacing>0 then
   end;
 u:=space_ptr(p); add_glue_ref(u);
 s:=xspace_ptr(p); add_glue_ref(s);
-if (not is_char_node(link(p))) {p1.0.9d}
+if not is_char_node(link(p)) {p1.0.9d}
     and(type(link(p))=glue_node)and(subtype(link(p))=jfm_skip+1) then
   begin v:=link(p); link(p):=link(v);
   fast_delete_glue_ref(glue_ptr(v)); free_node(v,small_node_size);
@@ -7200,7 +6340,7 @@ while p<>null do
   begin if is_char_node(p) then
     begin repeat @<Insert a space around the character |p|@>;
       q:=p; p:=link(p); incr(i);
-      if (i>5)and(pf) then
+      if (i>5)and pf then
         begin if is_char_node(v) then
         if font_dir[font(v)]<>dir_default then v:=link(v);
         v:=link(v);
@@ -7212,8 +6352,33 @@ while p<>null do
     hlist_node: @<Insert hbox surround spacing@>;
     ligature_node: @<Insert ligature surround spacing@>;
     penalty_node,disp_node: @<Insert penalty or displace surround spacing@>;
-    kern_node: if (insert_skip=after_schar)and(subtype(p)<>explicit) then
-      do_nothing else insert_skip:=no_skip;
+    kern_node: if subtype(p)=explicit then insert_skip:=no_skip
+      else if subtype(p)=acc_kern then begin
+        { When we insert \.{\\xkanjiskip}, we first ignore accent (and kerns) and
+          insert \.{\\xkanjiskip}, then we recover the accent. }
+        if q=p then begin t:=link(p);
+          { if p is beginning on the list, we have only to ignore nodes. }
+          if is_char_node(t) then
+            if font_dir[font(t)]<>dir_default then t:=link(t);
+          p:=link(link(t));
+	  if font_dir[font(p)]<>dir_default then
+            begin p:=link(p); insert_skip:=after_wchar; end
+          else  insert_skip:=after_schar;
+          end
+        else begin
+          a:=p; t:=link(p);
+          if is_char_node(t) then
+            if font_dir[font(t)]<>dir_default then t:=link(t);
+          t:=link(link(t)); link(q):=t; p:=t;
+          @<Insert a space around the character |p|@>; incr(i);
+          if (i>5)and pf then
+            begin if is_char_node(v) then
+            if font_dir[font(v)]<>dir_default then v:=link(v);
+            v:=link(v);
+            end;
+          if link(q)<>t then link(link(q)):=a else link(q):=a;
+          end;
+        end;
     math_node: @<Insert math surround spacing@>;
     mark_node,adjust_node,ins_node,whatsit_node:
       {These nodes are vanished when typeset is done}
@@ -7223,12 +6388,12 @@ while p<>null do
     q:=p; p:=link(p);
     end;
   end;
-if (not is_char_node(q))and(type(q)=glue_node)and(subtype(q)=jfm_skip+1) then
+if not is_char_node(q)and(type(q)=glue_node)and(subtype(q)=jfm_skip+1) then
   begin fast_delete_glue_ref(glue_ptr(q));
   glue_ptr(q):=zero_glue; add_glue_ref(zero_glue);
   end;
 delete_glue_ref(u); delete_glue_ref(s);
-if (v<>null)and(pf)and(i>5) then @<Make |jchr_widow_penalty| node@>;
+if (v<>null)and pf and(i>5) then @<Make |jchr_widow_penalty| node@>;
 exit:
 end;
 
@@ -7247,7 +6412,7 @@ else
 
 @ @<Insert hbox surround spacing@>=
 begin find_first_char:=true; first_char:=null; last_char:=null;
-if (shift_amount(p)=0) then
+if shift_amount(p)=0 then
   begin if check_box(list_ptr(p)) then
     begin if first_char<>null then @<Insert a space before the |first_char|@>;
     if last_char<>null then
@@ -7274,7 +6439,7 @@ else
 @ @<Insert a space after the |last_char|@>=
 if font_dir[font(last_char)]<>dir_default then
   begin insert_skip:=after_wchar;
-  if (is_char_node(link(p)))and(font_dir[font(link(p))]<>dir_default) then
+  if is_char_node(link(p))and(font_dir[font(link(p))]<>dir_default) then
     begin @<Append KANJI-KANJI spacing@>; p:=link(p);
     end;
   end
@@ -7289,7 +6454,7 @@ begin if (subtype(p)=before)and(insert_skip=after_wchar) then
   begin ax:=qo("0"); @<Insert KANJI-ASCII spacing@>;
   insert_skip:=no_skip;
   end
-else if (subtype(p)=after) then
+else if subtype(p)=after then
   begin ax:=qo("0"); insert_skip:=after_schar;
   end
 else insert_skip:=no_skip;
@@ -7370,16 +6535,16 @@ end
 
 @ @<Make |jchr_widow_penalty| node@>=
 begin q:=v; p:=link(v);
-if (is_char_node(v))and(font_dir[font(v)]<>dir_default) then
+if is_char_node(v)and(font_dir[font(v)]<>dir_default) then
   begin q:=p; p:=link(p);
   end;
 t:=q; s:=null;
 @<Seek list and make |t| pointing widow penalty position@>;
-if (s<>null) then
+if s<>null then
   begin s:=link(t);
-    if (not is_char_node(s))and(type(s)=penalty_node) then
+    if not is_char_node(s)and(type(s)=penalty_node) then
       penalty(s):=penalty(s)+jchr_widow_penalty
-    else if (jchr_widow_penalty<>0) then
+    else if jchr_widow_penalty<>0 then
       begin s:=new_penalty(jchr_widow_penalty); subtype(s):=widow_pena;
       link(s):=link(t); link(t):=s; t:=link(s);
       while(not is_char_node(t)) do
@@ -7450,7 +6615,7 @@ begin this_box:=temp_ptr;
       end;
     endcases;
   endcases;
-  cur_dir:=box_dir(temp_ptr);
+  cur_dir_hv:=box_dir(temp_ptr);
   if type(temp_ptr)=vlist_node then vlist_out@+else hlist_out;
 end;
 
@@ -7560,18 +6725,18 @@ again_2:
 main_loop_j+3:
   if ins_kp=true then @<Insert |pre_break_penalty| of |cur_chr|@>;
   @<Look ahead for glue or kerning@>;
-  if (ins_kp=false) then begin { Kanji -> Kanji }
+  if ins_kp=false then begin { Kanji -> Kanji }
     goto main_loop_j+1;
-  end else if (ins_kp=true) then begin { Kanji -> Ascii }
-    {@<Append |disp_node| at begin of displace area@>;}
+  end else if ins_kp=true then begin { Kanji -> Ascii }
+    {@@<Append |disp_node| at begin of displace area@@>;}
     ins_kp:=false; goto main_loop;
   end else begin { Kanji -> cs }
-    {@<Append |disp_node| at begin of displace area@>;}
+    {@@<Append |disp_node| at begin of displace area@@>;}
     goto reswitch;
   end;
 
 @ @<Append |disp_node| at begin ...@>=
-begin if (not is_char_node(tail))and(type(tail)=disp_node) then
+begin if not is_char_node(tail)and(type(tail)=disp_node) then
   begin if prev_disp=disp then
     begin free_node(tail,small_node_size); tail:=prev_node; link(tail):=null;
     end
@@ -7586,7 +6751,7 @@ end;
 
 @ @<Append |disp_node| at end ...@>=
 if disp<>0 then
-begin if (not is_char_node(tail))and(type(tail)=disp_node) then
+begin if not is_char_node(tail)and(type(tail)=disp_node) then
   begin disp_dimen(tail):=0;
   end
 else

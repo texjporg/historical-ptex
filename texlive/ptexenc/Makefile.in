@@ -171,6 +171,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -199,6 +200,7 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
@@ -231,7 +233,6 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
-lt_ECHO = @lt_ECHO@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -252,7 +253,7 @@ INCLUDES = $(KPATHSEA_INCLUDES)
 AM_CFLAGS = $(WARNING_CFLAGS)
 lib_LTLIBRARIES = libptexenc.la
 libptexenc_la_CPPFLAGS = -DMAKE_PTENC_DLL
-libptexenc_la_LDFLAGS = -version-info $(PTEXENC_LT_VERSINFO)
+libptexenc_la_LDFLAGS = -no-undefined -version-info $(PTEXENC_LT_VERSINFO)
 
 # Note: jisx0208.h is a copy of ../../libs/gd/gd-2.0.35/jisx0208.h.
 #
@@ -262,12 +263,12 @@ libptexenc_la_SOURCES = \
 	ptexenc.c \
 	ptexenc/kanjicnv.h \
 	ptexenc/unicode-jp.h \
-	ptexenc/unicode.h \
 	unicode-jp.c \
 	unicode.c
 
 nobase_include_HEADERS = \
-	ptexenc/ptexenc.h
+	ptexenc/ptexenc.h \
+	ptexenc/unicode.h
 
 EXTRA_DIST = COPYRIGHT ChangeLog.TL
 all: all-am
