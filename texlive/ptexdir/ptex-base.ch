@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.3
+% This is a change file for pTeX 3.4
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
@@ -48,12 +48,13 @@
 % (15/04/2011) PB  pTeX p3.2 Add \ifdbox and \ifddir
 % (2011-08-18) PB  Bug fix by Hironori Kitagawa.
 % (2012-05-11) PB  pTeX p3.3
+% (2013-04-09) PB  pTeX p3.4 (TL 2013)
 %
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.3' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.4' {current p\TeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.1415926',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -299,12 +300,6 @@ else
   wterm(' (');
   wterm(conststringcast(get_enc_string));
   wterm(')');
-@z
-
-@x l.1820 - pTeX
-k:=first; while k < last do begin print_buffer(k) end;
-@y
-if last<>first then for k:=first to last-1 do print(buffer[k]);
 @z
 
 @x [8.111] l.2436 - pTeX: check hi/ho
@@ -2149,7 +2144,7 @@ if cur_tok<cs_token_flag then
 else if cur_tok<cs_token_flag+single_base then
   cur_val:=cur_tok-cs_token_flag-active_base
 else cur_val:=cur_tok-cs_token_flag-single_base;
-if (cur_val>255)and(cur_cmd<kanji) then
+if (cur_val>255)and((cur_cmd<kanji)or(cur_cmd>max_char_code)) then
   begin print_err("Improper alphabetic or KANJI constant");
 @.Improper alphabetic constant@>
   help2("A one-character control sequence belongs after a ` mark.")@/
@@ -5266,26 +5261,6 @@ else link(p):=tail;
 p:=q;
 @z
 
-@x l.22334 - pTeX
-procedure cs_error;
-begin
-if cur_chr = 10 then
-begin
-  print_err("Extra "); print_esc("endmubyte");
-@.Extra \\endmubyte@>
-  help1("I'm ignoring this, since I wasn't doing a \mubyte.");
-end else begin
-  print_err("Extra "); print_esc("endcsname");
-@.Extra \\endcsname@>
-  help1("I'm ignoring this, since I wasn't doing a \csname.");
-end;
-@y
-procedure cs_error;
-begin print_err("Extra "); print_esc("endcsname");
-@.Extra \\endcsname@>
-help1("I'm ignoring this, since I wasn't doing a \csname.");
-@z
-
 @x [48.1138] l.22385 - pTeX: init math : direction < 0 ... math direction
 if (cur_cmd=math_shift)and(mode>0) then @<Go into display math mode@>
 else  begin back_input; @<Go into ordinary math mode@>;
@@ -6301,6 +6276,8 @@ If the first matter is a character, |first_char| is stored it.
 in the list, |first_char| and |last_char| is null.
 @^recursion@>
 
+Note that |first_char| and |last_char| may be |math_node|.
+
 @<Glob...@>=
 @!first_char:pointer; {first printable character}
 @!last_char:pointer; {last printable character}
@@ -6335,6 +6312,14 @@ while p<>null do
   ligature_node: if check_box(lig_ptr(p)) then flag:=true;
   ins_node,disp_node,mark_node,adjust_node,whatsit_node,penalty_node:
     do_nothing;
+  math_node:
+    if (subtype(p)=before)or(subtype(p)=after) then 
+      begin if find_first_char then
+        begin find_first_char:=false; first_char:=p; 
+        end;
+        last_char:=p; flag:=true;
+      end
+    else do_nothing; {\.{\\beginR} etc.}
   othercases begin flag:=true;
     if find_first_char then find_first_char:=false
     else last_char:=null;
@@ -6471,22 +6456,28 @@ if shift_amount(p)=0 then
 end
 
 @ @<Insert a space before the |first_char|@>=
-if font_dir[font(first_char)]<>dir_default then
+if type(first_char)=math_node then
+  begin ax:=qo("0");
+  if insert_skip=after_wchar then @<Insert KANJI-ASCII spacing@>;
+  end
+else if font_dir[font(first_char)]<>dir_default then
   begin KANJI(cx):=info(link(first_char));
   if insert_skip=after_schar then @<Insert ASCII-KANJI spacing@>
   else if insert_skip=after_wchar then @<Insert KANJI-KANJI spacing@>;
-  insert_skip:=after_wchar;
   end
 else
   begin ax:=qo(character(first_char));
   if insert_skip=after_wchar then @<Insert KANJI-ASCII spacing@>;
-  if auto_xsp_code(ax)>=2 then
-    insert_skip:=after_schar else insert_skip:=no_skip;
   end;
 
 @ @<Insert a space after the |last_char|@>=
-if font_dir[font(last_char)]<>dir_default then
-  begin insert_skip:=after_wchar;
+if type(last_char)=math_node then
+  begin ax:=qo("0"); 
+  if auto_xsp_code(ax)>=2 then
+    insert_skip:=after_schar else insert_skip:=no_skip;
+  end
+else if font_dir[font(last_char)]<>dir_default then
+  begin insert_skip:=after_wchar; KANJI(cx):=info(link(last_char));
   if is_char_node(link(p))and(font_dir[font(link(p))]<>dir_default) then
     begin @<Append KANJI-KANJI spacing@>; p:=link(p);
     end;
@@ -6503,7 +6494,9 @@ begin if (subtype(p)=before)and(insert_skip=after_wchar) then
   insert_skip:=no_skip;
   end
 else if subtype(p)=after then
-  begin ax:=qo("0"); insert_skip:=after_schar;
+  begin ax:=qo("0"); 
+  if auto_xsp_code(ax)>=2 then
+    insert_skip:=after_schar else insert_skip:=no_skip;
   end
 else insert_skip:=no_skip;
 end
