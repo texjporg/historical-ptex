@@ -39,12 +39,6 @@ pdf_page_height_code:   print_esc("pdfpageheight");
 @z
 
 @x
-@d etex_convert_codes=etex_convert_base+2 {end of \eTeX's command codes}
-@y
-@d etex_convert_codes=etex_convert_base+3 {end of \eTeX's command codes}
-@z
-
-@x
 @ @<Initialize variables as |ship_out| begins@>=
 @y
 @ @<Initialize variables as |ship_out| begins@>=
@@ -53,11 +47,9 @@ pdf_page_height_code:   print_esc("pdfpageheight");
 
 @x
 @!old_setting:0..max_selector; {saved |selector| setting}
-begin if tracing_output>0 then
 @y
 @!old_setting:0..max_selector; {saved |selector| setting}
 @!t: scaled;
-begin if tracing_output>0 then
 @z
 
 @x

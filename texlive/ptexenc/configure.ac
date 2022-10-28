@@ -5,28 +5,9 @@ dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
 dnl   with or without modifications, as long as this notice is preserved.
-dnl --------------------------------------------------------
-dnl Keep ptexenc shared and package library versions the same:
-dnl   Only bug fixes:
-dnl     ptexenc_lib_micro += 1;
-dnl   Adding new interfaces (backwards compatible)
-dnl     ptexenc_lib_minor += 1;
-dnl     ptexenc_lib_micro = 0;
-dnl   Modifying or revoking interfaces (not backwards compatible)
-dnl     ptexenc_lib_major += 1;
-dnl     ptexenc_lib_minor = 0;
-dnl     ptexenc_lib_micro = 0;
 dnl
-dnl   After a release, set ptexenc_lib_dev to "dev", to distinguish
-dnl   binaries built between releases.
-
-m4_define([ptexenc_lib_major], [1])[]dnl
-m4_define([ptexenc_lib_minor], [2])[]dnl
-m4_define([ptexenc_lib_micro], [0])[]dnl
-m4_define([ptexenc_lib_devel], [])[]dnl or "dev"
-m4_define([ptexenc_version], [ptexenc_lib_major.ptexenc_lib_minor.ptexenc_lib_micro[]ptexenc_lib_devel])[]dnl
-
-AC_INIT([ptexenc], [ptexenc_version], [tex-k@tug.org])
+m4_include([version.ac])[] dnl define ptexenc_version
+AC_INIT([ptexenc], ptexenc_version, [tex-k@tug.org])
 AC_PREREQ([2.63])
 AC_CONFIG_SRCDIR([ptexenc.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -34,30 +15,12 @@ AC_CONFIG_MACRO_DIR([../../m4])
 
 AC_SUBST([PTEXENCVERSION], [ptexenc_version])
 AC_DEFINE([PTEXENCVERSION], ["ptexenc version ptexenc_version"])
-AC_SUBST([PTEXENC_LT_VERSINFO],
-         [m4_eval(ptexenc_lib_major+ptexenc_lib_minor):ptexenc_lib_micro:ptexenc_lib_minor])
+KPSE_LT_VERSION([ptexenc])
 
 dnl Common code for all programs (or libraries) using libkpathsea.
 KPSE_COMMON([ptexenc])
 
 KPSE_KPATHSEA_FLAGS
-
-dnl Default pTeX character encoding.
-AC_ARG_WITH([ptexenc-enc],
-            AS_HELP_STRING([--with-ptexenc-enc=ENC],
-                           [Default pTeX character encoding
-                            (ENC=JIS/EUC/SJIS/UTF8, default UTF8)]))
-AC_MSG_CHECKING([default pTeX character encoding])
-AS_CASE([$with_ptexenc_enc],
-        [jis|JIS], [DEFAULT_KANJI_ENC=ENC_JIS],
-        [euc|EUC], [DEFAULT_KANJI_ENC=ENC_EUC],
-        [sjis|SJIS], [DEFAULT_KANJI_ENC=ENC_SJIS],
-        [''|utf8|UTF8], [DEFAULT_KANJI_ENC=ENC_UTF8],
-            [DEFAULT_KANJI_ENC=ENC_UTF8
-             AC_MSG_WARN([Unknown character encoding \`$with_ptexenc_enc'])])
-AC_MSG_RESULT([$DEFAULT_KANJI_ENC])
-AC_DEFINE_UNQUOTED([DEFAULT_KANJI_ENC], [$DEFAULT_KANJI_ENC],
-                   [Default kanji encoding.])
 
 dnl Using iconv for kanji <=> unicode conversion
 AC_ARG_ENABLE([kanji-iconv],

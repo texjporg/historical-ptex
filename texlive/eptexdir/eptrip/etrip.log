@@ -1,9 +1,9 @@
-This is e-TeX, Version 3.1415926-2.3 (TeX Live 2011/dev) (format=etrip 2011.4.7)  7 APR 2011 11:46
+This is e-pTeX, Version 3.1415926-p3.3-110825-2.4 (utf8.euc) (TeX Live 2012) (format=etrip 2012.5.12)  12 MAY 2012 14:12
 entering extended mode
 **&etrip etrip
-(etrip.tex e-IniTeX: e-Trip format loaded.
-This is the e-Trip test [2011-04-07] for e-TeX v3.1415926-2.3.
-(You are using e-TeX version/revision 2.3)
+(./etrip.tex e-IniTeX: e-Trip format loaded.
+This is the e-Trip test [2012-05-11] for e-TeX v3.1415926-2.4.
+(You are using e-TeX version/revision 2.4)
 Missing character: There is no b in font nullfont!
 
 Missing character: There is no c in font nullfont!
@@ -668,8 +668,10 @@ Completed box being shipped out [1]
 .\write1{\unexpanded \expandafter {\1}}
 .\closeout1
 
-Memory usage before: 50&182; after: 36&176; still untouched: 680
-(etrip.out) ( 
+\openout1 = `etrip.out'.
+
+Memory usage before: 57&183; after: 40&177; still untouched: 2171
+(./etrip.out) ( 
 Warning: end of semi simple group (level 3) entered at line 431 of a dif
 ferent file
 Warning: end of \iftrue entered on line 431 of a different file
@@ -761,7 +763,7 @@ Warning: end of file when \ifnum entered on line 6 is incomplete
 l.9 \fi
        
 l.444         }
-                % end of outer \scantokens) (etrip.out
+                % end of outer \scantokens) (./etrip.out
 ! Undefined control sequence.
 \endgroup ->\9\9
                 
@@ -2181,13 +2183,13 @@ look up `weird error' in the index to The TeXbook.)
 ! Bad character code (-1).
 l.673 ...ffontchar\textfont2 -1 
                                 \else \fi    % <== bad charac...
-A character number must be between 0 and 255.
+A character number must be between 0 and 255, or KANJI code.
 I changed this one to zero.
 
 ! Bad character code (256).
 l.674   \iffontchar\font 256 
                              \else \fi    % <== bad character...
-A character number must be between 0 and 255.
+A character number must be between 0 and 255, or KANJI code.
 I changed this one to zero.
 
 ! You can't use `\fontcharwd' in vertical mode.
@@ -2694,9 +2696,9 @@ since the result is out of range.
 
 Expr fraction rounding 3 OK
 [1]
-Memory usage before: 51&320; after: 44&320; still untouched: 680
+Memory usage before: 58&321; after: 48&321; still untouched: 1171
 [1]
-Memory usage before: 51&320; after: 44&320; still untouched: 680
+Memory usage before: 58&321; after: 48&321; still untouched: 1171
 Checking \mutoglue and \gluetomu:
 ! You can't use `\mutoglue' in vertical mode.
 l.903   \mutoglue
@@ -4270,12 +4272,12 @@ laywidowpenalties:
 {restoring \interlinepenalties=0}
  ) 
 Here is how much of TeX's memory you used:
- 22 strings out of 1665
- 132 string characters out of 8410
- 2661 words of memory out of 3000
- 408 multiletter control sequences out of 2100
+ 18 strings out of 1696
+ 140 string characters out of 8256
+ 3329 words of memory out of 4500
+ 460 multiletter control sequences out of 15000+0
  2286 words of font info for 3 fonts, out of 20000 for 75
- 10 hyphenation exceptions out of 307
+ 9 hyphenation exceptions out of 659
  10i,15n,8p,137b,78s stack positions out of 200i,40n,60p,500b,600s
 
 Output written on etrip.dvi (3 pages, 220 bytes).

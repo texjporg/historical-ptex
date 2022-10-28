@@ -13,22 +13,32 @@
 
 #define KANJI
 
+#if !defined(WIN32)
+extern int sjisterminal;
+#endif
+
 /* functions */
 #define Hi(x) (((x) >> 8) & 0xff)
 #define Lo(x) ((x) & 0xff)
 
-extern boolean check_kanji(integer c);
+extern int check_kanji (integer c);
 #define checkkanji check_kanji
-extern boolean is_kanji(integer c);
-#define iskanji is_kanji
-extern boolean is_char_ascii(integer c);
+extern boolean is_char_ascii (integer c);
 #define ischarascii is_char_ascii
-extern boolean is_wchar_ascii(integer c);
-#define iswcharascii is_wchar_ascii
-extern boolean ismultiprn(integer c);
-extern integer calc_pos(integer c);
+extern boolean is_char_kanji (integer c);
+#define ischarkanji is_char_kanji
+extern boolean ismultiprn (integer c);
+extern integer calc_pos (integer c);
 #define calcpos calc_pos
-extern integer kcatcodekey(integer c);
+extern integer kcatcodekey (integer c);
+
+extern void init_default_kanji (const_string file_str, const_string internal_str);
+/* for pTeX and e-pTeX */
+#define initdefaultkanji() init_default_kanji(NULL, "euc")
+/* for pBibTeX, pDVItype, pPLtoTF, and pTFtoPL */
+#define initkanji() init_default_kanji(NULL, "euc")
+/* for pDVItype */
+#define setpriorfileenc() set_prior_file_enc()
 
 #ifndef PRESERVE_PUTC
 #undef putc
@@ -40,12 +50,5 @@ extern integer kcatcodekey(integer c);
 #else
 #define inputline2(fp,buff,pos,size) input_line2(fp,buff,pos,size,NULL)
 #endif
-
-#ifdef MP
-#undef TEXMFPOOLNAME
-#undef TEXMFENGINENAME
-#define TEXMFPOOLNAME   "jmp.pool"
-#define TEXMFENGINENAME "jmpost"
-#endif /* MP */
 
 #endif /* not KANJI_H */

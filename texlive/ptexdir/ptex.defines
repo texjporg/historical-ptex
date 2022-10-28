@@ -21,9 +21,12 @@
 @define function fromKUTEN ();
 
 @define function checkkanji ();
-@define function iskanji ();
 @define function ischarascii ();
-@define function iswcharascii ();
+@define function ischarkanji ();
 @define function ismultiprn ();
 @define function calcpos ();
 @define function kcatcodekey ();
+
+@define procedure initkanji;
+
+@define var sjisterminal;

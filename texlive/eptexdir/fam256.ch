@@ -1,5 +1,5 @@
 % fam256.ch
-% (C) 2009 by Hironori Kitagawa.
+% (C) 2009, 2011 by Hironori Kitagawa.
 %
 % This patch is derived from om16bit.ch and omfi.ch (both in Omega).
 % (Omega is copyright by John Plaice and Yannis Haralambous.)
@@ -260,7 +260,8 @@ end;
 @x
 char_given,math_given: scanned_result(cur_chr)(int_val);
 @y
-char_given,math_given,omath_given: scanned_result(cur_chr)(int_val);
+omath_given,
+char_given,math_given: scanned_result(cur_chr)(int_val);
 @z
 %-----------------------------------------------
 @x
@@ -1159,7 +1160,10 @@ def_code: begin
   @<Let |m| be the minimal legal code value, based on |cur_chr|@>;
   @<Let |n| be the largest legal code value, based on |cur_chr|@>;
   p:=cur_chr; scan_char_num;
-  if p=kcat_code_base then p:=p+kcatcodekey(cur_val) else p:=p+cur_val;
+  if p=kcat_code_base then p:=p+kcatcodekey(cur_val) 
+  else if not is_char_ascii(cur_val) then p:=p+Hi(cur_val) 
+    { If |cur_val| is a KANJI code, we use its upper half, as the case of retrieving. }
+  else p:=p+cur_val;
   scan_optional_equals; scan_int;
   if ((cur_val<m)and(p<del_code_base))or(cur_val>n) then
   begin print_err("Invalid code ("); print_int(cur_val);
@@ -1204,7 +1208,10 @@ def_code: begin
     @<Let |m| be the minimal legal code value, based on |cur_chr|@>;
     @<Let |n| be the largest legal code value, based on |cur_chr|@>;
     p:=cur_chr; cur_val1:=p; scan_char_num;
-    if p=kcat_code_base then p:=p+kcatcodekey(cur_val) else p:=p+cur_val;
+    if p=kcat_code_base then p:=p+kcatcodekey(cur_val) 
+    else if not is_char_ascii(cur_val) then p:=p+Hi(cur_val) 
+      { If |cur_val| is a KANJI code, we use its upper half, as the case of retrieving. }
+    else p:=p+cur_val;
     scan_optional_equals; scan_int;
     if ((cur_val<m)and(p<del_code_base))or(cur_val>n) then
     begin print_err("Invalid code ("); print_int(cur_val);

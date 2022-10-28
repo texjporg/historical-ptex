@@ -35,7 +35,7 @@
 @y
  \def\titlepage{F}
  \centerline{\:\titlefont The {\:\ttitlefont J\BibTeX} preprocessor}
- \vskip 15pt \centerline{(Version 0.32 base on C Version \BibTeX 0.99d---\today)} \vfill}
+ \vskip 15pt \centerline{(Version 0.33 based on C Version \BibTeX 0.99d---\today)} \vfill}
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,9 +52,7 @@
   print (banner);
 @y
   print (banner);
-  print (' (');
-  print (conststringcast(get_enc_string));
-  print (')');
+  print (' (', conststringcast(get_enc_string), ')');
 @z
 
 @x Changes for JBibTeX by Shouichi Matsui [27]
@@ -203,11 +201,11 @@ var i:c_int_type;
     end;
   vgetc (f); {skip the eol}
 @y
-  last := input_line2(f,stringcast(buffer),last,buf_size,address_of(i));
+  last := input_line2(f,ustringcast(buffer),last,buf_size,address_of(i));
   while (not eof(f)) and (last > 0) and (i <> 10) and (i <> 13) do
   begin
     buffer_overflow;
-    last := input_line2(f,stringcast(buffer),last,buf_size,address_of(i));
+    last := input_line2(f,ustringcast(buffer),last,buf_size,address_of(i));
   end;
 @z
 
@@ -222,8 +220,15 @@ begin
 procedure get_the_top_level_aux_file_name;
 label aux_found,@!aux_not_found;
 begin
-  if (not set_enc_string (0,'EUC')) then uexit(1);
+  if (not set_enc_string (nil,'EUC')) then uexit(1);
   @<Process a possible command line@>
+@z
+
+@x
+parse_arguments;
+@y
+init_kanji;
+parse_arguments;
 @z
 
 @x Changes for JBibTeX by Shouichi Matsui [332]
@@ -328,11 +333,11 @@ if (ex_buf_ptr < ex_buf_length) then            {remove the ``and''}
     ex_buf_ptr := ex_buf_ptr - 4;
 @y
 if (ex_buf_ptr < ex_buf_length) then    {remove the ``and'', or Zenkau comma}
- begin
+  begin
     if( (ex_buf[ex_buf_ptr-1]=zen_comma) or (ex_buf[ex_buf_ptr-1]=zen_kuten) )
     then ex_buf_ptr := ex_buf_ptr - 2
     else ex_buf_ptr := ex_buf_ptr - 4;
- end;
+  end;
 @z
 
 @x Changes for JBibTeX by Shouichi Matsui for Zenkaku comma
@@ -449,12 +454,13 @@ while (sp_ptr < sp_end) do                      {shift the substring}
 @y
 { 2 bytes Kanji code break check }
 tps:=str_start[pop_lit3];
-while (tps < sp_ptr ) do
+while (tps < sp_ptr) do begin
     if str_pool[tps] > 127
     then tps := tps + 2
     else incr(tps);
+end;
 tpe:=tps;
-while (tpe < sp_end ) do begin
+while (tpe < sp_end) do begin
     if str_pool[tpe] > 127
     then tpe := tpe+2
     else incr(tpe);
@@ -478,7 +484,8 @@ while (sp_ptr < sp_end) do                      {shift the substring}
          append_char (str_pool[sp_ptr]); incr(sp_ptr);
          end
     else begin
-         append_char (str_pool[sp_ptr]); incr(sp_ptr); end;
+         append_char (str_pool[sp_ptr]); incr(sp_ptr);
+         end;
     end;
 @z
 
@@ -497,9 +504,10 @@ while (sp_ptr < sp_end) do                      {shift the substring}
         if (sp_brace_level > 0) then
             decr(sp_brace_level);
         end
-    else if (str_pool[sp_xptr1-1]>127) then begin {kanji char}
+    else if (str_pool[sp_xptr1-1]>127) then
+        begin {kanji char}
             incr(sp_xptr1); num_text_chars:=num_text_chars+2;
-         end
+        end
     else
         incr(num_text_chars);
     end;
@@ -507,22 +515,8 @@ while (sp_ptr < sp_end) do                      {shift the substring}
 
 @x
 const n_options = 4; {Pascal won't count array lengths for us.}
-var @!long_options: array[0..n_options] of getopt_struct;
-    @!getopt_return_val: integer;
-    @!option_index: c_int_type;
-    @!current_option: 0..n_options;
-begin
-  @<Initialize the option variables@>;
 @y
-const n_options = 5; {Pascal won't count array lengths for us.}
-var @!long_options: array[0..n_options] of getopt_struct;
-    @!getopt_return_val: integer;
-    @!option_index: c_int_type;
-    @!current_option: 0..n_options;
-    @!version_switch: boolean;
-begin
-  @<Initialize the option variables@>;
-  version_switch := false;
+const n_options = 6; {Pascal won't count array lengths for us.}
 @z
 
 @x
@@ -538,28 +532,19 @@ begin
 @z
 
 @x
-      print_version_and_exit (banner, 'Oren Patashnik', nil, nil);
+    end; {Else it was a flag; |getopt| has already done the assignment.}
 @y
-      version_switch := true;
-
     end else if argument_is ('kanji') then begin
-      @<Set process kanji code@>;
+      if (not set_enc_string(optarg, nil)) then
+        write_ln('Bad kanji encoding "', stringcast(optarg), '".');
+
+    end; {Else it was a flag; |getopt| has already done the assignment.}
 @z
 
 @x
-  until getopt_return_val = -1;
-@y
-  until getopt_return_val = -1;
-  if (version_switch) then
-    print_version_and_exit (banner, 'Oren Patashnik', nil, nil);
-@z
-
-@x
-  if (optind + 1 <> argc) then begin
     write_ln (stderr, 'bibtex: Need exactly one file argument.');
     usage ('bibtex');
 @y
-  if (optind + 1 <> argc) then begin
     write_ln (stderr, 'pbibtex: Need exactly one file argument.');
     usage ('pbibtex');
 @z
@@ -570,12 +555,21 @@ long_options[current_option].has_arg := 0;
 long_options[current_option].flag := 0;
 long_options[current_option].val := 0;
 incr (current_option);
-
 @y
 long_options[current_option].name := 'version';
 long_options[current_option].has_arg := 0;
 long_options[current_option].flag := 0;
 long_options[current_option].val := 0;
+incr (current_option);
+
+@ Shift-JIS terminal (the flag is ignored except for WIN32).
+@.-sjis-terminal@>
+
+@<Define the option...@> =
+long_options[current_option].name := 'sjis-terminal';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := address_of (sjis_terminal);
+long_options[current_option].val := 1;
 incr (current_option);
 
 @ Kanji option.
@@ -594,7 +588,6 @@ begin kpse_set_program_name (argv[0], 'bibtex');
 @y
 begin kpse_set_program_name (argv[0], 'pbibtex');
 @z
-
 
 @x
   until j_prime;
@@ -636,9 +629,4 @@ begin
         push_lit_stk(0,stk_int);
     end;
 exit:end;
-
-@ @<Set process kanji code@>=
-  if (not set_enc_string(optarg, 0)) then begin
-    write_ln('Bad kanjicode encoding "', stringcast(optarg), '".');
-  end;
 @z

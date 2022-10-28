@@ -1,22 +1,18 @@
 /*
  *  KANJI Code conversion routines.
- *  (for ptex only)
+ *  (for pTeX and e-pTeX)
  */
 
 #include "kanji.h"
 
-/* FIXME:  why not boolean value */
+#if !defined(WIN32)
+int sjisterminal;
+#endif
+
+/* TOKEN */
 boolean check_kanji(integer c)
 {
-    /* FIXME:  why not 255 (0xff) */
-    if (0 <= c && c <= 256) return -1;  /* ascii without catcode */
-    if (iskanji1(Hi(c)) && iskanji2(Lo(c))) return 1;
-    return 0;  /* ascii with catcode */
-}
-
-boolean is_kanji(integer c)
-{
-    return (iskanji1(Hi(c)) && iskanji2(Lo(c)));
+    return is_char_kanji(c);
 }
 
 boolean is_char_ascii(integer c)
@@ -24,9 +20,9 @@ boolean is_char_ascii(integer c)
     return (0 <= c && c < 0x100);
 }
 
-boolean is_wchar_ascii(integer c)
+boolean is_char_kanji(integer c)
 {
-    return (!is_char_ascii(c) && !is_kanji(c));
+    return (iskanji1(Hi(c)) && iskanji2(Lo(c)));
 }
 
 boolean ismultiprn(integer c)
@@ -76,4 +72,33 @@ integer calc_pos(integer c)
 integer kcatcodekey(integer c)
 {
     return Hi(toDVI(c));
+}
+
+void init_default_kanji (const_string file_str, const_string internal_str)
+{
+    char *p;
+
+    enable_UPTEX (false); /* disable */
+
+    p = getenv ("PTEX_KANJI_ENC");
+    if (p) {
+        if (!set_enc_string (p, NULL))
+            fprintf (stderr, "Ignoring bad kanji encoding \"%s\".\n", p);
+    }
+
+#ifdef WIN32
+    p = kpse_var_value ("guess_input_kanji_encoding");
+    if (p) {
+        if (*p == '1' || *p == 'y' || *p == 't')
+            infile_enc_auto = 1;
+        free(p);
+    }
+#endif
+
+    if (!set_enc_string (file_str, internal_str)) {
+        fprintf (stderr, "Bad kanji encoding \"%s\" or \"%s\".\n",
+                 file_str ? file_str  : "NULL",
+                 internal_str ? internal_str : "NULL");
+        uexit(1);
+    }
 }

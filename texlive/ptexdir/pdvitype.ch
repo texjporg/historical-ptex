@@ -1,12 +1,19 @@
-% This is a change file for PLtoTF
+% This is a change file for DVItype.
 %
 % 09/27/95 (KA)  Supporting ASCII pTeX
 %
 @x
 @d banner=='This is DVItype, Version 3.6' {printed when the program starts}
 @y
-@d banner=='This is PDVItype, Version 3.6-p0.4'
+@d banner=='This is pDVItype, Version 3.6-p0.4'
   {printed when the program starts}
+@z
+
+@x
+  parse_arguments;
+@y
+  init_kanji;
+  parse_arguments;
 @z
 
 @x
@@ -478,7 +485,7 @@ if (m<>id_byte) and (m<>ptex_id_byte) then
 @x
 const n_options = 8; {Pascal won't count array lengths for us.}
 @y
-const n_options = 9; {Pascal won't count array lengths for us.}
+const n_options = 10; {Pascal won't count array lengths for us.}
 @z
 
 @x
@@ -497,8 +504,9 @@ const n_options = 9; {Pascal won't count array lengths for us.}
     end; {Else it was a flag; |getopt| has already done the assignment.}
 @y
     end else if argument_is ('kanji') then begin
+      set_prior_file_enc;
       if (not set_enc_string(optarg,optarg)) then begin
-        write_ln('Bad kanjicode encoding "', stringcast(optarg), '".');
+        write_ln('Bad kanji encoding "', stringcast(optarg), '".');
       end;
 
     end; {Else it was a flag; |getopt| has already done the assignment.}
@@ -515,6 +523,16 @@ const n_options = 9; {Pascal won't count array lengths for us.}
 @x
 @ An element with all zeros always ends the list.
 @y
+@ Shift-JIS terminal (the flag is ignored except for WIN32).
+@.-sjis-terminal@>
+
+@<Define the option...@> =
+long_options[current_option].name := 'sjis-terminal';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := address_of (sjis_terminal);
+long_options[current_option].val := 1;
+incr (current_option);
+
 @ Decide kanji encode
 @.-kanji@>
 

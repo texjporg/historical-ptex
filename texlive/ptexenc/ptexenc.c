@@ -21,6 +21,11 @@
 #define ENC_EUC      2
 #define ENC_SJIS     3
 #define ENC_UTF8     4
+#define ENC_UPTEX    5
+
+static int default_kanji_enc = ENC_UTF8;
+static boolean UPTEX_enabled;
+static boolean prior_file_enc = false;
 
 #define ESC '\033'
 
@@ -32,11 +37,17 @@
 #endif
 
 const char *ptexenc_version_string = "ptexenc " PTEXENC_VERSION;
+#if defined(WIN32)
+int sjisterminal;
+FILE *Poptr;
+int infile_enc_auto;
+#else
+static int infile_enc_auto = 1;
+#endif
 
 static int     file_enc = ENC_UNKNOWN;
 static int internal_enc = ENC_UNKNOWN;
 static int terminal_enc = ENC_UNKNOWN;
-
 
 static const_string enc_to_string(int enc)
 {
@@ -45,6 +56,7 @@ static const_string enc_to_string(int enc)
     case ENC_EUC:  return "euc";
     case ENC_SJIS: return "sjis";
     case ENC_UTF8: return "utf8";
+    case ENC_UPTEX: if (UPTEX_enabled) return "uptex";
     default:       return "?";
     }
 }
@@ -52,11 +64,18 @@ static const_string enc_to_string(int enc)
 static int string_to_enc(const_string str)
 {
     if (str == NULL)                    return ENC_UNKNOWN;
-    if (strcasecmp(str, "default")== 0) return DEFAULT_KANJI_ENC;
+    if (strcasecmp(str, "default")== 0) return default_kanji_enc;
     if (strcasecmp(str, "jis")    == 0) return ENC_JIS;
     if (strcasecmp(str, "euc")    == 0) return ENC_EUC;
     if (strcasecmp(str, "sjis")   == 0) return ENC_SJIS;
     if (strcasecmp(str, "utf8")   == 0) return ENC_UTF8;
+    if (UPTEX_enabled && strcasecmp(str, "uptex")  == 0) return ENC_UPTEX;
+
+    if (strcasecmp(str, "BINARY") == 0)      return ENC_JIS;
+    if (strcasecmp(str, "ISO-2022-JP") == 0) return ENC_JIS;
+    if (strcasecmp(str, "EUC-JP") == 0)      return ENC_EUC;
+    if (strcasecmp(str, "Shift_JIS")   == 0) return ENC_SJIS;
+    if (strcasecmp(str, "UTF-8")       == 0) return ENC_UTF8;
     return -1; /* error */
 }
 
@@ -73,17 +92,19 @@ static int get_default_enc(void)
     } else if (enc != ENC_UNKNOWN) {
         return enc;
     }
-    return DEFAULT_KANJI_ENC;
+    return default_kanji_enc;
 }
 
 static void set_file_enc(int enc)
 {
-    file_enc = enc;
+    if (enc == ENC_UPTEX) file_enc = ENC_UTF8;
+    else /* rest */       file_enc = enc;
 }
 
 static void set_internal_enc(int enc)
 {
     if      (enc == ENC_SJIS)  internal_enc = ENC_SJIS;
+    else if (UPTEX_enabled && enc == ENC_UPTEX) internal_enc = ENC_UPTEX;
     else /* EUC, JIS, UTF8 */  internal_enc = ENC_EUC;
 }
 
@@ -124,6 +145,24 @@ static int get_terminal_enc(void)
     return terminal_enc;
 }
 
+/* enable/disable UPTEX */
+void enable_UPTEX (boolean enable)
+{
+    UPTEX_enabled = enable;
+    if (enable)
+        default_kanji_enc = ENC_UPTEX;
+    else {
+        default_kanji_enc = ENC_UTF8;
+        if (internal_enc == ENC_UPTEX)
+            internal_enc = ENC_EUC;
+    }
+}
+
+void set_prior_file_enc(void)
+{
+    prior_file_enc = true;
+}
+
 const_string get_enc_string(void)
 {
     static char buffer[20]; /* enough large space */
@@ -144,7 +183,13 @@ boolean set_enc_string(const_string file_str, const_string internal_str)
     int internal = string_to_enc(internal_str);
 
     if (file < 0 || internal < 0) return false; /* error */
-    if (file     != ENC_UNKNOWN) {  set_file_enc(file);  nkf_disable();  }
+    if (file     != ENC_UNKNOWN) {
+        set_file_enc(file);
+#if !defined(WIN32)
+        infile_enc_auto = 0;
+        nkf_disable();
+#endif
+    }
     if (internal != ENC_UNKNOWN) set_internal_enc(internal);
     return true;
 }
@@ -154,10 +199,43 @@ boolean is_internalSJIS(void)
     return (internal_enc == ENC_SJIS);
 }
 
+boolean is_internalEUC(void)
+{
+    return (internal_enc == ENC_EUC);
+}
+
+boolean is_internalUPTEX(void)
+{
+    return (internal_enc == ENC_UPTEX);
+}
+
+
+/* check char range */
+boolean ismultichr (int length, int nth, int c)
+{
+    if (is_internalUPTEX()) return isUTF8(length, nth, c);
+    if (length == 2) {
+        if (nth == 1) {
+            if (is_internalSJIS()) return isSJISkanji1(c);
+            /* EUC */              return isEUCkanji1(c);
+        } else if (nth == 2) {
+            if (is_internalSJIS()) return isSJISkanji2(c);
+            /* EUC */              return isEUCkanji2(c);
+        }
+    }
+    if ((length == 3 || length == 4) &&
+        (0 < nth && nth <= length)) return false;
+    fprintf(stderr, "ismultichr: unexpected param length=%d, nth=%d\n",
+            length, nth);
+    return false;
+}
 
 /* check char range (kanji 1st) */
 boolean iskanji1(int c)
 {
+    if (is_internalUPTEX()) return (isUTF8(2,1,c) ||
+                                    isUTF8(3,1,c) ||
+                                    isUTF8(4,1,c));
     if (is_internalSJIS()) return isSJISkanji1(c);
     /* EUC */              return isEUCkanji1(c);
 }
@@ -170,9 +248,14 @@ boolean iskanji2(int c)
 }
 
 /* multi-byte char length in s[pos] */
-int multistrlen(string s, int len, int pos)
+int multistrlen(unsigned char *s, int len, int pos)
 {
     s += pos; len -= pos;
+    if (is_internalUPTEX()) {
+        int ret = UTF8Slength(s, len);
+        if (ret < 0) return 1;
+        return ret;
+    }
     if (len < 2) return 1;
     if (is_internalSJIS()) {
         if (isSJISkanji1(s[0]) && isSJISkanji2(s[1])) return 2;
@@ -182,10 +265,27 @@ int multistrlen(string s, int len, int pos)
     return 1;
 }
 
-/* buffer (EUC/SJIS/UTF-8) to internal (EUC/SJIS) code conversion */
-long fromBUFF(string s, int len, int pos)
+/* with not so strict range check */
+int multibytelen (int first_byte)
+{
+    if (is_internalUPTEX()) {
+        return UTF8length(first_byte);
+    } else if (is_internalSJIS()) {
+        if (isSJISkanji1(first_byte)) return 2;
+    } else { /* EUC */
+        if (isEUCkanji1(first_byte))  return 2;
+    }
+    return 1;
+}
+
+/* buffer (EUC/SJIS/UTF-8) to internal (EUC/SJIS/UPTEX) code conversion */
+long fromBUFF(unsigned char *s, int len, int pos)
 {
     s += pos; len -= pos;
+    if (is_internalUPTEX()) {
+        if (UTF8Slength(s, len) < 0) return s[0];
+        return UCStoUPTEX(UTF8StoUCS(s));
+    }
     if (len < 2) return s[0];
     if (is_internalSJIS()) {
         if (isSJISkanji1(s[0]) && isSJISkanji2(s[1])) return HILO(s[0], s[1]);
@@ -195,85 +295,110 @@ long fromBUFF(string s, int len, int pos)
     return s[0];
 }
 
-/* internal (EUC/SJIS) to buffer (EUC/SJIS) code conversion */
+/* internal (EUC/SJIS/UPTEX) to buffer (EUC/SJIS/UTF-8) code conversion */
 long toBUFF(long kcode)
 {
+    if (is_internalUPTEX()) kcode = UCStoUTF8(UPTEXtoUCS(kcode));
     return kcode;
 }
 
-
-/* JIS to internal (EUC/SJIS) code conversion */
-long fromJIS(long kcode)
+/* DVI (JIS/UCS) to internal (EUC/SJIS/UPTEX) code conversion */
+long fromDVI (long kcode)
 {
+    if (is_internalUPTEX()) return UCStoUPTEX(kcode);
     if (is_internalSJIS())  return JIStoSJIS(kcode);
     /* EUC */               return JIStoEUC(kcode);
 }
 
-/* internal (EUC/SJIS) to JIS code conversion */
+/* internal (EUC/SJIS/UPTEX) to DVI (JIS/UCS) code conversion */
+long toDVI (long kcode)
+{
+    if (is_internalUPTEX()) return UPTEXtoUCS(kcode);
+    if (is_internalSJIS())  return SJIStoJIS(kcode);
+    /* EUC */               return EUCtoJIS(kcode);
+}
+
+/* JIS to internal (EUC/SJIS/UPTEX) code conversion */
+long fromJIS(long kcode)
+{
+    if (is_internalUPTEX()) return UCStoUPTEX(JIStoUCS2(kcode));
+    if (is_internalSJIS())  return JIStoSJIS(kcode);
+    /* EUC */               return JIStoEUC(kcode);
+}
+
+/* internal (EUC/SJIS/UPTEX) to JIS code conversion */
 long toJIS(long kcode)
 {
+    if (is_internalUPTEX()) return UCS2toJIS(UPTEXtoUCS(kcode));
     if (is_internalSJIS())  return SJIStoJIS(kcode);
     /* EUC */               return EUCtoJIS(kcode);
 }
 
 
-/* EUC to internal (EUC/SJIS) code conversion */
+/* EUC to internal (EUC/SJIS/UPTEX) code conversion */
 long fromEUC(long kcode)
 {
-    if (is_internalSJIS()) return fromJIS(EUCtoJIS(kcode));
-    /* EUC */              return kcode;
+    if (!is_internalUPTEX() && !is_internalSJIS()) return kcode;
+    return fromJIS(EUCtoJIS(kcode));
 }
 
-/* internal (EUC/SJIS) to EUC code conversion */
+/* internal (EUC/SJIS/UPTEX) to EUC code conversion */
 static long toEUC(long kcode)
 {
-    if (is_internalSJIS()) return JIStoEUC(toJIS(kcode));
-    /* EUC */              return kcode;
-    
+    if (!is_internalUPTEX() && !is_internalSJIS()) return kcode;
+    return JIStoEUC(toJIS(kcode));
 }
 
 
-/* SJIS to internal (EUC/SJIS) code conversion */
+/* SJIS to internal (EUC/SJIS/UPTEX) code conversion */
 long fromSJIS(long kcode)
 {
     if (is_internalSJIS()) return kcode;
-    /* EUC */              return fromJIS(SJIStoJIS(kcode));
+    return fromJIS(SJIStoJIS(kcode));
 }
 
-/* internal (EUC/SJIS) to SJIS code conversion */
+/* internal (EUC/SJIS/UPTEX) to SJIS code conversion */
 static long toSJIS(long kcode)
 {
     if (is_internalSJIS()) return kcode;
-    /* EUC */              return JIStoSJIS(toJIS(kcode));
+    return JIStoSJIS(toJIS(kcode));
 }
 
 
-/* KUTEN to internal (EUC/SJIS) code conversion */
+/* KUTEN to internal (EUC/SJIS/UPTEX) code conversion */
 long fromKUTEN(long kcode)
 {
     return fromJIS(KUTENtoJIS(kcode));
 }
 
 
-/* UCS to internal (EUC/SJIS) code conversion */
-static long fromUCS(long kcode)
+/* UCS to internal (EUC/SJIS/UPTEX) code conversion */
+long fromUCS(long kcode)
 {
+    if (is_internalUPTEX()) return UCStoUPTEX(kcode);
     kcode = UCS2toJIS(kcode);
     if (kcode == 0) return 0;
     return fromJIS(kcode);
 }
 
-/* internal (EUC/SJIS) to UCS code conversion */
+/* internal (EUC/SJIS/UPTEX) to UCS code conversion */
 long toUCS(long kcode)
 {
+    if (is_internalUPTEX()) return UPTEXtoUCS(kcode);
     return JIStoUCS2(toJIS(kcode));
 }
 
-/* internal (EUC/SJIS) to 'enc' code conversion */
+/* internal (EUC/SJIS/UPTEX) to UTF-8 code conversion */
+static long toUTF8 (long kcode)
+{
+    return UCStoUTF8(toUCS(kcode));
+}
+
+/* internal (EUC/SJIS/UPTEX) to 'enc' code conversion */
 static long toENC(long kcode, int enc)
 {
     switch (enc) {
-    case ENC_UTF8: return UCStoUTF8(toUCS(kcode));
+    case ENC_UTF8: return toUTF8(kcode);
     case ENC_JIS:  return toJIS(kcode);
     case ENC_EUC:  return toEUC(kcode);
     case ENC_SJIS: return toSJIS(kcode);
@@ -295,34 +420,61 @@ static int put_multibyte(long c, FILE *fp) {
     /* always */  return putc(BYTE4(c), fp);
 }
 
+static int flush (unsigned char *buff, int num, FILE *fp)
+{
+    int i, ret = EOF;
+
+    /* fprintf(stderr, "putc2: unexpected chars. ( ");
+       for (i=0; i<num; i++) fprintf(stderr, "%02X ", buff[i]);
+       fprintf(stderr, ")\n");
+    */
+    for (i=0; i<num; i++) ret = putc(buff[i], fp);
+    return ret;
+}
+
 /* putc() with code conversion */
 int putc2(int c, FILE *fp)
 {
-    static int inkanji[NOFILE]; /* 0: not in Kanji
-                                   1: in JIS Kanji and first byte is in c1[]
-                                  -1: in JIS Kanji and c1[] is empty */
-    static unsigned char c1[NOFILE];
+    static int num[NOFILE];
+        /* 0    : not in Kanji
+           1..4 : in JIS Kanji and num[] bytes are in store[][]
+           -1   : in JIS Kanji and store[][] is empty */
+    static unsigned char store[NOFILE][4];
     const int fd = fileno(fp);
     int ret = c, output_enc;
 
-    if (fp == stdout || fp == stderr) output_enc = get_terminal_enc();
+    if ((fp == stdout || fp == stderr) && !(prior_file_enc))
+                                      output_enc = get_terminal_enc();
     else                              output_enc = get_file_enc();
 
-    if (inkanji[fd] > 0) {   /* KANJI 2nd */
-        ret = put_multibyte(toENC(HILO(c1[fd], c), output_enc), fp);
-        inkanji[fd] = -1;
-    } else if (iskanji1(c)) { /* KANJI 1st */
-        if (inkanji[fd] == 0 && output_enc == ENC_JIS) {
+    if (num[fd] > 0) {        /* multi-byte char */
+        if (is_internalUPTEX() && iskanji1(c)) { /* error */
+            ret = flush(store[fd], num[fd], fp);
+            num[fd] = 0;
+        }
+        store[fd][num[fd]] = c;
+        num[fd]++;
+        if (multistrlen(store[fd], num[fd], 0) == num[fd]) {
+            long i = fromBUFF(store[fd], num[fd], 0);
+            ret = put_multibyte(toENC(i, output_enc), fp);
+            num[fd] = -1;
+        } else if ((is_internalUPTEX() && num[fd] == 4) ||
+                   (!is_internalUPTEX() && num[fd] == 2)) { /* error */
+            ret = flush(store[fd], num[fd], fp);
+            num[fd] = -1;
+        }
+    } else if (iskanji1(c)) { /* first multi-byte char */
+        if (num[fd] == 0 && output_enc == ENC_JIS) {
             ret = put_multibyte(KANJI_IN, fp);
         }
-        c1[fd] = c;
-        inkanji[fd] = 1;
+        store[fd][0] = c;
+        num[fd] = 1;
     } else {                  /* ASCII */
-        if (inkanji[fd] < 0 && output_enc == ENC_JIS) {
-            ret = put_multibyte(KANJI_OUT, fp);
+        if (num[fd] < 0 && output_enc == ENC_JIS) {
+            put_multibyte(KANJI_OUT, fp);
         }
         ret = putc(c, fp);
-        inkanji[fd] = 0;
+        num[fd] = 0;
     }
     return ret;
 }
@@ -361,7 +513,7 @@ static int ungetc4(int c, FILE *fp)
 }
 
 
-static string buffer;
+static unsigned char *buffer;
 static long first, last;
 static boolean combin_voiced_sound(boolean semi)
 {
@@ -388,7 +540,7 @@ static void write_multibyte(long i)
 
 static void write_hex(int i)
 {
-    sprintf(buffer + last, "^^%02x", i);
+    sprintf((char *) buffer + last, "^^%02x", i);
     last += 4;
 }
 
@@ -503,8 +655,8 @@ static int infile_enc[NOFILE]; /* ENC_UNKNOWN (=0): not determined
                                   other: determined */
 
 /* input line with encoding conversion */
-long input_line2(FILE *fp, string buff, long pos,
-		 const long buffsize, int *lastchar)
+long input_line2(FILE *fp, unsigned char *buff, long pos,
+                 const long buffsize, int *lastchar)
 {
     long i;
     static boolean injis = false;
@@ -578,7 +730,12 @@ long input_line2(FILE *fp, string buff, long pos,
     return last;
 }
 
-
+#ifdef WIN32
+void clear_infile_enc(FILE *fp)
+{
+    infile_enc[fileno(fp)] = ENC_UNKNOWN;
+}
+#else /* !WIN32 */
 static const_string in_filter = NULL;
 static FILE *piped_fp[NOFILE];
 static int piped_num = 0;
@@ -589,7 +746,6 @@ void nkf_disable(void)
 }
 
 #ifdef NKF_TEST
-#include <stdlib.h>
 static void nkf_check(void)
 {
     if (piped_num > 0) {
@@ -644,3 +800,4 @@ int nkf_close(FILE *fp) {
     }
     return fclose(fp);
 }
+#endif /* !WIN32 */

@@ -32,7 +32,7 @@ boolean isUTF8(int length, int nth, int c)
 
 int UTF8length(int first_byte)
 {
-    if (first_byte < 0x00) return -2;  /* illegal */
+    first_byte &= 0xff;
     if (first_byte < 0x80) return 1;
     if (first_byte < 0xc2) return -2;  /* illegal */
     if (first_byte < 0xe0) return 2;
@@ -43,7 +43,7 @@ int UTF8length(int first_byte)
 
 
 /* with strict range check */
-int UTF8Slength(string buff, int buff_len)
+int UTF8Slength(unsigned char *buff, int buff_len)
 {
     int i, len;
 
@@ -58,7 +58,7 @@ int UTF8Slength(string buff, int buff_len)
 
 
 /* WITHOUT strict range check */
-long UTF8StoUCS(string s)
+long UTF8StoUCS(unsigned char *s)
 {
     switch (UTF8length(s[0])) {
     case 1: return s[0];
@@ -70,7 +70,7 @@ long UTF8StoUCS(string s)
 }
 
 #if 0 /* not used */
-int UCStoUTF8S(long ucs, string s)
+int UCStoUTF8S(long ucs, unsigned char *s)
 {
     if (ucs < 0x80) {
 	*s = ucs;
@@ -111,4 +111,20 @@ long UCStoUTF8(long ucs)
 				    UCStoUTF8D3(ucs),
 				    UCStoUTF8D4(ucs));
     return 0; /* unsupported */
+}
+
+
+#define UCS_MAX 0x110000L
+
+/* using over U+10.FFFF Area */
+long UCStoUPTEX (long ucs)
+{
+    return ucs;
+}
+
+/* using over U+10.FFFF Area */
+long UPTEXtoUCS (long uptex)
+{
+    if (uptex>UCS_MAX) return uptex % UCS_MAX; /* for OTF package */
+    return uptex;
 }

@@ -1,24 +1,25 @@
 ## texk/web2c/ptexdir/am/ptex.am: Makefile fragment for pTeX.
 ##
-## Copyright (C) 2010, 2011 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2010-2011 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
 ptex_cppflags = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS)
-ptex_ldadd = $(pproglib) $(PTEXENC_LIBS) $(LDADD)
+ptex_ldadd = libkanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD)
+ptex_dependencies = libkanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies)
 p_tangle = WEBINPUTS=.:$(srcdir)/ptexdir:$(srcdir) $(buildenv) $(TANGLE)
 
 pweb_programs = pbibtex pdvitype ppltotf ptftopl
 
 # pTeX Tests
 #
-ptex_tests = \
+ptex_tests = ptexdir/ptrip.test
+pweb_tests = \
 	ptexdir/pbibtex.test \
 	ptexdir/pdvitype.test \
 	ptexdir/ppltotf.test \
-	ptexdir/ptftopl.test \
-	ptexdir/ptrip.test
+	ptexdir/ptftopl.test
 
-EXTRA_DIST += $(ptex_tests)
+EXTRA_DIST += $(ptex_tests) $(pweb_tests)
 DISTCLEANFILES += $(pweb_programs:=.c) $(pweb_programs:=.h) \
 	$(pweb_programs:=.p) $(pweb_programs:=-web2c) $(pweb_programs:=.web)
 
@@ -41,16 +42,17 @@ libkanji_a_CPPFLAGS = $(ptex_cppflags)
 ##
 if PTEX
 bin_PROGRAMS += ptex
-if WEB
-bin_PROGRAMS += $(pweb_programs)
-endif WEB
 endif PTEX
+if PWEB
+bin_PROGRAMS += $(pweb_programs)
+endif PWEB
 EXTRA_PROGRAMS += ptex $(pweb_programs)
 
 ptex_CPPFLAGS = $(ptex_cppflags)
 
 # With --enable-ipc, pTeX may need to link with -lsocket.
-ptex_LDADD = libkanji.a $(ptex_ldadd) $(ipc_socketlibs)
+ptex_LDADD = $(ptex_ldadd) $(ipc_socketlibs)
+ptex_DEPENDENCIES = $(ptex_dependencies)
 
 # pTeX C sources
 ptex_c_h = ptexini.c ptex0.c ptexcoerce.h ptexd.h
@@ -93,6 +95,7 @@ ptex.ch: tie$(EXEEXT) ptex.web $(ptex_ch_srcs)
 	$(tie) -c ptex.ch ptex.web $(ptex_ch_srcs)
 ptex_ch_srcs = \
 	ptexdir/ptex-base.ch \
+	$(ptex_ch_synctex) \
 	tex-binpool.ch
 
 EXTRA_DIST += $(ptex_web_srcs) $(ptex_ch_srcs) ptexdir/ptex.defines
@@ -106,6 +109,7 @@ nodist_pbibtex_SOURCES = pbibtex.c pbibtex.h
 pbibtex_SOURCES = ptexdir/kanji.h
 pbibtex_CPPFLAGS = $(ptex_cppflags)
 pbibtex_LDADD  = $(ptex_ldadd)
+pbibtex_DEPENDENCIES = $(ptex_dependencies)
 pbibtex.c pbibtex.h: pbibtex-web2c
 	$(web2c) pbibtex
 pbibtex-web2c: pbibtex.p $(web2c_depend) ptexdir/ptex.defines web2c/cvtbib.sed
@@ -116,15 +120,16 @@ pbibtex.web: tie$(EXEEXT) bibtex.web bibtex.ch
 	$(tie) -m pbibtex.web bibtex.web bibtex.ch
 EXTRA_DIST += ptexdir/pbibtex.ch web2c/cvtbib.sed
 
-ptex_tests += ptexdir/pbibtex-openout-test.pl ptexdir/pbibtex-longline-test.pl
-ptex_tests += ptexdir/pbibtex-mem.test ptexdir/nissya.test
+pweb_tests += ptexdir/pbibtex-openout-test.pl ptexdir/pbibtex-longline-test.pl
+pweb_tests += ptexdir/pbibtex-mem.test ptexdir/nissya.test
 
 ## pDVItype
 ## 
 nodist_pdvitype_SOURCES = pdvitype.c pdvitype.h
 pdvitype_SOURCES = ptexdir/kanji.h
-pdvitype_CPPFLAGS = $(ptex_cppflags) -DDHEX_CHAR_CODE
+pdvitype_CPPFLAGS = $(ptex_cppflags) -DHEX_CHAR_CODE
 pdvitype_LDADD = $(ptex_ldadd)
+pdvitype_DEPENDENCIES = $(ptex_dependencies)
 pdvitype.c pdvitype.h: pdvitype-web2c
 	$(web2c) pdvitype
 pdvitype-web2c: pdvitype.p $(web2c_depend) ptexdir/ptex.defines
@@ -135,7 +140,7 @@ pdvitype.web: tie$(EXEEXT) dvitype.web dvitype.ch
 	$(tie) -m pdvitype.web dvitype.web dvitype.ch
 EXTRA_DIST += ptexdir/pdvitype.ch
 
-ptex_tests += ptexdir/sample.test
+pweb_tests += ptexdir/sample.test
 
 ## pPLtoTF
 ## 
@@ -143,6 +148,7 @@ nodist_ppltotf_SOURCES = ppltotf.c ppltotf.h
 ppltotf_SOURCES = ptexdir/kanji.h
 ppltotf_CPPFLAGS = $(ptex_cppflags) -DPRESERVE_PUTC
 ppltotf_LDADD  = $(ptex_ldadd)
+ppltotf_DEPENDENCIES = $(ptex_dependencies)
 ppltotf.c ppltotf.h: ppltotf-web2c
 	$(web2c) ppltotf
 ppltotf-web2c: ppltotf.p $(web2c_depend) ptexdir/ptex.defines
@@ -159,6 +165,7 @@ nodist_ptftopl_SOURCES = ptftopl.c ptftopl.h
 ptftopl_SOURCES = ptexdir/kanji.h
 ptftopl_CPPFLAGS = $(ptex_cppflags)
 ptftopl_LDADD  = $(ptex_ldadd)
+ptftopl_DEPENDENCIES = $(ptex_dependencies)
 ptftopl.c ptftopl.h: ptftopl-web2c
 	$(web2c) ptftopl
 ptftopl-web2c: ptftopl.p $(web2c_depend) ptexdir/ptex.defines
@@ -169,7 +176,7 @@ ptftopl.web: tie$(EXEEXT) tftopl.web tftopl.ch
 	$(tie) -m ptftopl.web tftopl.web tftopl.ch
 EXTRA_DIST += ptexdir/ptftopl.ch
 
-ptex_tests += ptexdir/yokotate.test
+pweb_tests += ptexdir/yokotate.test
 
 ## 
 EXTRA_DIST += \
@@ -186,6 +193,9 @@ check_PROGRAMS += dvitype pltotf tftopl
 TRIPTRAP += ptrip.diffs
 TRIPTRAP_CLEAN += ptrip-clean
 endif PTEX
+if PWEB
+TESTS += $(pweb_tests)
+endif PWEB
 
 ## Test data and results
 ##
@@ -196,7 +206,7 @@ DISTCLEANFILES += tests/nissya_bib.*
 DISTCLEANFILES += tests/xexampl.aux tests/xexampl.bbl tests/xexampl.blg
 ## ptexdir/pbibtex-mem.test
 EXTRA_DIST += tests/memdata1.bst tests/memdata2.bst tests/memdata3.bst
-DISTCLEANFILES += tests/memtest*
+DISTCLEANFILES += tests/memtest.bib tests/memtest?.*
 ## ptexdir/pdvitype.test
 DISTCLEANFILES += tests/xstory.dvityp tests/xpagenum.typ
 ## ptexdir/ppltotf.test

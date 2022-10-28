@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.2
+% This is a change file for pTeX 3.3
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
@@ -46,12 +46,14 @@
 % (31/12/2010) AK  Bug fix and accent Kanji by Hironori Kitagawa.
 % (19/01/2011) PB  Let \lastkern etc act through disp node.
 % (15/04/2011) PB  pTeX p3.2 Add \ifdbox and \ifddir
+% (2011-08-18) PB  Bug fix by Hironori Kitagawa.
+% (2012-05-11) PB  pTeX p3.3
 %
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.2' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.3' {current p\TeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.1415926',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -305,13 +307,26 @@ k:=first; while k < last do begin print_buffer(k) end;
 if last<>first then for k:=first to last-1 do print(buffer[k]);
 @z
 
+@x [8.111] l.2436 - pTeX: check hi/ho
+  (mem_top+sup_main_memory>=max_halfword) then bad:=14;
+@y
+  (mem_top+sup_main_memory>=max_halfword)or@|
+  (hi(0)<>0) then bad:=14;
+@z
+
+@x [8.112] l.2450 - pTeX: hi/ho
+sufficiently large.
+@y
+sufficiently large and this is required for p\TeX.
+@z
+
 @x [8.112] l.2588 - pTeX:
 @d ho(#)==# {to take a sixteen-bit item from a halfword}
 @y
 @d ho(#)==# {to take a sixteen-bit item from a halfword}
-@d KANJI(#)==# {pTeX: to output an KANJI code into a halfword}
-@d tokanji(#)==# {pTeX: to take an KANJI code into a halfword}
-@d tonum(#)==# {pTeX: to put an KANJI code into a halfword}
+@d KANJI(#)==# {pTeX: to output a KANJI code}
+@d tokanji(#)==# {pTeX: to take a KANJI code from a halfword}
+@d tonum(#)==# {pTeX: to put a KANJI code into a halfword}
 @z
 
 @x [10.135] l.2895 - pTeX: box_dir
@@ -673,37 +688,32 @@ end
 @x [13.202] l.4056 - pTeX:
     kern_node,math_node,penalty_node: do_nothing;
 @y
-    kern_node,disp_node,math_node,penalty_node: do_nothing;
+    disp_node,
+    kern_node,math_node,penalty_node: do_nothing;
 @z
 
 @x [14.206] l.4121 - pTeX: space_ptr, xspace_ptr, dir_node, disp_node
 @ @<Case statement to copy...@>=
-case type(p) of
+@y
+@ @<Case statement to copy...@>=
+@z
+@x [14.206] l.4123
 hlist_node,vlist_node,unset_node: begin r:=get_node(box_node_size);
   mem[r+6]:=mem[p+6]; mem[r+5]:=mem[p+5]; {copy the last two words}
-  list_ptr(r):=copy_node_list(list_ptr(p)); {this affects |mem[r+5]|}
-  words:=5;
-  end;
-rule_node: begin r:=get_node(rule_node_size); words:=rule_node_size;
-  end;
+@y
+dir_node,
+hlist_node,vlist_node,unset_node: begin r:=get_node(box_node_size);
+  mem[r+7]:=mem[p+7];
+  mem[r+6]:=mem[p+6]; mem[r+5]:=mem[p+5]; {copy the last three words}
+  add_glue_ref(space_ptr(r)); add_glue_ref(xspace_ptr(r));
+@z
+@x [14.206] l.4130
 ins_node: begin r:=get_node(ins_node_size); mem[r+4]:=mem[p+4];
   add_glue_ref(split_top_ptr(p));
   ins_ptr(r):=copy_node_list(ins_ptr(p)); {this affects |mem[r+4]|}
   words:=ins_node_size-1;
   end;
 @y
-@ @<Case statement to copy...@>=
-case type(p) of
-hlist_node,vlist_node,dir_node,unset_node:
-  begin r:=get_node(box_node_size);
-  mem[r+7]:=mem[p+7];
-  mem[r+6]:=mem[p+6]; mem[r+5]:=mem[p+5]; {copy the last three words}
-  add_glue_ref(space_ptr(r)); add_glue_ref(xspace_ptr(r));
-  list_ptr(r):=copy_node_list(list_ptr(p)); {this affects |mem[r+5]|}
-  words:=5;
-  end;
-rule_node: begin r:=get_node(rule_node_size); words:=rule_node_size;
-  end;
 ins_node: begin r:=get_node(ins_node_size);
   mem[r+5]:=mem[p+5]; mem[r+4]:=mem[p+4];
   add_glue_ref(split_top_ptr(p));
@@ -714,12 +724,9 @@ ins_node: begin r:=get_node(ins_node_size);
 
 @x [14.206] l.4140 - pTeX: disp_node
 kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
-  words:=small_node_size;
-  end;
 @y
-kern_node,disp_node,math_node,penalty_node:
-  begin r:=get_node(small_node_size); words:=small_node_size;
-  end;
+disp_node,
+kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @z
 
 @x [15.207] l.4201 - pTeX: Add kanji, kana, other_kchar category codes.
@@ -1188,6 +1195,35 @@ for k:="A" to "Z" do
 { $\.{@@"20}+|k| = |kcatcodekey|(|fromKUTEN|(|HILO|(k,1))$ }
 @z
 
+@x
+@ @<Show the halfword code in |eqtb[n]|@>=
+if n<math_code_base then
+  begin if n<lc_code_base then
+    begin print_esc("catcode"); print_int(n-cat_code_base);
+    end
+@y
+@ @<Show the halfword code in |eqtb[n]|@>=
+if n<math_code_base then
+  begin if n<kcat_code_base then
+    begin print_esc("catcode"); print_int(n-cat_code_base);
+    end
+  else if n<auto_xsp_code_base then
+    begin print_esc("kcatcode"); print_int(n-kcat_code_base);
+    end
+  else if n<inhibit_xsp_code_base then
+    begin print_esc("xspcode"); print_int(n-auto_xsp_code_base);
+    end
+  else if n<kinsoku_base then
+    begin print("(inhibitxspcode table) "); print_int(n-inhibit_xsp_code_base);
+    end
+  else if n<kansuji_base then
+    begin print("(kinsoku table) "); print_int(n-kinsoku_base);
+    end
+  else if n<lc_code_base then
+    begin print_esc("kansujichar"); print_int(n-kansuji_base);
+    end
+@z
+
 @x [17.236] l.5092 - pTeX: cur_jfam_code, jchr_widow_penalty
 @d cur_fam_code=44 {current family}
 @d escape_char_code=45 {escape character for token output}
@@ -1470,6 +1506,7 @@ var old_setting:0..max_selector; {saved |selector| setting}
   trick_count:=1000000;
   end
 @z
+
 @x [22.316] l.7114 - pTeX: kcode_pos
 @d set_trick_count==
   begin first_count:=tally;
@@ -1514,7 +1551,7 @@ if token_type<macro then
   begin  if (token_type=backed_up)and(loc<>null) then
     begin  if (link(start)=null)and(check_kanji(info(start))) then {|wchar_token|}
       begin cur_input:=input_stack[base_ptr-1];
-      s:=get_avail; info(s):=Lo(buffer[loc]);
+      s:=get_avail; info(s):=Lo(info(loc));
       cur_input:=input_stack[base_ptr];
       link(start):=s;
       show_token_list(start,loc,100000);
@@ -1546,8 +1583,8 @@ begin switch: if loc<=limit then {current line not yet finished}
 @^inner loop@>
 begin switch: if loc<=limit then {current line not yet finished}
   begin cur_chr:=buffer[loc]; incr(loc);
-    if multistrlen(stringcast(buffer), limit+1, loc-1)=2 then
-      begin cur_chr:=fromBUFF(stringcast(buffer), limit+1, loc-1);
+    if multistrlen(ustringcast(buffer), limit+1, loc-1)=2 then
+      begin cur_chr:=fromBUFF(ustringcast(buffer), limit+1, loc-1);
       cur_cmd:=kcat_code(kcatcodekey(cur_chr));
       incr(loc);
       end
@@ -1636,8 +1673,8 @@ end
 @<Scan a control...@>=
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin k:=loc; cur_chr:=buffer[k]; incr(k);
-  if multistrlen(stringcast(buffer), limit+1, k-1)=2 then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(stringcast(buffer), limit+1, k-1))); incr(k);
+  if multistrlen(ustringcast(buffer), limit+1, k-1)=2 then
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1))); incr(k);
     end
   else cat:=cat_code(cur_chr);
 start_cs:
@@ -1720,8 +1757,8 @@ end
 @y
 @ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; incr(k);
-  if multistrlen(stringcast(buffer), limit+1, k-1)=2 then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(stringcast(buffer), limit+1, k-1))); incr(k);
+  if multistrlen(ustringcast(buffer), limit+1, k-1)=2 then
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1))); incr(k);
     end
   else cat:=cat_code(cur_chr);
   while (buffer[k]=cur_chr)and(cat=sup_mark)and(k<limit) do
@@ -1959,12 +1996,16 @@ else scanned_result(eqtb[m+cur_val].int)(int_val);
 @y
 if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m=kcat_code_base then scanned_result(equiv(m+kcatcodekey(cur_val)))(int_val)
-else if m<math_code_base then
-  begin if is_kanji(cur_val) then
+else if m<math_code_base then { \.{\\lccode}, \.{\\uccode}, \.{\\sfcode}, \.{\\catcode} }
+  begin if not is_char_ascii(cur_val) then
   scanned_result(equiv(m+Hi(cur_val)))(int_val)
   else scanned_result(equiv(m+cur_val))(int_val)
   end
-else scanned_result(eqtb[m+cur_val].int)(int_val);
+else { \.{\\delcode} }
+  begin if not is_char_ascii(cur_val) then
+  scanned_result(eqtb[m+Hi(cur_val)].int)(int_val)
+  else scanned_result(eqtb[m+cur_val].int)(int_val)
+  end;
 @z
 
 @x [26.420] l.8474 - pTeX: Fetch a box dimension: dir_node
@@ -2063,7 +2104,7 @@ end;
 @y
 procedure scan_char_num;
 begin scan_int;
-if not is_char_ascii(cur_val)and not check_kanji(cur_val) then {|wchar_token|}
+if not is_char_ascii(cur_val) and not is_char_kanji(cur_val) then
   begin print_err("Bad character code");
 @.Bad character code@>
   help2("A character number must be between 0 and 255, or KANJI code.")@/
@@ -2154,8 +2195,8 @@ else if scan_keyword("sp") then goto done
   if t=" " then t:=space_token
   else t:=other_token+t;
 @y
-  if multistrlen(stringcast(str_pool), pool_ptr, k)=2 then
-    begin t:=fromBUFF(stringcast(str_pool), pool_ptr, k); incr(k);
+  if multistrlen(ustringcast(str_pool), pool_ptr, k)=2 then
+    begin t:=fromBUFF(ustringcast(str_pool), pool_ptr, k); incr(k);
     end
   else if t=" " then t:=space_token
   else t:=other_token+t;
@@ -2179,7 +2220,8 @@ else if scan_keyword("sp") then goto done
 @d sjis_code=7 {command code for \.{\\sjis}}
 @d jis_code=8 {command code for \.{\\jis}}
 @d kuten_code=9 {command code for \.{\\kuten}}
-@d job_name_code=10 {command code for \.{\\jobname}}
+@d ptex_convert_codes=10 {end of \eTeX's command codes}
+@d job_name_code=ptex_convert_codes {command code for \.{\\jobname}}
 @z
 
 @x [27.468] l.9547 - pTeX:
@@ -2568,10 +2610,10 @@ fget; read_sixteen(nk);
 fget; read_sixteen(ne);
 fget; read_sixteen(np);
 if jfm_flag<>dir_default then
-  begin if lf<>7+lh+nt+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then abort
+  begin if lf<>7+lh+nt+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then abort;
   end
 else
-  begin if lf<>6+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then abort
+  begin if lf<>6+lh+(ec-bc+1)+nw+nh+nd+ni+nl+nk+ne+np then abort;
   end;
 if (nw=0)or(nh=0)or(nd=0)or(ni=0) then abort;
 end
@@ -5619,7 +5661,10 @@ def_code: begin
   @<Let |m| be the minimal legal code value, based on |cur_chr|@>;
   @<Let |n| be the largest legal code value, based on |cur_chr|@>;
   p:=cur_chr; scan_char_num;
-  if p=kcat_code_base then p:=p+kcatcodekey(cur_val) else p:=p+cur_val;
+  if p=kcat_code_base then p:=p+kcatcodekey(cur_val) 
+  else if not is_char_ascii(cur_val) then p:=p+Hi(cur_val) 
+    { If |cur_val| is a KANJI code, we use its upper half, as the case of retrieving. }
+  else p:=p+cur_val;
   scan_optional_equals; scan_int;
   if ((cur_val<m)and(p<del_code_base))or(cur_val>n) then
   begin print_err("Invalid code ("); print_int(cur_val);
@@ -5855,6 +5900,9 @@ function get_jfm_pos(@!kcode:KANJI_code;@!f:internal_font_number):eight_bits;
 var @!jc:KANJI_code; {temporary register for KANJI}
 @!sp,@!mp,@!ep:pointer;
 begin@/
+if f=null_font then
+  begin get_jfm_pos:=kchar_type(null_font)(0); return;
+  end;
 jc:=toDVI(kcode);
 sp:=1; { start position }
 ep:=font_num_ext[f]-1; { end position }
@@ -5903,7 +5951,7 @@ set_kansuji_char: print_esc("kansujichar");
 @ @<Assignments@>=
 set_kansuji_char:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
-if not check_kanji(cur_val) then
+if not is_char_kanji(cur_val) then
   begin print_err("Invalid KANSUJI char (");
   print_hex(cur_val); print_char(")");
 @.Invalid KANSUJI char@>
@@ -6039,7 +6087,7 @@ end;
 @ @<Assignments@>=
 assign_inhibit_xsp_code:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
-if check_kanji(n) then
+if is_char_kanji(n) then
   begin j:=get_inhibit_pos(tokanji(n),new_pos);
   if j=no_entry then
     begin print_err("Inhibit table is full!!");
@@ -6113,7 +6161,7 @@ end;
 @ @<Assignments@>=
 assign_kinsoku:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
-if is_char_ascii(n) or check_kanji(n) then
+if is_char_ascii(n) or is_char_kanji(n) then
   begin j:=get_kinsoku_pos(tokanji(n),new_pos);
   if j=no_entry then
     begin print_err("KINSOKU table is full!!");
@@ -6684,11 +6732,13 @@ main_i:=orig_char_info(main_f)(qi(0));
 goto main_loop_j+3;
 @#
 main_loop_j+1: space_factor:=1000;
-  fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
-  link(tail):=main_p; tail:=main_p; last_jchr:=tail;
-  fast_get_avail(main_p); info(main_p):=KANJI(cur_chr);
-  link(tail):=main_p; tail:=main_p;
-  cx:=cur_chr; @<Insert kinsoku penalty@>;
+  if main_f<>null_font then
+    begin fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
+    link(tail):=main_p; tail:=main_p; last_jchr:=tail;
+    fast_get_avail(main_p); info(main_p):=KANJI(cur_chr);
+    link(tail):=main_p; tail:=main_p;
+    cx:=cur_chr; @<Insert kinsoku penalty@>;
+  end;
   ins_kp:=false;
 again_2:
   get_next;
@@ -6724,7 +6774,10 @@ again_2:
 @#
 main_loop_j+3:
   if ins_kp=true then @<Insert |pre_break_penalty| of |cur_chr|@>;
-  @<Look ahead for glue or kerning@>;
+  if main_f<>null_font then 
+    begin @<Look ahead for glue or kerning@>;
+    end
+  else inhibit_glue_flag:=false;
   if ins_kp=false then begin { Kanji -> Kanji }
     goto main_loop_j+1;
   end else if ins_kp=true then begin { Kanji -> Ascii }

@@ -1,3 +1,143 @@
+2012-05-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.test, sample.test: Cope with spaces in paths returned
+	by kpsewhich.
+
+2012-05-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Restore the 'unnecessary and seemingly wrong'
+	changes; they are required to show the error context.
+	* ptrip/ptrip.diffs: Adapted.
+
+2012-05-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch (pTeX_version_string): Version 3.3.
+	* ptrip/ptrip.diffs: Adapted.
+
+2012-03-11  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptex-base.ch: remove unnecessary and seemingly wrong changes
+
+2012-03-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptex-base.ch: fix a long-remained bug in show_context.
+
+2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid 'differ in signedness' warnings.
+	* pbibtex.ch, ppltotf.ch: Use ustringcast(buffer).
+	* ptex-base.ch: Use ustringcast for buffer and str_pool.
+
+2012-01-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptftopl.ch: Adapt to missing space added in ../tftopl.ch.
+
+2012-01-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdvitype.ch: Remove an unnecessary change in previous.
+
+2012-01-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* kanji.h, pdvitype.ch: enable -kanji option in pdvitype.
+	(patch from TANAKA Takuji-san).
+
+2011-12-19  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch, ptex.defines, kanji.[ch]: Avoid Segmentation
+	fault for japanese \catcode or \kcatcode.
+
+2011-12-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Ensure that `hi(#)==#'.
+
+2011-11-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (pdvitype_CPPFLAGS): Replace '-DDHEX_CHAR_CODE' by
+	'-DHEX_CHAR_CODE'.
+
+2011-10-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (DISTCLEANFILES): Preserve distributed files.
+
+2011-08-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch: Use nil, not 0 as arg of set_enc_string().
+
+2011-08-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch, ptex.defines:
+	Change init_default_kanji => init_kanji.
+	* kanji.[ch]: Map initdefaultkanji (for pTeX and e-pTeX) and
+	initkanji (for pBibTeX, pDVItype, pPLtoTF, and pTFtoPL) to
+	init_default_kanji() with two encoding string arguments.
+
+2011-08-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch: Change error
+	message text 'kanjicode encoding' => 'kanji encoding'.
+	* am/ptex.am (*_DEPENDENCIES): Define proper dependencies.
+
+2011-08-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, ppltotf.ch, ptftopl.ch: Stop parsing arguments at
+	"-version" and immediately call print_version_and_exit().
+
+2011-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch: Add WIN32
+	option "sjis-terminal" and init_default_kanji().
+	* ptex.defines: Add sjisterminal and initdefaultkanji.
+	* kanji.[ch]: Add support for WIN32 option "sjis-terminal".
+	(check_kanji): Change return type boolean => int (for -1, 0, +1).
+	(initdefaultkanji): New function from W32TeX kanjiextra.c.
+	* am/ptex.am (*_LDADD): Use libkanji.a for all binaries.
+
+	* pdvitype.ch: Change banner 'PDVItype' => 'pDVItype'.
+	* ppltotf.ch: Change banner 'Nihongo PLtoTF' => 'pPLtoTF'.
+	More fix usage ('progname').  Simplify kanji encoding output.
+	* ptftopl.ch: Change banner 'Nihongo TFtoPL' => 'pTFtoPL'.
+	More fix usage ('progname').  Simplify kanji encoding output.
+	* pbibtex.ch: Simplify kanji encoding output.
+
+2011-08-19  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ppltotf.ch, ptftopl.ch: fix usage ('progname').
+
+2011-08-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch: Add WIN32
+	option "sjis-terminal" and init_default_kanji().
+	* ptex.defines: Add sjisterminal and initdefaultkanji.
+	* kanji.[ch]: Add support for WIN32 option "sjis-terminal".
+	(check_kanji): Change return type boolean => int (for -1, 0, +1).
+	(initdefaultkanji): New function from W32TeX kanjiextra.c.
+	* am/ptex.am (*_LDADD): Use libkanji.a for all binaries.
+
+2011-08-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	pTeX update tlsvn23478-uptex-1108111825 [ptex:00267]
+	from Hironori Kitagawa <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Merged with ptex-20110723-nullfont.ch (bug fix).
+
+2011-08-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Slightly reformulate to simplify e-upTeX.
+
+	* kanji.h [MP]: Remove TEXMFPOOLNAME and TEXMFENGINENAME.
+
+2011-07-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (pweb_tests): New variable for tests of pTeX
+	related Web programs (split off ptex_tests).
+
+	* ptrip/texmf.cnf (main_memory): Increase for SyncTeX.
+
+2011-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (ptex_ch_srcs): SyncTeX infrastructure.
+	* ptex-base.ch: Slightly reformulate to simplify SyncTeX.
+
 2011-04-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	Avoid 'differ in signedness' warnings.

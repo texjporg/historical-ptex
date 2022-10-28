@@ -12,7 +12,7 @@
 @x [2] l.64 - pTeX:
 @d banner=='This is TFtoPL, Version 3.2' {printed when the program starts}
 @y
-@d banner=='This is Nihongo TFtoPL, Version 3.2-p1.7'
+@d banner=='This is pTFtoPL, Version 3.2-p1.7'
   {printed when the program starts}
 @z
 
@@ -29,13 +29,18 @@ var @!k:integer; {all-purpose initiallization index}
     tfm_file_array := cast_to_byte_pointer (xmalloc (1003+4));
 @z
 
+@x
+    parse_arguments;
+@y
+    init_kanji;
+    parse_arguments;
+@z
+
 @x [7] l.149 - pTeX:
   print_ln (version_string);
 @y
   print_ln (version_string);
-  print ('process kanji code is ');
-  print (conststringcast(get_enc_string));
-  print_ln('.');
+  print_ln ('process kanji code is ', conststringcast(get_enc_string), '.');
 @z
 
 @x [18.20] l.438 - pTeX:
@@ -111,7 +116,7 @@ else
 @x [21] l.485 - pTeX: ng has to be treated specially
 if (bc>ec+1)or(ec>255) then abort('The character code range ',
 @.The character code range...@>
-  bc:1,'..',ec:1,'is illegal!');
+  bc:1,'..',ec:1,' is illegal!');
 if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
   abort('Incomplete subfiles for character dimensions!');
 @.Incomplete subfiles...@>
@@ -125,7 +130,7 @@ case file_format of
 tfm_format: begin
   if (bc>ec+1)or(ec>255) then abort('The character code range ',
 @.The character code range...@>
-    bc:1,'..',ec:1,'is illegal!');
+    bc:1,'..',ec:1,' is illegal!');
   if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
     abort('Incomplete subfiles for character dimensions!');
 @.Incomplete subfiles...@>
@@ -138,7 +143,7 @@ tfm_format: begin
 jfm_format,vfm_format: begin ng:=ne;
   if (bc>ec+1)or(ec>255)or(bc<>0) then abort('The character code range ',
 @.The character code range...@>
-      bc:1,'..',ec:1,'is illegal!');
+      bc:1,'..',ec:1,' is illegal!');
   if (nw=0)or(nh=0)or(nd=0)or(ni=0) then
     abort('Incomplete subfiles for character dimensions!');
 @.Incomplete subfiles...@>
@@ -343,54 +348,54 @@ else
 @x
 const n_options = 4; {Pascal won't count array lengths for us.}
 @y
-const n_options = 5; {Pascal won't count array lengths for us.}
+const n_options = 6; {Pascal won't count array lengths for us.}
 @z
+
 @x
-var @!long_options: array[0..n_options] of getopt_struct;
-    @!getopt_return_val: integer;
-    @!option_index: c_int_type;
-    @!current_option: 0..n_options;
-begin
-  @<Initialize the option variables@>;
+      usage ('tftopl');
 @y
-var @!long_options: array[0..n_options] of getopt_struct;
-    @!getopt_return_val: integer;
-    @!option_index: c_int_type;
-    @!current_option: 0..n_options;
-    @!version_switch: boolean;
-begin
-  @<Initialize the option variables@>;
-  version_switch := false;
+      usage ('ptftopl');
 @z
+
 @x
       usage_help (TFTOPL_HELP, nil);
 @y
       usage_help (PTFTOPL_HELP, nil);
 @z
-@x
-    end else if argument_is ('version') then begin
-      print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
-@y
-    end else if argument_is ('version') then begin
-      version_switch := true;
 
-    end else if argument_is ('kanji') then begin
-      @<Set process kanji code@>;
-@z
 @x
     end; {Else it was a flag; |getopt| has already done the assignment.}
-  until getopt_return_val = -1;
 @y
+    end else if argument_is ('kanji') then begin
+      if (not set_enc_string(optarg,optarg)) then
+        print_ln('Bad kanji encoding "', stringcast(optarg), '".');
+
     end; {Else it was a flag; |getopt| has already done the assignment.}
-  until getopt_return_val = -1;
-  if (version_switch) then
-    print_version_and_exit (banner, nil, 'D.E. Knuth', nil);
+@z
+
+@x
+    print_ln ('tftopl: Need one or two file arguments.');
+    usage ('tftopl');
+@y
+    print_ln ('ptftopl: Need one or two file arguments.');
+    usage ('ptftopl');
 @z
 
 @x
 @ An element with all zeros always ends the list.
 @y
-@ kanji option
+@ Shift-JIS terminal (the flag is ignored except for WIN32).
+@.-sjis-terminal@>
+
+@<Define the option...@> =
+long_options[current_option].name := 'sjis-terminal';
+long_options[current_option].has_arg := 0;
+long_options[current_option].flag := address_of (sjis_terminal);
+long_options[current_option].val := 1;
+incr (current_option);
+
+@ Kanji option.
+@.-kanji@>
 
 @<Define the option...@> =
 long_options[current_option].name := 'kanji';
@@ -528,7 +533,7 @@ begin
 if ix<=8*94-1 then
   index_to_jis:=(ix div 94 + @"21) * @'400 + (ix mod 94 + @"21)
 else
-  index_to_jis:=((ix+7 * 94) div 94 + @"21) * @'400 + ((ix+7*94) mod 94 + @"21)
+  index_to_jis:=((ix+7 * 94) div 94 + @"21) * @'400 + ((ix+7*94) mod 94 + @"21);
 end;
 
 @ @<declare kanji conversion functions@>=
@@ -542,12 +547,6 @@ if first_byte<8 then
 else
   jis_to_index:=(first_byte-7)*94+second_byte;
 end
-
-@ output kanji code.
-
-@ @<Set process kanji code@>=
-  if (not set_enc_string(optarg,optarg)) then
-    print_ln('Bad kanjicode encoding "', stringcast(optarg), '".');
 
 @* Index.
 @z
