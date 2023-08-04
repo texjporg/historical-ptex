@@ -549,6 +549,7 @@ begin
 if s<=biggest_char then begin
   if s<0 then begin p:=undefined_primitive; goto found; end
   else p:=(s mod prim_prime)+prim_base; {we start searching here}
+  l:=1
   end
 else begin
   j:=str_start[s];
@@ -698,7 +699,7 @@ no_expand: if cur_chr=0 then @<Suppress expansion of the next token@>
 begin save_scanner_status:=scanner_status; scanner_status:=normal;
 get_token; scanner_status:=save_scanner_status; t:=cur_tok;
 back_input; {now |start| and |loc| point to the backed-up token |t|}
-if t>=cs_token_flag then
+if (t>=cs_token_flag)and(t<>end_write_token) then
   begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
   link(p):=loc; start:=p; loc:=p;
   end;
@@ -708,7 +709,7 @@ end
 begin save_scanner_status:=scanner_status; scanner_status:=normal;
 get_token; scanner_status:=save_scanner_status; t:=cur_tok;
 back_input; {now |start| and |loc| point to the backed-up token |t|}
-if t>=cs_token_flag then
+if (t>=cs_token_flag)and(t<>end_write_token) then
   begin p:=get_avail; info(p):=cs_token_flag+frozen_dont_expand;
   link(p):=loc; start:=p; loc:=p;
   end;
@@ -839,13 +840,13 @@ ignore_spaces: {trap unexpandable primitives}
 @z
 
 @x
-@d eptex_version_code=ptex_minor_version_code+1 {code for \.{\\epTeXversion}}
+@d ptex_minor_version_code=eptex_version_code+1 {code for \.{\\ptexminorversion}}
 @y
-@d eptex_version_code=ptex_minor_version_code+1 {code for \.{\\epTeXversion}}
-@d pdf_last_x_pos_code=eptex_version_code+1 {code for \.{\\pdflastxpos}}
+@d ptex_minor_version_code=eptex_version_code+1 {code for \.{\\ptexminorversion}}
+@d pdf_last_x_pos_code=ptex_minor_version_code+1 {code for \.{\\pdflastxpos}}
 @d pdf_last_y_pos_code=pdf_last_x_pos_code+1 {code for \.{\\pdflastypos}}
 @d pdf_shell_escape_code=pdf_last_y_pos_code+1 {code for \.{\\pdflastypos}}
-@d elapsed_time_code =pdf_shell_escape_code+1 {code for \.{\\pdfelapsedtime}}
+@d elapsed_time_code=pdf_shell_escape_code+1 {code for \.{\\pdfelapsedtime}}
 @d random_seed_code=elapsed_time_code+1 {code for \.{\\pdfrandomseed}}
 @z
 
@@ -1203,11 +1204,9 @@ var b:boolean; {is the condition true?}
 @z
 
 @x \[if]pdfprimitive
-if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code, if_mbox_code:
-  @<Test box register status@>;
+if_void_code, if_hbox_code, if_vbox_code: @<Test box register status@>;
 @y
-if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code, if_mbox_code:
-  @<Test box register status@>;
+if_void_code, if_hbox_code, if_vbox_code: @<Test box register status@>;
 if_pdfprimitive_code: begin
   save_scanner_status:=scanner_status;
   scanner_status:=normal;
